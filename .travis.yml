@@ -50,12 +50,13 @@ deploy:
 
 before_deploy: |
   if [[ -f "target/release/grex" ]]; then
-    chmod +x target/release/grex;
     if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then
+      choco install zip;
       cd target/release;
       zip grex-$TRAVIS_TAG-$TRAVIS_OS_NAME.zip grex;
       cd ../..;
     else
+      chmod +x target/release/grex;
       tar -zcf target/release/grex-$TRAVIS_TAG-$TRAVIS_OS_NAME.tar.gz -C target/release grex;
     fi
     echo "Created binary archive";
