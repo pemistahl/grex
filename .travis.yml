@@ -50,6 +50,7 @@ deploy:
 before_deploy: |
   if [[ -f "target/release/grex" ]]; then
     cd target/release &&
+    chmod +x grex &&
     tar -zcf grex-$TRAVIS_TAG-$TRAVIS_OS_NAME.tar.gz grex
   fi
 
