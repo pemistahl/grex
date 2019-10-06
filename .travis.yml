@@ -7,13 +7,49 @@ rust:
   - beta
   - nightly
 
+os:
+  - linux
+  - osx
+  - windows
+
 cache: cargo
+before_cache:
+  - rm -rf "$TRAVIS_HOME/.cargo/registry/src"
+  # Travis can't cache files that are not readable by "others"
+  - chmod -R a+r $HOME/.cargo
+
+install: cargo build --release --verbose
+
+script: cargo build --release --verbose; cargo test --verbose
 
 matrix:
   allow_failures:
     - rust: beta
     - rust: nightly
   fast_finish: true
+
+deploy:
+  #- provider: cargo
+  #  skip_cleanup: true
+  #  on:
+  #    tags: true
+  #    branch: master
+  #    condition: $TRAVIS_RUST_VERSION = stable && $TRAVIS_OS_NAME = linux
+  #  token:
+  #    secure: KA+BCrI4/8zKDxTB73p8Z+p7qlXrEtKiHh1Eh9pY+vGO2X1vMq+ArHL9dIKyvjDDLfM+hCuEJ+xrjEsylWF3SOigHt0f7zSOSzEz141olS4eiNHZUyn9tzvYFSclFIggSAAX1dek+twqtCQrTANY2X/l0y/zfgNRPYtx3jIHRtdhfiIfNtY+pe21+9dGiSwihMp/qMaZoskaqrBMZrF7ghE7NeL0DxobO07j9duRg+F8IR/HhrT0hBbeHeFPEepx/9Y8aKer1bA6mVU4N75FowcOrZRN9WxJNZ0RFvPlXTYLyO0z395hIuEBSZa/Qww50+53CVXbuvJJoSWSjalDDTecgAPAQBjy6r4C22VrMdDKk2wEuH8+Llp5i0CI8P+blEw8nWxd1APgFWPFCDVeG1XqyDBOVujC6UW/Vnmb6osMSV2T1+Cy55ZqrWu+6RMz9aLKUBYD+P6tkKIT2FFQORCVkmVt5rvJTkFdYy72ww0Pa4yKHBq39yyVPh/z8D15o2e+lVL93QaRL5toGfxyKhnFxaaP180KQuqXUTHAdVIsp4OCebX0SBOfPeK2IQN3WKdWYq1gSBKcazaXRFZyVxZiTWvCpY86xc5+RJcbKlTdgxhN3K/IVe3g+tPbYzz2EaYzyrOLIhVVJzglm9kONYSRfDQ9zQWi0rcNAYKpHxQ=
+  - provider: releases
+    skip_cleanup: true
+    on:
+      tags: true
+      branch: master
+      condition: $TRAVIS_RUST_VERSION = stable
+    file_glob: true
+    file: target/release/grex-*
+    api_key:
+      secure: iUJkFsOtXXyXzRJJH/UokuYSjUCqYJGVDQyaF7Ean2RkB5s/2OdO4nCMrBTp0VD2Lg8QUgDYh2Lg+mhXuPr1AICnmqvcVaFqyx6HVg+hiEBc3Q6qxRoslsi/U7PfCDuZRSZeJ/1ykdA+bORDrp0idext+mvias72I7emZWKc2GjtSUvkZr+7eePF3RWBmP5wR5c5jigep6iDk+yY1ol6zEik3Sm79VlTnIohzF88edmksKjLaT5kfAh5/p2jHJU8t4HQJQG5znCavm8DSTtOTpxlq7uDIeoaA+NudTJCm2G23mskF2WULBAtZbShIZmRYk5yTlgR0PIaYRQLvH6We/nAPsf3xFtl9wgYPHzeR90Q4qBYTFV8582IZT5ToDFc5mlpzX5E0IMDhxvYSzMWuH0nNw7RSt81wQtnXj+2UNBdyMHidY5UgVXxCN+TjH9XV6oz1v5sO1aLsJgxv2vHKhj144TaDYiirqRj0z9isdFs9kMx+ncx/+m98gzea4vLnFUFGk9JrXeYnEcpQS7VyTLLB8qZn8LI5jYsvhWiGvAOAN2TgMLUk4erSnmrs9eEtgD0Uxoay43kARQZIPjHd1G+mZQUaOoaF+3YxycOtqbSL2h6uZssReYtwZdtZTBhCmzot0YSeSl076tU8+RuqhdsHNn+WEd5DnSbY2B0DOs=
+
+before_deploy:
+  - "if [[ -f target/release/grex ]]; then mv target/release/grex \"target/release/grex-$TRAVIS_TAG-$TRAVIS_OS_NAME\"; fi"
 
 addons:
   apt:
@@ -37,6 +73,6 @@ after_success: |
   make install DESTDIR=../../kcov-build &&
   cd ../.. &&
   rm -rf kcov-master &&
-  for file in target/debug/grex-*[^\.d]; do mkdir -p "target/cov/$(basename $file)"; ./kcov-build/usr/local/bin/kcov --exclude-pattern=/.cargo,/usr/lib --verify "target/cov/$(basename $file)" "$file"; done &&
+  for file in target/release/grex-*[^\.d]; do mkdir -p "target/cov/$(basename $file)"; ./kcov-build/usr/local/bin/kcov --exclude-pattern=/.cargo,/usr/lib --verify "target/cov/$(basename $file)" "$file"; done &&
   bash <(curl -s https://codecov.io/bash) &&
   echo "Uploaded code coverage"
