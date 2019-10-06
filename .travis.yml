@@ -49,9 +49,9 @@ deploy:
 
 before_deploy: |
   if [[ -f "target/release/grex" ]]; then
-    cd target/release &&
-    chmod +x grex &&
-    tar -zcf grex-$TRAVIS_TAG-$TRAVIS_OS_NAME.tar.gz grex
+    chmod +x target/release/grex &&
+    tar -zcf target/release/grex-$TRAVIS_TAG-$TRAVIS_OS_NAME.tar.gz target/release/grex &&
+    echo "Created binary archive"
   fi
 
 addons:
@@ -81,3 +81,7 @@ after_success: |
     bash <(curl -s https://codecov.io/bash) &&
     echo "Uploaded code coverage"
   fi
+
+notifications:
+  email:
+    on_success: never
