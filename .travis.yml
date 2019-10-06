@@ -53,7 +53,7 @@ before_deploy: |
     if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then
       choco install zip;
       cd target/release;
-      zip grex-$TRAVIS_TAG-$TRAVIS_OS_NAME.zip grex;
+      zip grex-$TRAVIS_TAG-$TRAVIS_OS_NAME.zip grex.exe;
       cd ../..;
     else
       chmod +x target/release/grex;
