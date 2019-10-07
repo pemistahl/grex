@@ -109,7 +109,7 @@ impl DFA {
                 while let Some(y) = p_cursor.peek_next() {
                     let i = x
                         .intersection(y)
-                        .map(|elem| *elem)
+                        .copied()
                         .collect::<LinkedHashSet<State>>();
 
                     if i.is_empty() {
@@ -119,7 +119,7 @@ impl DFA {
 
                     let d = y
                         .difference(&x)
-                        .map(|elem| *elem)
+                        .copied()
                         .collect::<LinkedHashSet<State>>();
 
                     if d.is_empty() {
@@ -197,7 +197,7 @@ impl DFA {
 
         for equivalence_class in p.iter() {
             let old_source_state = *equivalence_class.iter().next().unwrap();
-            let new_source_state = self.get_target_state(&graph, &old_source_state);
+            let new_source_state = self.get_target_state(&graph, old_source_state);
 
             for old_target_state in self.graph.neighbors(old_source_state) {
                 let edge = self
@@ -206,7 +206,7 @@ impl DFA {
                     .unwrap();
 
                 let edge_label = self.graph.edge_weight(edge).unwrap();
-                let new_target_state = self.get_target_state(&graph, &old_target_state);
+                let new_target_state = self.get_target_state(&graph, old_target_state);
 
                 graph.add_edge(new_source_state, new_target_state, edge_label.clone());
 
@@ -223,7 +223,7 @@ impl DFA {
     fn get_target_state(
         &self,
         graph: &StableGraph<HashSet<usize>, String>,
-        source_state: &State,
+        source_state: State,
     ) -> State {
         graph
             .node_indices()
@@ -243,7 +243,7 @@ impl DFA {
             .unwrap()
     }
 
-    fn is_final_state(&self, state: &State) -> bool {
+    fn is_final_state(&self, state: State) -> bool {
         self.final_state_indices.contains(&state.index())
     }
 
@@ -261,7 +261,7 @@ impl DFA {
         }
 
         for (i, state) in states.iter().enumerate() {
-            if self.is_final_state(state) {
+            if self.is_final_state(*state) {
                 b[i] = Some(Expression::new_literal(""));
             }
 

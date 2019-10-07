@@ -122,12 +122,12 @@ impl Expression {
         }
     }
 
-    fn value(&self, substring: &Option<&Substring>) -> Option<Vec<&str>> {
+    fn value(&self, substring: Option<&Substring>) -> Option<Vec<&str>> {
         match self {
             Expression::Concatenation(expr1, expr2) => match substring {
                 Some(value) => match value {
-                    Substring::Prefix => expr1.value(&None),
-                    Substring::Suffix => expr2.value(&None),
+                    Substring::Prefix => expr1.value(None),
+                    Substring::Suffix => expr2.value(None),
                 },
                 None => None,
             },
@@ -303,8 +303,8 @@ fn remove_common_substring(
 }
 
 fn find_common_substring(a: &Expression, b: &Expression, substring: &Substring) -> Option<String> {
-    let mut graphemes_a = a.value(&Some(substring)).unwrap_or_else(|| vec![]);
-    let mut graphemes_b = b.value(&Some(substring)).unwrap_or_else(|| vec![]);
+    let mut graphemes_a = a.value(Some(substring)).unwrap_or_else(|| vec![]);
+    let mut graphemes_b = b.value(Some(substring)).unwrap_or_else(|| vec![]);
     let mut common_graphemes = vec![];
 
     if let Substring::Suffix = substring {
@@ -489,24 +489,24 @@ mod tests {
     fn ensure_correct_removal_of_prefix_in_literal() {
         let mut literal = Expression::new_literal("abcdef");
         assert_eq!(
-            literal.value(&None),
+            literal.value(None),
             Some(vec!["a", "b", "c", "d", "e", "f"])
         );
 
         literal.remove_substring(&Substring::Prefix, 2);
-        assert_eq!(literal.value(&None), Some(vec!["c", "d", "e", "f"]));
+        assert_eq!(literal.value(None), Some(vec!["c", "d", "e", "f"]));
     }
 
     #[test]
     fn ensure_correct_removal_of_suffix_in_literal() {
         let mut literal = Expression::new_literal("abcdef");
         assert_eq!(
-            literal.value(&None),
+            literal.value(None),
             Some(vec!["a", "b", "c", "d", "e", "f"])
         );
 
         literal.remove_substring(&Substring::Suffix, 2);
-        assert_eq!(literal.value(&None), Some(vec!["a", "b", "c", "d"]));
+        assert_eq!(literal.value(None), Some(vec!["a", "b", "c", "d"]));
     }
 
     #[test]
