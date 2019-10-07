@@ -16,6 +16,8 @@
 
 use crate::dfa::DFA;
 use itertools::Itertools;
+use std::io::ErrorKind;
+use std::path::PathBuf;
 use structopt::StructOpt;
 
 #[macro_use]
@@ -25,13 +27,36 @@ mod dfa;
 
 #[derive(StructOpt)]
 #[structopt(author, about)]
-struct Cli {
-    #[structopt(required = true)]
+struct CLI {
+    #[structopt(required_unless = "file", conflicts_with = "file")]
     input: Vec<String>,
+
+    #[structopt(
+        name = "file",
+        short,
+        long,
+        parse(from_os_str),
+        required_unless = "input"
+    )]
+    file_path: Option<PathBuf>,
 }
 
 fn main() {
-    let cli = Cli::from_args();
-    let input = cli.input.iter().map(|it| it.as_str()).collect_vec();
-    println!("{}", DFA::from(input).to_regex());
+    let cli = CLI::from_args();
+
+    if !cli.input.is_empty() {
+        let input = cli.input.iter().map(|it| it.as_str()).collect_vec();
+        println!("{}", DFA::from(input).to_regex());
+    } else if let Some(file_path) = cli.file_path {
+        match std::fs::read_to_string(file_path) {
+            Ok(file_content) => {
+                let input = file_content.lines().collect_vec();
+                println!("{}", DFA::from(input).to_regex());
+            }
+            Err(error) => match error.kind() {
+                ErrorKind::NotFound => eprintln!("Error: The provided file could not be found"),
+                _ => eprintln!("Error: The provided file was found but could not be opened"),
+            },
+        }
+    }
 }
