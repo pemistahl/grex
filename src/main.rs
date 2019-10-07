@@ -15,7 +15,11 @@
  */
 
 use crate::dfa::DFA;
-use itertools::Itertools;
+use std::{
+    fs::File,
+    io::{self, stdin, BufRead, BufReader},
+    path::PathBuf,
+};
 use structopt::StructOpt;
 
 #[macro_use]
@@ -26,12 +30,33 @@ mod dfa;
 #[derive(StructOpt)]
 #[structopt(author, about)]
 struct Cli {
-    #[structopt(required = true)]
     input: Vec<String>,
+    #[structopt(short = "f", long = "file")]
+    file: Option<PathBuf>,
+}
+
+fn handle_errors<E: std::error::Error>(e: E) -> ! {
+    eprintln!("{}", e);
+    std::process::exit(1)
 }
 
 fn main() {
     let cli = Cli::from_args();
-    let input = cli.input.iter().map(|it| it.as_str()).collect_vec();
+    let input = if !cli.input.is_empty() {
+        cli.input
+    } else if let Some(f) = cli.file {
+        BufReader::new(File::open(f).map_err(handle_errors).unwrap())
+            .lines()
+            .collect::<Result<Vec<_>, io::Error>>()
+            .map_err(handle_errors)
+            .unwrap()
+    } else {
+        stdin()
+            .lock()
+            .lines()
+            .collect::<Result<Vec<_>, io::Error>>()
+            .map_err(handle_errors)
+            .unwrap()
+    };
     println!("{}", DFA::from(input).to_regex());
 }

@@ -47,7 +47,7 @@ impl DFA {
         }
     }
 
-    pub fn from(strs: Vec<&str>) -> Self {
+    pub fn from(strs: Vec<String>) -> Self {
         let mut dfa = Self::new();
         for elem in strs {
             dfa.insert(elem);
@@ -56,9 +56,9 @@ impl DFA {
         dfa
     }
 
-    fn insert(&mut self, s: &str) {
+    fn insert(&mut self, s: String) {
         let mut current_state = self.initial_state;
-        for grapheme in UnicodeSegmentation::graphemes(s, true) {
+        for grapheme in UnicodeSegmentation::graphemes(s.as_str(), true) {
             self.alphabet.insert(grapheme.to_string());
             current_state = self.get_next_state(current_state, &grapheme);
         }
