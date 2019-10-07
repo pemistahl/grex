@@ -312,7 +312,7 @@ mod tests {
     #[test]
     fn ensure_correctness_of_regular_expressions() {
         for (input, expected_output) in params() {
-            assert_eq!(DFA::from(input).to_regex(), expected_output);
+            assert_eq!(DFA::from(input.iter().map(ToString::to_string).collect()).to_regex(), expected_output);
         }
     }
 
