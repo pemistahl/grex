@@ -15,15 +15,13 @@
  */
 
 use std::collections::BTreeSet;
-use std::fmt::{Display, Formatter, Result};
 
 use itertools::EitherOrBoth::Both;
 use itertools::Itertools;
-use unic_char_range::CharRange;
 use unicode_segmentation::UnicodeSegmentation;
 
 #[derive(Clone, Eq, PartialEq)]
-pub enum Expression {
+pub(crate) enum Expression {
     Alternation(Vec<Expression>),
     CharacterClass(BTreeSet<char>),
     Concatenation(Box<Expression>, Box<Expression>),
@@ -32,25 +30,25 @@ pub enum Expression {
 }
 
 #[derive(Clone, Eq, PartialEq)]
-pub enum Quantifier {
+pub(crate) enum Quantifier {
     KleeneStar,
     QuestionMark,
 }
 
-pub enum Substring {
+enum Substring {
     Prefix,
     Suffix,
 }
 
 impl Expression {
-    pub fn new_alternation(expr1: Expression, expr2: Expression) -> Self {
+    fn new_alternation(expr1: Expression, expr2: Expression) -> Self {
         let mut options: Vec<Expression> = vec![];
         flatten_alternations(&mut options, vec![expr1, expr2]);
         options.sort_by(|a, b| b.len().cmp(&a.len()));
         Expression::Alternation(options)
     }
 
-    pub fn new_character_class(
+    fn new_character_class(
         first_char_set: BTreeSet<char>,
         second_char_set: BTreeSet<char>,
     ) -> Self {
@@ -58,11 +56,11 @@ impl Expression {
         Expression::CharacterClass(union_set)
     }
 
-    pub fn new_concatenation(expr1: Expression, expr2: Expression) -> Self {
+    fn new_concatenation(expr1: Expression, expr2: Expression) -> Self {
         Expression::Concatenation(Box::from(expr1), Box::from(expr2))
     }
 
-    pub fn new_literal(value: &str) -> Self {
+    pub(crate) fn new_literal(value: &str) -> Self {
         Expression::Literal(
             UnicodeSegmentation::graphemes(value, true)
                 .map(|it| it.to_string())
@@ -70,7 +68,7 @@ impl Expression {
         )
     }
 
-    pub fn new_repetition(expr: Expression, quantifier: Quantifier) -> Self {
+    fn new_repetition(expr: Expression, quantifier: Quantifier) -> Self {
         Expression::Repetition(Box::from(expr), quantifier)
     }
 
@@ -81,7 +79,7 @@ impl Expression {
         }
     }
 
-    fn is_single_codepoint(&self) -> bool {
+    pub(crate) fn is_single_codepoint(&self) -> bool {
         match self {
             Expression::CharacterClass(_) => true,
             Expression::Literal(graphemes) => {
@@ -101,7 +99,7 @@ impl Expression {
         }
     }
 
-    fn precedence(&self) -> u8 {
+    pub(crate) fn precedence(&self) -> u8 {
         match self {
             Expression::Alternation(_) | Expression::CharacterClass(_) => 1,
             Expression::Concatenation(_, _) | Expression::Literal(_) => 2,
@@ -166,7 +164,7 @@ fn flatten_alternations(flattened_options: &mut Vec<Expression>, current_options
     }
 }
 
-pub fn repeat_zero_or_more_times(expr: &Option<Expression>) -> Option<Expression> {
+pub(crate) fn repeat_zero_or_more_times(expr: &Option<Expression>) -> Option<Expression> {
     if let Some(value) = expr {
         Some(Expression::new_repetition(
             value.clone(),
@@ -177,7 +175,7 @@ pub fn repeat_zero_or_more_times(expr: &Option<Expression>) -> Option<Expression
     }
 }
 
-pub fn concatenate(a: &Option<Expression>, b: &Option<Expression>) -> Option<Expression> {
+pub(crate) fn concatenate(a: &Option<Expression>, b: &Option<Expression>) -> Option<Expression> {
     if a.is_none() || b.is_none() {
         return None;
     }
@@ -223,7 +221,7 @@ pub fn concatenate(a: &Option<Expression>, b: &Option<Expression>) -> Option<Exp
     Some(Expression::new_concatenation(expr1.clone(), expr2.clone()))
 }
 
-pub fn union(a: &Option<Expression>, b: &Option<Expression>) -> Option<Expression> {
+pub(crate) fn union(a: &Option<Expression>, b: &Option<Expression>) -> Option<Expression> {
     if let (Some(mut expr1), Some(mut expr2)) = (a.clone(), b.clone()) {
         if expr1 != expr2 {
             let common_prefix = remove_common_substring(&mut expr1, &mut expr2, Substring::Prefix);
@@ -366,176 +364,6 @@ fn find_common_substring(a: &Expression, b: &Expression, substring: &Substring) 
         None
     } else {
         Some(common_graphemes.join(""))
-    }
-}
-
-impl Display for Expression {
-    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
-        match self {
-            Expression::Alternation(options) => format_alternation(f, &self, options),
-            Expression::CharacterClass(char_set) => format_character_class(f, char_set),
-            Expression::Concatenation(expr1, expr2) => format_concatenation(f, &self, expr1, expr2),
-            Expression::Literal(graphemes) => format_literal(f, graphemes),
-            Expression::Repetition(expr, quantifier) => {
-                format_repetition(f, &self, expr, quantifier)
-            }
-        }
-    }
-}
-
-impl Display for Quantifier {
-    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
-        write!(
-            f,
-            "{}",
-            match self {
-                Quantifier::KleeneStar => '*',
-                Quantifier::QuestionMark => '?',
-            }
-        )
-    }
-}
-
-fn get_codepoint_position(c: char) -> usize {
-    CharRange::all().iter().position(|it| it == c).unwrap()
-}
-
-fn format_alternation(
-    f: &mut Formatter<'_>,
-    expr: &Expression,
-    options: &Vec<Expression>,
-) -> Result {
-    let alternation_str = options
-        .iter()
-        .map(|option| {
-            if option.precedence() < expr.precedence() && !option.is_single_codepoint() {
-                format!("({})", option)
-            } else {
-                format!("{}", option)
-            }
-        })
-        .join("|");
-
-    write!(f, "{}", alternation_str)
-}
-
-fn format_character_class(f: &mut Formatter<'_>, char_set: &BTreeSet<char>) -> Result {
-    let char_positions = char_set
-        .iter()
-        .map(|&it| get_codepoint_position(it))
-        .collect_vec();
-
-    let mut subsets = vec![];
-    let mut subset = vec![];
-
-    for ((first_c, first_pos), (second_c, second_pos)) in
-        char_set.iter().zip(char_positions).tuple_windows()
-    {
-        if subset.is_empty() {
-            subset.push(first_c);
-        }
-        if second_pos == first_pos + 1 {
-            subset.push(second_c);
-        } else {
-            subsets.push(subset);
-            subset = vec![];
-            subset.push(second_c);
-        }
-    }
-
-    subsets.push(subset);
-
-    let mut char_class_strs = vec![];
-
-    for subset in subsets.iter() {
-        if subset.len() <= 2 {
-            for c in subset.iter() {
-                char_class_strs.push(format!("{}", c));
-            }
-        } else {
-            char_class_strs.push(format!(
-                "{}-{}",
-                subset.first().unwrap(),
-                subset.last().unwrap()
-            ));
-        }
-    }
-
-    write!(f, "[{}]", char_class_strs.join(""))
-}
-
-fn format_concatenation(
-    f: &mut Formatter<'_>,
-    expr: &Expression,
-    expr1: &Box<Expression>,
-    expr2: &Box<Expression>,
-) -> Result {
-    let expr_strs = vec![expr1, expr2]
-        .iter()
-        .map(|&it| {
-            if it.precedence() < expr.precedence() && !it.is_single_codepoint() {
-                format!("({})", it)
-            } else {
-                format!("{}", it)
-            }
-        })
-        .collect_vec();
-
-    write!(
-        f,
-        "{}{}",
-        expr_strs.first().unwrap(),
-        expr_strs.last().unwrap()
-    )
-}
-
-fn format_literal(f: &mut Formatter<'_>, graphemes: &Vec<String>) -> Result {
-    let literal_str = graphemes
-        .iter()
-        .map(|it| match it.as_str() {
-            //"\u{C}" => "\\u{C}", // represents \f
-            "\t" => "\\t",
-            "\n" => "\\n",
-            "\r" => "\\r",
-            "(" => "\\(",
-            ")" => "\\)",
-            "[" => "\\[",
-            "]" => "\\]",
-            "{" => "\\{",
-            "}" => "\\}",
-            "\\" => "\\\\",
-            "+" => "\\+",
-            "*" => "\\*",
-            "-" => "\\-",
-            "." => "\\.",
-            "?" => "\\?",
-            "|" => "\\|",
-            "^" => "\\^",
-            "$" => "\\$",
-            _ => it,
-        })
-        .map(|it| {
-            if it.is_ascii() {
-                it.to_string()
-            } else {
-                it.escape_unicode().to_string()
-            }
-        })
-        .join("");
-
-    write!(f, "{}", literal_str)
-}
-
-fn format_repetition(
-    f: &mut Formatter<'_>,
-    expr: &Expression,
-    expr1: &Box<Expression>,
-    quantifier: &Quantifier,
-) -> Result {
-    if expr1.precedence() < expr.precedence() && !expr1.is_single_codepoint() {
-        write!(f, "({}){}", expr1, quantifier)
-    } else {
-        write!(f, "{}{}", expr1, quantifier)
     }
 }
 
