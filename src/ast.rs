@@ -14,14 +14,18 @@
  * limitations under the License.
  */
 
+use std::collections::BTreeSet;
+use std::fmt::{Display, Formatter, Result};
+
 use itertools::EitherOrBoth::Both;
 use itertools::Itertools;
-use std::fmt::{Display, Formatter, Result};
+use unic_char_range::CharRange;
 use unicode_segmentation::UnicodeSegmentation;
 
 #[derive(Clone, Eq, PartialEq)]
 pub enum Expression {
     Alternation(Vec<Expression>),
+    CharacterClass(BTreeSet<char>),
     Concatenation(Box<Expression>, Box<Expression>),
     Literal(Vec<String>),
     Repetition(Box<Expression>, Quantifier),
@@ -44,6 +48,14 @@ impl Expression {
         flatten_alternations(&mut options, vec![expr1, expr2]);
         options.sort_by(|a, b| b.len().cmp(&a.len()));
         Expression::Alternation(options)
+    }
+
+    pub fn new_character_class(
+        first_char_set: BTreeSet<char>,
+        second_char_set: BTreeSet<char>,
+    ) -> Self {
+        let union_set = first_char_set.union(&second_char_set).copied().collect();
+        Expression::CharacterClass(union_set)
     }
 
     pub fn new_concatenation(expr1: Expression, expr2: Expression) -> Self {
@@ -71,16 +83,18 @@ impl Expression {
 
     fn is_single_codepoint(&self) -> bool {
         match self {
-            Expression::Alternation(_) => false,
-            Expression::Concatenation(_, _) => false,
-            Expression::Literal(graphemes) => graphemes.len() == 1,
-            Expression::Repetition(_, _) => false,
+            Expression::CharacterClass(_) => true,
+            Expression::Literal(graphemes) => {
+                graphemes.len() == 1 && graphemes.get(0).unwrap().chars().collect_vec().len() == 1
+            }
+            _ => false,
         }
     }
 
     fn len(&self) -> usize {
         match self {
             Expression::Alternation(options) => options.get(0).unwrap().len(),
+            Expression::CharacterClass(_) => 1,
             Expression::Concatenation(expr1, expr2) => expr1.len() + expr2.len(),
             Expression::Literal(graphemes) => graphemes.len(),
             Expression::Repetition(expr, _) => expr.len(),
@@ -89,9 +103,8 @@ impl Expression {
 
     fn precedence(&self) -> u8 {
         match self {
-            Expression::Alternation(_) => 1,
-            Expression::Concatenation(_, _) => 2,
-            Expression::Literal(_) => 2,
+            Expression::Alternation(_) | Expression::CharacterClass(_) => 1,
+            Expression::Concatenation(_, _) | Expression::Literal(_) => 2,
             Expression::Repetition(_, _) => 3,
         }
     }
@@ -254,6 +267,15 @@ pub fn union(a: &Option<Expression>, b: &Option<Expression>) -> Option<Expressio
                 }
             }
 
+            if result.is_none() && expr1.is_single_codepoint() && expr2.is_single_codepoint() {
+                let first_char_set = extract_character_set(expr1.clone());
+                let second_char_set = extract_character_set(expr2.clone());
+                result = Some(Expression::new_character_class(
+                    first_char_set,
+                    second_char_set,
+                ));
+            }
+
             if result.is_none() {
                 result = Some(Expression::new_alternation(expr1.clone(), expr2.clone()));
             }
@@ -286,6 +308,17 @@ pub fn union(a: &Option<Expression>, b: &Option<Expression>) -> Option<Expressio
         b.clone()
     } else {
         None
+    }
+}
+
+fn extract_character_set(expr: Expression) -> BTreeSet<char> {
+    match expr {
+        Expression::Literal(graphemes) => {
+            let single_char = graphemes.first().unwrap().chars().next().unwrap();
+            btree_set![single_char]
+        }
+        Expression::CharacterClass(char_set) => char_set,
+        _ => BTreeSet::new(),
     }
 }
 
@@ -336,6 +369,10 @@ fn find_common_substring(a: &Expression, b: &Expression, substring: &Substring) 
     }
 }
 
+fn get_codepoint_position(c: char) -> usize {
+    CharRange::all().iter().position(|it| it == c).unwrap()
+}
+
 impl Display for Expression {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         match self {
@@ -353,6 +390,50 @@ impl Display for Expression {
                     .join("|");
 
                 write!(f, "{}", alternation_str)
+            }
+            Expression::CharacterClass(char_set) => {
+                let char_positions = char_set
+                    .iter()
+                    .map(|&it| get_codepoint_position(it))
+                    .collect_vec();
+
+                let mut subsets = vec![];
+                let mut subset = vec![];
+
+                for ((first_c, first_pos), (second_c, second_pos)) in
+                    char_set.iter().zip(char_positions).tuple_windows()
+                {
+                    if subset.is_empty() {
+                        subset.push(first_c);
+                    }
+                    if second_pos == first_pos + 1 {
+                        subset.push(second_c);
+                    } else {
+                        subsets.push(subset);
+                        subset = vec![];
+                        subset.push(second_c);
+                    }
+                }
+
+                subsets.push(subset);
+
+                let mut char_class_strs = vec![];
+
+                for subset in subsets.iter() {
+                    if subset.len() <= 2 {
+                        for c in subset.iter() {
+                            char_class_strs.push(format!("{}", c));
+                        }
+                    } else {
+                        char_class_strs.push(format!(
+                            "{}-{}",
+                            subset.first().unwrap(),
+                            subset.last().unwrap()
+                        ));
+                    }
+                }
+
+                write!(f, "[{}]", char_class_strs.join(""))
             }
             Expression::Concatenation(expr1, expr2) => {
                 let expr1_str =

@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-use crate::ast::{concatenate, repeat_zero_or_more_times, union, Expression};
+use std::collections::{BTreeSet, HashSet};
+
 use linked_hash_set::LinkedHashSet;
 use linked_list::LinkedList;
 use ndarray::{Array1, Array2};
@@ -23,8 +24,9 @@ use petgraph::prelude::EdgeRef;
 use petgraph::stable_graph::StableGraph;
 use petgraph::visit::Dfs;
 use petgraph::Direction;
-use std::collections::{BTreeSet, HashSet};
 use unicode_segmentation::UnicodeSegmentation;
+
+use crate::ast::{concatenate, repeat_zero_or_more_times, union, Expression};
 
 type State = NodeIndex<u32>;
 
@@ -107,20 +109,14 @@ impl DFA {
                 let mut replacements = vec![];
 
                 while let Some(y) = p_cursor.peek_next() {
-                    let i = x
-                        .intersection(y)
-                        .copied()
-                        .collect::<LinkedHashSet<State>>();
+                    let i = x.intersection(y).copied().collect::<LinkedHashSet<State>>();
 
                     if i.is_empty() {
                         p_cursor.next();
                         continue;
                     }
 
-                    let d = y
-                        .difference(&x)
-                        .copied()
-                        .collect::<LinkedHashSet<State>>();
+                    let d = y.difference(&x).copied().collect::<LinkedHashSet<State>>();
 
                     if d.is_empty() {
                         p_cursor.next();
@@ -332,17 +328,22 @@ mod tests {
 
     fn params() -> HashMap<Vec<&'static str>, &'static str> {
         hashmap![
-            vec!["a", "b", "c"] => "a|b|c",
+            vec!["a", "b"] => "[ab]",
+            vec!["a", "b", "c"] => "[a-c]",
+            vec!["a", "b", "c", "d", "e", "f"] => "[a-f]",
+            vec!["a", "c", "d", "e", "f"] => "[ac-f]",
+            vec!["a", "b", "c", "x", "d", "e"] => "[a-ex]",
+            vec!["a", "b", "c", "d", "e", "f", "o", "x", "y", "z"] => "[a-fox-z]",
+            vec!["a", "b", "d", "e", "f", "o", "x", "y", "z"] => "[abd-fox-z]",
             vec!["a", "b", "bc"] => "bc?|a",
             vec!["a", "b", "bcd"] => "b(cd)?|a",
             vec!["a", "ab", "abc"] => "a(bc?)?",
-            vec!["ac", "bc"] => "(a|b)c",
-            vec!["ab", "ac"] => "a(b|c)",
+            vec!["ac", "bc"] => "[ab]c",
+            vec!["ab", "ac"] => "a[bc]",
             vec!["abx", "cdx"] => "(ab|cd)x",
-            vec!["abd", "acd"] => "a(b|c)d",
+            vec!["abd", "acd"] => "a[bc]d",
             vec!["abc", "abcd"] => "abcd?",
-            vec!["abc", "abcde"] => "abc(de)?",
-            vec!["2.0-3.5", "2.5-6.0"] => "2\\.(0\\-3\\.5|5\\-6\\.0)"
+            vec!["abc", "abcde"] => "abc(de)?"
         ]
     }
 }
