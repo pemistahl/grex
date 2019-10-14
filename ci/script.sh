@@ -16,8 +16,8 @@ main() {
     $cargo test --target $TARGET
     $cargo test --target $TARGET --release
 
-    $cargo run --target $TARGET
-    $cargo run --target $TARGET --release
+    $cargo run --target $TARGET -- a b c
+    $cargo run --target $TARGET --release -- a b c
 }
 
 # we don't run the "test phase" when doing deploys
