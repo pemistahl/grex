@@ -53,11 +53,7 @@ fn get_codepoint_position(c: char) -> usize {
     CharRange::all().iter().position(|it| it == c).unwrap()
 }
 
-fn format_alternation(
-    f: &mut Formatter<'_>,
-    expr: &Expression,
-    options: &Vec<Expression>,
-) -> Result {
+fn format_alternation(f: &mut Formatter<'_>, expr: &Expression, options: &[Expression]) -> Result {
     let alternation_str = options
         .iter()
         .map(|option| {
@@ -120,8 +116,8 @@ fn format_character_class(f: &mut Formatter<'_>, char_set: &BTreeSet<char>) -> R
 fn format_concatenation(
     f: &mut Formatter<'_>,
     expr: &Expression,
-    expr1: &Box<Expression>,
-    expr2: &Box<Expression>,
+    expr1: &Expression,
+    expr2: &Expression,
 ) -> Result {
     let expr_strs = vec![expr1, expr2]
         .iter()
@@ -142,7 +138,7 @@ fn format_concatenation(
     )
 }
 
-fn format_literal(f: &mut Formatter<'_>, graphemes: &Vec<String>) -> Result {
+fn format_literal(f: &mut Formatter<'_>, graphemes: &[String]) -> Result {
     let literal_str = graphemes
         .iter()
         .map(|it| match it.as_str() {
@@ -182,7 +178,7 @@ fn format_literal(f: &mut Formatter<'_>, graphemes: &Vec<String>) -> Result {
 fn format_repetition(
     f: &mut Formatter<'_>,
     expr: &Expression,
-    expr1: &Box<Expression>,
+    expr1: &Expression,
     quantifier: &Quantifier,
 ) -> Result {
     if expr1.precedence() < expr.precedence() && !expr1.is_single_codepoint() {
