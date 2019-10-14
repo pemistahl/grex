@@ -21,6 +21,7 @@ use itertools::Itertools;
 use structopt::StructOpt;
 
 use crate::dfa::DFA;
+use std::cmp::Ordering;
 
 #[macro_use]
 mod macros;
@@ -48,33 +49,49 @@ fn main() {
     let cli = CLI::from_args();
 
     if !cli.input.is_empty() {
-        let input = cli.input.iter().map(|it| it.as_str()).collect_vec();
-        println!("{}", DFA::from(input).to_regex());
+        let mut input = cli.input.iter().map(|it| it.as_str()).collect_vec();
+        sort_input(&mut input);
+        println_regex(input);
     } else if let Some(file_path) = cli.file_path {
         match std::fs::read_to_string(file_path) {
             Ok(file_content) => {
-                let input = file_content.lines().collect_vec();
-                println!("{}", DFA::from(input).to_regex());
+                let mut input = file_content.lines().collect_vec();
+                sort_input(&mut input);
+                println_regex(input);
             }
             Err(error) => match error.kind() {
-                ErrorKind::NotFound => eprintln!("Error: The provided file could not be found"),
-                _ => eprintln!("Error: The provided file was found but could not be opened"),
+                ErrorKind::NotFound => eprintln!("Error: The file could not be found"),
+                _ => eprintln!("Error: The file was found but could not be opened"),
             },
         }
     }
+}
+
+fn sort_input(strs: &mut Vec<&str>) {
+    strs.sort();
+    strs.dedup();
+    strs.sort_by(|&a, &b| match a.len().cmp(&b.len()) {
+        Ordering::Equal => a.cmp(&b),
+        other => other,
+    });
+}
+
+fn println_regex(strs: Vec<&str>) {
+    println!("{}", DFA::from(strs).to_regex());
 }
 
 #[cfg(test)]
 mod tests {
     use crate::ast::{Expression, Quantifier, Substring};
     use crate::dfa::DFA;
+    use crate::sort_input;
     use regex::Regex;
     use std::collections::HashMap;
 
     #[test]
     fn ensure_correctness_of_regular_expressions() {
         for (input, expected_output) in params() {
-            assert_eq!(DFA::from(input).to_regex(), expected_output);
+            assert_regex(input, expected_output);
         }
     }
 
@@ -210,6 +227,17 @@ mod tests {
         assert_eq!(alternation2.to_string(), "abc|ab|a");
     }
 
+    fn assert_regex(mut input: Vec<&str>, expected_output: &str) {
+        let input_str = format!("[{}]", input.join(", "));
+        sort_input(&mut input);
+        assert_eq!(
+            DFA::from(input).to_regex(),
+            expected_output,
+            "unexpected output for input {}",
+            input_str
+        );
+    }
+
     fn assert_match(re: &Regex, text: &str) {
         assert!(re.is_match(text), "\"{}\" does not match regex", text);
     }
@@ -223,23 +251,51 @@ mod tests {
     }
 
     fn params() -> HashMap<Vec<&'static str>, &'static str> {
+        //let grapheme_of_two_codepoints = "y̆"; // consists of ['y', '\u{306}']
         hashmap![
-            vec!["a", "b"] => "[ab]",
-            vec!["a", "b", "c"] => "[a-c]",
-            vec!["a", "b", "c", "d", "e", "f"] => "[a-f]",
-            vec!["a", "c", "d", "e", "f"] => "[ac-f]",
-            vec!["a", "b", "c", "x", "d", "e"] => "[a-ex]",
-            vec!["a", "b", "c", "d", "e", "f", "o", "x", "y", "z"] => "[a-fox-z]",
-            vec!["a", "b", "d", "e", "f", "o", "x", "y", "z"] => "[abd-fox-z]",
-            vec!["a", "b", "bc"] => "bc?|a",
-            vec!["a", "b", "bcd"] => "b(cd)?|a",
-            vec!["a", "ab", "abc"] => "a(bc?)?",
-            vec!["ac", "bc"] => "[ab]c",
-            vec!["ab", "ac"] => "a[bc]",
-            vec!["abx", "cdx"] => "(ab|cd)x",
-            vec!["abd", "acd"] => "a[bc]d",
-            vec!["abc", "abcd"] => "abcd?",
-            vec!["abc", "abcde"] => "abc(de)?"
+            vec![""] => "^$",
+            vec![" "] => "^ $",
+            vec!["   "] => "^   $",
+
+            vec!["a", "b"] => "^[ab]$",
+            vec!["a", "b", "c"] => "^[a-c]$",
+            vec!["a", "c", "d", "e", "f"] => "^[ac-f]$",
+            vec!["a", "b", "x", "d", "e"] => "^[abdex]$",
+            vec!["a", "b", "x", "de"] => "^de|[abx]$",
+            vec!["a", "b", "c", "x", "d", "e"] => "^[a-ex]$",
+            vec!["a", "b", "c", "x", "de"] => "^de|[a-cx]$",
+            vec!["a", "b", "c", "d", "e", "f", "o", "x", "y", "z"] => "^[a-fox-z]$",
+            vec!["a", "b", "d", "e", "f", "o", "x", "y", "z"] => "^[abd-fox-z]$",
+
+            vec!["1", "2"] => "^[12]$",
+            vec!["1", "2", "3"] => "^[1-3]$",
+            vec!["1", "3", "4", "5", "6"] => "^[13-6]$",
+            vec!["1", "2", "8", "4", "5"] => "^[12458]$",
+            vec!["1", "2", "8", "45"] => "^45|[128]$",
+            vec!["1", "2", "3", "8", "4", "5"] => "^[1-58]$",
+            vec!["1", "2", "3", "8", "45"] => "^45|[1-38]$",
+            vec!["1", "2", "3", "5", "7", "8", "9"] => "^[1-357-9]$",
+
+            vec!["a", "b", "bc"] => "^bc?|a$",
+            vec!["a", "b", "bcd"] => "^b(cd)?|a$",
+            vec!["a", "ab", "abc"] => "^a(bc?)?$",
+            vec!["ac", "bc"] => "^[ab]c$",
+            vec!["ab", "ac"] => "^a[bc]$",
+            vec!["abx", "cdx"] => "^(ab|cd)x$",
+            vec!["abd", "acd"] => "^a[bc]d$",
+            vec!["abc", "abcd"] => "^abcd?$",
+            vec!["abc", "abcde"] => "^abc(de)?$",
+            vec!["ade", "abcde"] => "^a(bc)?de$",
+            vec!["abcxy", "adexy"] => "^a(bc|de)xy$",
+            vec!["axy", "abcxy", "adexy"] => "^a((bc)?|de)xy$", // goal: "^a(bc|de)?xy$",
+
+            vec!["abcxy", "abcw", "efgh"] => "^abc(xy|w)|efgh$",
+            vec!["abcxy", "efgh", "abcw"] => "^abc(xy|w)|efgh$",
+            vec!["efgh", "abcxy", "abcw"] => "^abc(xy|w)|efgh$",
+
+            vec!["abxy", "cxy", "efgh"] => "^(ab|c)xy|efgh$",
+            vec!["abxy", "efgh", "cxy"] => "^(ab|c)xy|efgh$",
+            vec!["efgh", "abxy", "cxy"] => "^(ab|c)xy|efgh$"
         ]
     }
 }

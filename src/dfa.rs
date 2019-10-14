@@ -16,6 +16,7 @@
 
 use std::collections::{BTreeSet, HashSet};
 
+use itertools::Itertools;
 use linked_hash_set::LinkedHashSet;
 use linked_list::LinkedList;
 use ndarray::{Array1, Array2};
@@ -148,7 +149,7 @@ impl DFA {
             }
         }
 
-        self.recreate_graph(p);
+        self.recreate_graph(p.iter().filter(|&it| !it.is_empty()).collect_vec());
     }
 
     fn get_initial_partition(&self) -> LinkedList<LinkedHashSet<State>> {
@@ -178,7 +179,7 @@ impl DFA {
         x
     }
 
-    fn recreate_graph(&mut self, p: LinkedList<LinkedHashSet<State>>) {
+    fn recreate_graph(&mut self, p: Vec<&LinkedHashSet<State>>) {
         let mut graph = StableGraph::<HashSet<usize>, String>::new();
         let mut final_state_indices = HashSet::new();
 
@@ -295,6 +296,10 @@ impl DFA {
             }
         }
 
-        b[0].as_ref().unwrap().to_string()
+        if !b.is_empty() && b[0].is_some() {
+            format!("^{}$", b[0].as_ref().unwrap().to_string())
+        } else {
+            String::from("^$")
+        }
     }
 }
