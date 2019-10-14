@@ -1,16 +1,29 @@
+dist: trusty
 language: rust
-
+rust: stable
+services: docker
 sudo: required
 
-rust:
-  - stable
-  - beta
-  - nightly
+env:
+  global:
+    - CRATE_NAME=grex
 
-os:
-  - linux
-  - osx
-  - windows
+matrix:
+  include:
+    - env: TARGET=i686-unknown-linux-musl
+      os: linux
+    - env: TARGET=x86_64-unknown-linux-musl
+      os: linux
+
+    - env: TARGET=i686-apple-darwin
+      os: osx
+    - env: TARGET=x86_64-apple-darwin
+      os: osx
+
+    - env: TARGET=i686-pc-windows-msvc
+      os: windows
+    - env: TARGET=x86_64-pc-windows-msvc
+      os: windows
 
 cache: cargo
 before_cache:
@@ -18,15 +31,34 @@ before_cache:
   # Travis can't cache files that are not readable by "others"
   - chmod -R a+r $HOME/.cargo
 
-install: cargo build --release --verbose
+before_install:
+  - set -e
+  - rustup self update
 
-script: cargo build --release --verbose; cargo test --verbose
+install:
+  - sh ci/install.sh
+  - source ~/.cargo/env || true
 
-matrix:
-  allow_failures:
-    - rust: beta
-    - rust: nightly
-  fast_finish: true
+script:
+  - bash ci/script.sh
+
+after_script: set +e
+
+before_deploy: |
+  test -f Cargo.lock || cargo generate-lockfile;
+
+  if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then
+    cargo rustc --bin $CRATE_NAME --target $TARGET --release -- -C lto
+    choco install zip;
+    cd target/$TARGET/release;
+    zip $CRATE_NAME-$TRAVIS_TAG-$TARGET.zip $CRATE_NAME.exe;
+    cd ../../..;
+  else
+    cross rustc --bin $CRATE_NAME --target $TARGET --release -- -C lto
+    chmod +x target/$TARGET/release/$CRATE_NAME;
+    tar -zcf target/$TARGET/release/$CRATE_NAME-$TRAVIS_TAG-$TARGET.tar.gz -C target/$TARGET/release $CRATE_NAME;
+  fi
+  echo "Created binary archive";
 
 deploy:
   #- provider: cargo
@@ -34,7 +66,7 @@ deploy:
   #  on:
   #    tags: true
   #    branch: master
-  #    condition: $TRAVIS_RUST_VERSION = stable && $TRAVIS_OS_NAME = linux
+  #    condition: $TRAVIS_RUST_VERSION = stable && $TRAVIS_OS_NAME = linux && $TARGET = x86_64-unknown-linux-musl
   #  token:
   #    secure: KA+BCrI4/8zKDxTB73p8Z+p7qlXrEtKiHh1Eh9pY+vGO2X1vMq+ArHL9dIKyvjDDLfM+hCuEJ+xrjEsylWF3SOigHt0f7zSOSzEz141olS4eiNHZUyn9tzvYFSclFIggSAAX1dek+twqtCQrTANY2X/l0y/zfgNRPYtx3jIHRtdhfiIfNtY+pe21+9dGiSwihMp/qMaZoskaqrBMZrF7ghE7NeL0DxobO07j9duRg+F8IR/HhrT0hBbeHeFPEepx/9Y8aKer1bA6mVU4N75FowcOrZRN9WxJNZ0RFvPlXTYLyO0z395hIuEBSZa/Qww50+53CVXbuvJJoSWSjalDDTecgAPAQBjy6r4C22VrMdDKk2wEuH8+Llp5i0CI8P+blEw8nWxd1APgFWPFCDVeG1XqyDBOVujC6UW/Vnmb6osMSV2T1+Cy55ZqrWu+6RMz9aLKUBYD+P6tkKIT2FFQORCVkmVt5rvJTkFdYy72ww0Pa4yKHBq39yyVPh/z8D15o2e+lVL93QaRL5toGfxyKhnFxaaP180KQuqXUTHAdVIsp4OCebX0SBOfPeK2IQN3WKdWYq1gSBKcazaXRFZyVxZiTWvCpY86xc5+RJcbKlTdgxhN3K/IVe3g+tPbYzz2EaYzyrOLIhVVJzglm9kONYSRfDQ9zQWi0rcNAYKpHxQ=
   - provider: releases
@@ -44,23 +76,9 @@ deploy:
       branch: master
       condition: $TRAVIS_RUST_VERSION = stable
     file_glob: true
-    file: target/release/grex-$TRAVIS_TAG-$TRAVIS_OS_NAME.*
+    file: target/$TARGET/release/$CRATE_NAME-$TRAVIS_TAG-$TARGET.*
     api_key:
       secure: iUJkFsOtXXyXzRJJH/UokuYSjUCqYJGVDQyaF7Ean2RkB5s/2OdO4nCMrBTp0VD2Lg8QUgDYh2Lg+mhXuPr1AICnmqvcVaFqyx6HVg+hiEBc3Q6qxRoslsi/U7PfCDuZRSZeJ/1ykdA+bORDrp0idext+mvias72I7emZWKc2GjtSUvkZr+7eePF3RWBmP5wR5c5jigep6iDk+yY1ol6zEik3Sm79VlTnIohzF88edmksKjLaT5kfAh5/p2jHJU8t4HQJQG5znCavm8DSTtOTpxlq7uDIeoaA+NudTJCm2G23mskF2WULBAtZbShIZmRYk5yTlgR0PIaYRQLvH6We/nAPsf3xFtl9wgYPHzeR90Q4qBYTFV8582IZT5ToDFc5mlpzX5E0IMDhxvYSzMWuH0nNw7RSt81wQtnXj+2UNBdyMHidY5UgVXxCN+TjH9XV6oz1v5sO1aLsJgxv2vHKhj144TaDYiirqRj0z9isdFs9kMx+ncx/+m98gzea4vLnFUFGk9JrXeYnEcpQS7VyTLLB8qZn8LI5jYsvhWiGvAOAN2TgMLUk4erSnmrs9eEtgD0Uxoay43kARQZIPjHd1G+mZQUaOoaF+3YxycOtqbSL2h6uZssReYtwZdtZTBhCmzot0YSeSl076tU8+RuqhdsHNn+WEd5DnSbY2B0DOs=
-
-before_deploy: |
-  if [[ -f "target/release/grex" ]]; then
-    if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then
-      choco install zip;
-      cd target/release;
-      zip grex-$TRAVIS_TAG-$TRAVIS_OS_NAME.zip grex.exe;
-      cd ../..;
-    else
-      chmod +x target/release/grex;
-      tar -zcf target/release/grex-$TRAVIS_TAG-$TRAVIS_OS_NAME.tar.gz -C target/release grex;
-    fi
-    echo "Created binary archive";
-  fi
 
 addons:
   apt:
@@ -74,7 +92,7 @@ addons:
       - libiberty-dev
 
 after_success: |
-  if [[ "$TRAVIS_RUST_VERSION" == "stable" && "$TRAVIS_OS_NAME" == "linux" ]]; then
+  if [[ "$TRAVIS_RUST_VERSION" == "stable" && "$TRAVIS_OS_NAME" == "linux" && "$TARGET" == "x86_64-unknown-linux-musl" ]]; then
     wget https://github.com/SimonKagstrom/kcov/archive/master.tar.gz &&
     tar xzf master.tar.gz &&
     cd kcov-master &&
@@ -85,7 +103,7 @@ after_success: |
     make install DESTDIR=../../kcov-build &&
     cd ../.. &&
     rm -rf kcov-master &&
-    for file in target/debug/grex-*[^\.d]; do mkdir -p "target/cov/$(basename $file)"; ./kcov-build/usr/local/bin/kcov --exclude-pattern=/.cargo,/usr/lib --verify "target/cov/$(basename $file)" "$file"; done &&
+    for file in target/$TARGET/debug/$CRATE_NAME-*[^\.d]; do mkdir -p "target/$TARGET/cov/$(basename $file)"; ./kcov-build/usr/local/bin/kcov --exclude-pattern=/.cargo,/usr/lib --verify "target/$TARGET/cov/$(basename $file)" "$file"; done &&
     bash <(curl -s https://codecov.io/bash) &&
     echo "Uploaded code coverage"
   fi
