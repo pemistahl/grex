@@ -28,10 +28,12 @@ matrix:
     #  os: windows
 
 cache: cargo
-before_cache:
-  - rm -rf "$TRAVIS_HOME/.cargo/registry/src"
-  # Travis can't cache files that are not readable by "others"
-  - chmod -R a+r $HOME/.cargo
+before_cache: |
+  rm -rf "$TRAVIS_HOME/.cargo/registry/src;
+  chmod -R a+r $HOME/.cargo;
+  if [[ "$TRAVIS_OS_NAME" == "linux" && "$TARGET" == "x86_64-unknown-linux-gnu" ]]; then
+    cargo install cargo-tarpaulin -f
+  fi
 
 before_install:
   - set -e
@@ -85,28 +87,12 @@ deploy:
 addons:
   apt:
     packages:
-      - libcurl4-openssl-dev
-      - libelf-dev
-      - libdw-dev
-      - cmake
-      - gcc
-      - binutils-dev
-      - libiberty-dev
-      - zlib1g-dev
+      - libssl-dev
 
 after_success: |
   if [[ "$TRAVIS_OS_NAME" == "linux" && "$TARGET" == "x86_64-unknown-linux-gnu" ]]; then
-    wget https://github.com/SimonKagstrom/kcov/archive/master.tar.gz &&
-    tar xzf master.tar.gz &&
-    cd kcov-master &&
-    mkdir build &&
-    cd build &&
-    cmake .. &&
-    make &&
-    make install DESTDIR=../../kcov-build &&
-    cd ../.. &&
-    rm -rf kcov-master &&
-    for file in target/$TARGET/debug/$CRATE_NAME-*[^\.d]; do mkdir -p "target/cov/$(basename $file)"; ./kcov-build/usr/local/bin/kcov --coveralls-id=$TRAVIS_JOB_ID --exclude-pattern=/.cargo,/usr/lib --verify "target/cov/$(basename $file)" "$file"; done &&
+    cargo tarpaulin --verbose --ciserver travis-ci --out Xml
+    bash <(curl -s https://codecov.io/bash)
     echo "Uploaded code coverage"
   fi
 
