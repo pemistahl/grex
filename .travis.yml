@@ -1,7 +1,7 @@
-dist: trusty
+#dist: trusty
 language: rust
 rust: stable
-services: docker
+#services: docker
 sudo: required
 
 env:
