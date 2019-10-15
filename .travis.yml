@@ -12,10 +12,10 @@ matrix:
   include:
     #- env: TARGET=i686-unknown-linux-musl
     #  os: linux
-    - env: TARGET=x86_64-unknown-linux-musl
-      os: linux
-    #- env: TARGET=x86_64-unknown-linux-gnu
+    #- env: TARGET=x86_64-unknown-linux-musl
     #  os: linux
+    - env: TARGET=x86_64-unknown-linux-gnu
+      os: linux
 
     #- env: TARGET=i686-apple-darwin
     #  os: osx
@@ -95,7 +95,7 @@ addons:
       - zlib1g-dev
 
 after_success: |
-  if [[ "$TRAVIS_OS_NAME" == "linux" && "$TARGET" == "x86_64-unknown-linux-musl" ]]; then
+  if [[ "$TRAVIS_OS_NAME" == "linux" && "$TARGET" == "x86_64-unknown-linux-gnu" ]]; then
     wget https://github.com/SimonKagstrom/kcov/archive/master.tar.gz &&
     tar xzf master.tar.gz &&
     cd kcov-master &&
