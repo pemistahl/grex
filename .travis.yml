@@ -1,7 +1,5 @@
-#dist: trusty
 language: rust
 rust: stable
-#services: docker
 sudo: required
 
 env:
@@ -10,28 +8,26 @@ env:
 
 matrix:
   include:
-    #- env: TARGET=i686-unknown-linux-musl
-    #  os: linux
-    #- env: TARGET=x86_64-unknown-linux-musl
-    #  os: linux
-    - env: TARGET=x86_64-unknown-linux-gnu
+    - env: TARGET=i686-unknown-linux-musl
+      os: linux
+    - env: TARGET=x86_64-unknown-linux-musl
       os: linux
 
-    #- env: TARGET=i686-apple-darwin
-    #  os: osx
-    #- env: TARGET=x86_64-apple-darwin
-    #  os: osx
+    - env: TARGET=i686-apple-darwin
+      os: osx
+    - env: TARGET=x86_64-apple-darwin
+      os: osx
 
-    #- env: TARGET=i686-pc-windows-msvc
-    #  os: windows
-    #- env: TARGET=x86_64-pc-windows-msvc
-    #  os: windows
+    - env: TARGET=i686-pc-windows-msvc
+      os: windows
+    - env: TARGET=x86_64-pc-windows-msvc
+      os: windows
 
 cache: cargo
 before_cache: |
   rm -rf "$TRAVIS_HOME/.cargo/registry/src";
   chmod -R a+r $HOME/.cargo;
-  if [[ "$TRAVIS_OS_NAME" == "linux" && "$TARGET" == "x86_64-unknown-linux-gnu" ]]; then
+  if [[ "$TARGET" == "x86_64-unknown-linux-musl" ]]; then
     cargo install cargo-tarpaulin -f
   fi
 
@@ -70,7 +66,7 @@ deploy:
   #  on:
   #    tags: true
   #    branch: master
-  #    condition: $TRAVIS_RUST_VERSION = stable && $TRAVIS_OS_NAME = linux && $TARGET = x86_64-unknown-linux-musl
+  #    condition: $TARGET = x86_64-unknown-linux-musl
   #  token:
   #    secure: KA+BCrI4/8zKDxTB73p8Z+p7qlXrEtKiHh1Eh9pY+vGO2X1vMq+ArHL9dIKyvjDDLfM+hCuEJ+xrjEsylWF3SOigHt0f7zSOSzEz141olS4eiNHZUyn9tzvYFSclFIggSAAX1dek+twqtCQrTANY2X/l0y/zfgNRPYtx3jIHRtdhfiIfNtY+pe21+9dGiSwihMp/qMaZoskaqrBMZrF7ghE7NeL0DxobO07j9duRg+F8IR/HhrT0hBbeHeFPEepx/9Y8aKer1bA6mVU4N75FowcOrZRN9WxJNZ0RFvPlXTYLyO0z395hIuEBSZa/Qww50+53CVXbuvJJoSWSjalDDTecgAPAQBjy6r4C22VrMdDKk2wEuH8+Llp5i0CI8P+blEw8nWxd1APgFWPFCDVeG1XqyDBOVujC6UW/Vnmb6osMSV2T1+Cy55ZqrWu+6RMz9aLKUBYD+P6tkKIT2FFQORCVkmVt5rvJTkFdYy72ww0Pa4yKHBq39yyVPh/z8D15o2e+lVL93QaRL5toGfxyKhnFxaaP180KQuqXUTHAdVIsp4OCebX0SBOfPeK2IQN3WKdWYq1gSBKcazaXRFZyVxZiTWvCpY86xc5+RJcbKlTdgxhN3K/IVe3g+tPbYzz2EaYzyrOLIhVVJzglm9kONYSRfDQ9zQWi0rcNAYKpHxQ=
   - provider: releases
@@ -78,7 +74,6 @@ deploy:
     on:
       tags: true
       branch: master
-      condition: $TRAVIS_RUST_VERSION = stable
     file_glob: true
     file: target/$TARGET/release/$CRATE_NAME-$TRAVIS_TAG-$TARGET.*
     api_key:
@@ -90,7 +85,7 @@ addons:
       - libssl-dev
 
 after_success: |
-  if [[ "$TRAVIS_OS_NAME" == "linux" && "$TARGET" == "x86_64-unknown-linux-gnu" ]]; then
+  if [[ "$TARGET" == "x86_64-unknown-linux-musl" ]]; then
     cargo tarpaulin --verbose --ciserver travis-ci --out Xml
     bash <(curl -s https://codecov.io/bash)
     echo "Uploaded code coverage"
