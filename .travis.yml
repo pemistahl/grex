@@ -12,10 +12,10 @@ matrix:
   include:
     #- env: TARGET=i686-unknown-linux-musl
     #  os: linux
-    #- env: TARGET=x86_64-unknown-linux-musl
-    #  os: linux
-    - env: TARGET=x86_64-unknown-linux-gnu
+    - env: TARGET=x86_64-unknown-linux-musl
       os: linux
+    #- env: TARGET=x86_64-unknown-linux-gnu
+    #  os: linux
 
     #- env: TARGET=i686-apple-darwin
     #  os: osx
@@ -92,9 +92,10 @@ addons:
       - gcc
       - binutils-dev
       - libiberty-dev
+      - zlib1g-dev
 
 after_success: |
-  if [[ "$TRAVIS_RUST_VERSION" == "stable" && "$TRAVIS_OS_NAME" == "linux" && "$TARGET" == "x86_64-unknown-linux-gnu" ]]; then
+  if [[ "$TRAVIS_OS_NAME" == "linux" && "$TARGET" == "x86_64-unknown-linux-musl" ]]; then
     wget https://github.com/SimonKagstrom/kcov/archive/master.tar.gz &&
     tar xzf master.tar.gz &&
     cd kcov-master &&
@@ -105,8 +106,7 @@ after_success: |
     make install DESTDIR=../../kcov-build &&
     cd ../.. &&
     rm -rf kcov-master &&
-    for file in target/$TARGET/debug/$CRATE_NAME-*[^\.d]; do mkdir -p "target/cov/$(basename $file)"; ./kcov-build/usr/local/bin/kcov --exclude-pattern=/.cargo,/usr/lib --verify "target/cov/$(basename $file)" "$file"; done &&
-    bash <(curl -s https://codecov.io/bash) &&
+    for file in target/$TARGET/debug/$CRATE_NAME-*[^\.d]; do mkdir -p "target/cov/$(basename $file)"; ./kcov-build/usr/local/bin/kcov --coveralls-id=$TRAVIS_JOB_ID --exclude-pattern=/.cargo,/usr/lib --verify "target/cov/$(basename $file)" "$file"; done &&
     echo "Uploaded code coverage"
   fi
 
