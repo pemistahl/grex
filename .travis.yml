@@ -29,7 +29,7 @@ matrix:
 
 cache: cargo
 before_cache: |
-  rm -rf "$TRAVIS_HOME/.cargo/registry/src;
+  rm -rf "$TRAVIS_HOME/.cargo/registry/src";
   chmod -R a+r $HOME/.cargo;
   if [[ "$TRAVIS_OS_NAME" == "linux" && "$TARGET" == "x86_64-unknown-linux-gnu" ]]; then
     cargo install cargo-tarpaulin -f
