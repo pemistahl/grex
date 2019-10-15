@@ -10,20 +10,20 @@ env:
 
 matrix:
   include:
-    - env: TARGET=i686-unknown-linux-musl
-      os: linux
+    #- env: TARGET=i686-unknown-linux-musl
+    #  os: linux
     - env: TARGET=x86_64-unknown-linux-musl
       os: linux
 
-    - env: TARGET=i686-apple-darwin
-      os: osx
-    - env: TARGET=x86_64-apple-darwin
-      os: osx
+    #- env: TARGET=i686-apple-darwin
+    #  os: osx
+    #- env: TARGET=x86_64-apple-darwin
+    #  os: osx
 
-    - env: TARGET=i686-pc-windows-msvc
-      os: windows
-    - env: TARGET=x86_64-pc-windows-msvc
-      os: windows
+    #- env: TARGET=i686-pc-windows-msvc
+    #  os: windows
+    #- env: TARGET=x86_64-pc-windows-msvc
+    #  os: windows
 
 cache: cargo
 before_cache:
@@ -103,7 +103,7 @@ after_success: |
     make install DESTDIR=../../kcov-build &&
     cd ../.. &&
     rm -rf kcov-master &&
-    for file in target/$TARGET/debug/$CRATE_NAME-*[^\.d]; do mkdir -p "target/$TARGET/cov/$(basename $file)"; ./kcov-build/usr/local/bin/kcov --exclude-pattern=/.cargo,/usr/lib --verify "target/$TARGET/cov/$(basename $file)" "$file"; done &&
+    for file in target/$TARGET/debug/$CRATE_NAME-*[^\.d]; do mkdir -p "target/cov/$(basename $file)"; ./kcov-build/usr/local/bin/kcov --exclude-pattern=/.cargo,/usr/lib --verify "target/cov/$(basename $file)" "$file"; done &&
     bash <(curl -s https://codecov.io/bash) &&
     echo "Uploaded code coverage"
   fi
