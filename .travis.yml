@@ -15,11 +15,6 @@
 
 language: rust
 
-rust:
-  - stable
-  - beta
-  - nightly
-
 env:
   global:
     - CRATE_NAME=grex
@@ -45,6 +40,10 @@ matrix:
   include:
     - name: Linux Binary 64-Bit
       os: linux
+      rust:
+        - stable
+        - beta
+        - nightly
       env: TARGET=x86_64-unknown-linux-musl
       before_script: rustup target add $TARGET
       script:
@@ -68,6 +67,10 @@ matrix:
 
     - name: MacOS Binary 64-Bit
       os: osx
+      rust:
+        - stable
+        - beta
+        - nightly
       env: TARGET=x86_64-apple-darwin MACOSX_DEPLOYMENT_TARGET=10.7
       script:
         - cargo build --target $TARGET --locked
@@ -78,6 +81,10 @@ matrix:
 
     - name: Windows Binary 64-Bit
       os: windows
+      rust:
+        - stable
+        - beta
+        - nightly
       env: TARGET=x86_64-pc-windows-msvc
       script:
         - cargo build --target $TARGET --locked
