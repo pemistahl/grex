@@ -15,6 +15,8 @@
 
 language: rust
 
+rust: stable
+
 env:
   global:
     - CRATE_NAME=grex
@@ -32,26 +34,11 @@ before_cache:
   - chmod -R a+r $TRAVIS_HOME/.cargo
 
 matrix:
-  allow_failures:
-    - rust: beta
-    - rust: nightly
-  fast_finish: true
-
   include:
     - name: Linux Binary 64-Bit
       os: linux
-      rust:
-        - stable
-        - beta
-        - nightly
       env: TARGET=x86_64-unknown-linux-musl
       before_script: rustup target add $TARGET
-      script:
-        - cargo build --target $TARGET --locked --features vendored-openssl
-        - cargo build --target $TARGET --locked --features vendored-openssl --release
-        - cargo test --target $TARGET
-        - cargo run --target $TARGET -- a b c
-        - cargo run --target $TARGET --release -- a b c
       addons:
         apt:
           packages:
@@ -67,31 +54,18 @@ matrix:
 
     - name: MacOS Binary 64-Bit
       os: osx
-      rust:
-        - stable
-        - beta
-        - nightly
       env: TARGET=x86_64-apple-darwin MACOSX_DEPLOYMENT_TARGET=10.7
-      script:
-        - cargo build --target $TARGET --locked
-        - cargo build --target $TARGET --locked --release
-        - cargo test --target $TARGET
-        - cargo run --target $TARGET -- a b c
-        - cargo run --target $TARGET --release -- a b c
 
     - name: Windows Binary 64-Bit
       os: windows
-      rust:
-        - stable
-        - beta
-        - nightly
       env: TARGET=x86_64-pc-windows-msvc
-      script:
-        - cargo build --target $TARGET --locked
-        - cargo build --target $TARGET --locked --release
-        - cargo test --target $TARGET
-        - cargo run --target $TARGET -- a b c
-        - cargo run --target $TARGET --release -- a b c
+
+script:
+  - cargo build --target $TARGET --locked
+  - cargo build --target $TARGET --locked --release
+  - cargo test --target $TARGET
+  - cargo run --target $TARGET -- a b c
+  - cargo run --target $TARGET --release -- a b c
 
 before_deploy: |
   if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then
