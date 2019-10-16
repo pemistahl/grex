@@ -48,7 +48,7 @@ matrix:
         if [[ "$TRAVIS_RUST_VERSION" == "stable" ]]; then
           cargo install cargo-tarpaulin -f
           cargo tarpaulin --verbose --ciserver travis-ci --out Xml
-          bash <(curl -s https://codecov.io/bash) -v
+          bash <(curl -s https://codecov.io/bash)
           echo "Uploaded code coverage report"
         fi
 
@@ -64,8 +64,6 @@ script:
   - cargo build --target $TARGET --locked
   - cargo build --target $TARGET --locked --release
   - cargo test --target $TARGET
-  - cargo run --target $TARGET -- a b c
-  - cargo run --target $TARGET --release -- a b c
 
 before_deploy: |
   if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then

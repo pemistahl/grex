@@ -110,7 +110,18 @@ fn format_character_class(f: &mut Formatter<'_>, char_set: &BTreeSet<char>) -> R
         }
     }
 
-    write!(f, "[{}]", char_class_strs.join(""))
+    let char_class_strs_escaped = char_class_strs
+        .iter()
+        .map(|it| {
+            if it.is_ascii() {
+                it.to_string()
+            } else {
+                it.escape_unicode().to_string()
+            }
+        })
+        .collect_vec();
+
+    write!(f, "[{}]", char_class_strs_escaped.join(""))
 }
 
 fn format_concatenation(

@@ -53,15 +53,20 @@ fn main() {
         sort_input(&mut input);
         println_regex(input);
     } else if let Some(file_path) = cli.file_path {
-        match std::fs::read_to_string(file_path) {
+        match std::fs::read_to_string(&file_path) {
             Ok(file_content) => {
                 let mut input = file_content.lines().collect_vec();
                 sort_input(&mut input);
                 println_regex(input);
             }
             Err(error) => match error.kind() {
-                ErrorKind::NotFound => eprintln!("Error: The file could not be found"),
-                _ => eprintln!("Error: The file was found but could not be opened"),
+                ErrorKind::NotFound => {
+                    eprintln!("error: The file {:?} could not be found", file_path)
+                }
+                _ => eprintln!(
+                    "error: The file {:?} was found but could not be opened",
+                    file_path
+                ),
             },
         }
     }
@@ -251,7 +256,6 @@ mod tests {
     }
 
     fn params() -> HashMap<Vec<&'static str>, &'static str> {
-        //let grapheme_of_two_codepoints = "y̆"; // consists of ['y', '\u{306}']
         hashmap![
             vec![""] => "^$",
             vec![" "] => "^ $",
@@ -295,7 +299,13 @@ mod tests {
 
             vec!["abxy", "cxy", "efgh"] => "^(ab|c)xy|efgh$",
             vec!["abxy", "efgh", "cxy"] => "^(ab|c)xy|efgh$",
-            vec!["efgh", "abxy", "cxy"] => "^(ab|c)xy|efgh$"
+            vec!["efgh", "abxy", "cxy"] => "^(ab|c)xy|efgh$",
+
+            vec!["a", "ä", "o", "ö", "u", "ü", "♥"] => "^[aou\\u{e4}\\u{f6}\\u{fc}\\u{2665}]$",
+            vec!["y̆", "a", "z"] => "^[az]|\\u{79}\\u{306}$", // goal: "^[az]|y\\u{306}$"
+
+            vec!["a", "b\n", "c"] => "^b\\n|[ac]$",
+            vec!["a", "b\\n", "c"] => "^b\\\\n|[ac]$"
         ]
     }
 }
