@@ -17,7 +17,6 @@
 use std::collections::{BTreeSet, HashSet};
 
 use itertools::Itertools;
-use linked_hash_set::LinkedHashSet;
 use linked_list::LinkedList;
 use ndarray::{Array1, Array2};
 use petgraph::graph::NodeIndex;
@@ -95,29 +94,25 @@ impl DFA {
 
     pub fn minimize(&mut self) {
         let mut p = self.get_initial_partition();
-        let mut w = LinkedHashSet::new();
-        for elem in p.iter() {
-            w.insert(elem.clone());
-        }
-
+        let mut w = p.iter().cloned().collect_vec();
         let mut p_cursor = p.cursor();
 
         while !w.is_empty() {
-            let a = w.pop_front().unwrap();
+            let a = w.drain(0..1).next().unwrap();
 
             for edge_label in self.alphabet.iter() {
                 let x = self.get_parent_states(&a, edge_label);
                 let mut replacements = vec![];
 
                 while let Some(y) = p_cursor.peek_next() {
-                    let i = x.intersection(y).copied().collect::<LinkedHashSet<State>>();
+                    let i = x.intersection(y).copied().collect::<HashSet<State>>();
 
                     if i.is_empty() {
                         p_cursor.next();
                         continue;
                     }
 
-                    let d = y.difference(&x).copied().collect::<LinkedHashSet<State>>();
+                    let d = y.difference(&x).copied().collect::<HashSet<State>>();
 
                     if d.is_empty() {
                         p_cursor.next();
@@ -137,13 +132,14 @@ impl DFA {
 
                 for (y, i, d) in replacements {
                     if w.contains(&y) {
-                        w.remove(&y);
-                        w.insert(i);
-                        w.insert(d);
+                        let idx = w.iter().position(|it| it == &y).unwrap();
+                        w.remove(idx);
+                        w.push(i);
+                        w.push(d);
                     } else if i.len() <= d.len() {
-                        w.insert(i);
+                        w.push(i);
                     } else {
-                        w.insert(d);
+                        w.push(d);
                     }
                 }
             }
@@ -152,8 +148,8 @@ impl DFA {
         self.recreate_graph(p.iter().filter(|&it| !it.is_empty()).collect_vec());
     }
 
-    fn get_initial_partition(&self) -> LinkedList<LinkedHashSet<State>> {
-        let (final_states, non_final_states): (LinkedHashSet<State>, LinkedHashSet<State>) = self
+    fn get_initial_partition(&self) -> LinkedList<HashSet<State>> {
+        let (final_states, non_final_states): (HashSet<State>, HashSet<State>) = self
             .graph
             .node_indices()
             .partition(|&state| !self.final_state_indices.contains(&state.index()));
@@ -161,8 +157,8 @@ impl DFA {
         linked_list![final_states, non_final_states]
     }
 
-    fn get_parent_states(&self, a: &LinkedHashSet<State>, label: &str) -> LinkedHashSet<State> {
-        let mut x = LinkedHashSet::new();
+    fn get_parent_states(&self, a: &HashSet<State>, label: &str) -> HashSet<State> {
+        let mut x = HashSet::new();
         for state in self.graph.node_indices() {
             let next_states = self.graph.neighbors(state);
             for next_state in next_states {
@@ -179,7 +175,7 @@ impl DFA {
         x
     }
 
-    fn recreate_graph(&mut self, p: Vec<&LinkedHashSet<State>>) {
+    fn recreate_graph(&mut self, p: Vec<&HashSet<State>>) {
         let mut graph = StableGraph::<HashSet<usize>, String>::new();
         let mut final_state_indices = HashSet::new();
 
