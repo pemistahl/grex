@@ -159,16 +159,15 @@ impl DFA {
 
     fn get_parent_states(&self, a: &HashSet<State>, label: &str) -> HashSet<State> {
         let mut x = HashSet::new();
-        for state in self.graph.node_indices() {
-            let next_states = self.graph.neighbors(state);
-            for next_state in next_states {
-                if a.contains(&next_state) {
-                    let edge = self.graph.find_edge(state, next_state).unwrap();
-                    let edge_label = self.graph.edge_weight(edge).unwrap();
-                    if edge_label == label {
-                        x.insert(state);
-                        break;
-                    }
+
+        for &state in a {
+            let direct_parent_states = self.graph.neighbors_directed(state, Direction::Incoming);
+            for parent_state in direct_parent_states {
+                let edge = self.graph.find_edge(parent_state, state).unwrap();
+                let edge_label = self.graph.edge_weight(edge).unwrap();
+                if edge_label == label {
+                    x.insert(parent_state);
+                    break;
                 }
             }
         }
