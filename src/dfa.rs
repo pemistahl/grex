@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-use std::collections::{BTreeSet, HashSet};
+use std::collections::{BTreeSet, HashMap, HashSet};
 
 use itertools::Itertools;
 use linked_list::LinkedList;
@@ -29,10 +29,12 @@ use unicode_segmentation::UnicodeSegmentation;
 use crate::ast::{concatenate, repeat_zero_or_more_times, union, Expression};
 
 type State = NodeIndex<u32>;
+type StateLabel = String;
+type EdgeLabel = String;
 
 pub struct DFA {
     alphabet: BTreeSet<String>,
-    graph: StableGraph<HashSet<usize>, String>,
+    graph: StableGraph<StateLabel, EdgeLabel>,
     initial_state: State,
     final_state_indices: HashSet<usize>,
 }
@@ -40,7 +42,7 @@ pub struct DFA {
 impl DFA {
     pub fn new() -> Self {
         let mut graph = StableGraph::new();
-        let initial_state = graph.add_node(HashSet::new());
+        let initial_state = graph.add_node("".to_string());
         Self {
             alphabet: BTreeSet::new(),
             graph,
@@ -86,7 +88,7 @@ impl DFA {
     }
 
     fn add_new_state(&mut self, current_state: State, label: &str) -> State {
-        let next_state = self.graph.add_node(HashSet::new());
+        let next_state = self.graph.add_node("".to_string());
         self.graph
             .add_edge(current_state, next_state, label.to_string());
         next_state
@@ -175,21 +177,25 @@ impl DFA {
     }
 
     fn recreate_graph(&mut self, p: Vec<&HashSet<State>>) {
-        let mut graph = StableGraph::<HashSet<usize>, String>::new();
+        let mut graph = StableGraph::<StateLabel, EdgeLabel>::new();
         let mut final_state_indices = HashSet::new();
+        let mut state_mappings = HashMap::new();
+        let mut new_initial_state: Option<NodeIndex> = None;
 
         for equivalence_class in p.iter() {
-            let state_label = equivalence_class
-                .iter()
-                .map(|&state| state.index())
-                .collect::<HashSet<usize>>();
+            let new_state = graph.add_node("".to_string());
 
-            graph.add_node(state_label);
+            for old_state in equivalence_class.iter() {
+                if self.initial_state == *old_state {
+                    new_initial_state = Some(new_state);
+                }
+                state_mappings.insert(*old_state, new_state);
+            }
         }
 
         for equivalence_class in p.iter() {
             let old_source_state = *equivalence_class.iter().next().unwrap();
-            let new_source_state = self.get_target_state(&graph, old_source_state);
+            let new_source_state = state_mappings.get(&old_source_state).unwrap();
 
             for old_target_state in self.graph.neighbors(old_source_state) {
                 let edge = self
@@ -198,41 +204,18 @@ impl DFA {
                     .unwrap();
 
                 let edge_label = self.graph.edge_weight(edge).unwrap();
-                let new_target_state = self.get_target_state(&graph, old_target_state);
+                let new_target_state = state_mappings.get(&old_target_state).unwrap();
 
-                graph.add_edge(new_source_state, new_target_state, edge_label.clone());
+                graph.add_edge(*new_source_state, *new_target_state, edge_label.clone());
 
                 if self.final_state_indices.contains(&old_target_state.index()) {
                     final_state_indices.insert(new_target_state.index());
                 }
             }
         }
-        self.initial_state = self.get_initial_state(&graph);
+        self.initial_state = new_initial_state.unwrap();
         self.final_state_indices = final_state_indices;
         self.graph = graph;
-    }
-
-    fn get_target_state(
-        &self,
-        graph: &StableGraph<HashSet<usize>, String>,
-        source_state: State,
-    ) -> State {
-        graph
-            .node_indices()
-            .find(|&state| {
-                graph
-                    .node_weight(state)
-                    .unwrap()
-                    .contains(&source_state.index())
-            })
-            .unwrap()
-    }
-
-    fn get_initial_state(&self, graph: &StableGraph<HashSet<usize>, String>) -> State {
-        graph
-            .node_indices()
-            .find(|&state| graph.edges_directed(state, Direction::Incoming).count() == 0)
-            .unwrap()
     }
 
     fn is_final_state(&self, state: State) -> bool {
