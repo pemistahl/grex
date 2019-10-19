@@ -54,7 +54,7 @@ fn assert_that_grex_fails_when_file_name_is_not_provided() {
     let mut grex = call_grex();
     grex.arg("-f");
     grex.assert().failure().stderr(predicate::str::contains(
-        "argument '--file <file>' requires a value but none was supplied",
+        "argument '--file <FILE>' requires a value but none was supplied",
     ));
 }
 
@@ -76,7 +76,7 @@ fn assert_that_grex_fails_with_both_direct_and_file_input() {
     grex.args(&["a", "b", "c"]);
     grex.args(&["-f", "/path/to/some/file"]);
     grex.assert().failure().stderr(predicate::str::contains(
-        "argument '--file <file>' cannot be used with 'input'",
+        "argument '--file <FILE>' cannot be used with 'input'",
     ));
 }
 

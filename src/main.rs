@@ -32,15 +32,22 @@ mod fmt;
 #[derive(StructOpt)]
 #[structopt(author, about)]
 struct CLI {
-    #[structopt(required_unless = "file", conflicts_with = "file")]
+    #[structopt(
+        value_name = "INPUT",
+        required_unless = "file",
+        conflicts_with = "file",
+        help = "One or more strings separated by blank space"
+    )]
     input: Vec<String>,
 
     #[structopt(
         name = "file",
+        value_name = "FILE",
         short,
         long,
         parse(from_os_str),
-        required_unless = "input"
+        required_unless = "input",
+        help = "Reads input strings from a file with each string on a separate line"
     )]
     file_path: Option<PathBuf>,
 }
@@ -309,7 +316,8 @@ mod tests {
             vec!["a", "b\n", "c"] => "^b\\n|[ac]$",
             vec!["a", "b\\n", "c"] => "^b\\\\n|[ac]$",
 
-            vec!["[a-z]", "(d,e,f)"] => "^\\(d,e,f\\)|\\[a\\-z\\]$"
+            vec!["[a-z]", "(d,e,f)"] => "^\\(d,e,f\\)|\\[a\\-z\\]$",
+            vec!["3.5", "4.5", "4,5"] => "^3\\.5|4[,.]5$"
         ]
     }
 }
