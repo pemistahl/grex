@@ -243,10 +243,7 @@ impl DFA {
             for edge in self.graph.edges_directed(*state, Direction::Outgoing) {
                 let edge_label = edge.weight();
                 let literal = Expression::new_literal(edge_label);
-                let j = states
-                    .iter()
-                    .position(|&it| it.index() == edge.target().index())
-                    .unwrap();
+                let j = states.iter().position(|&it| it == edge.target()).unwrap();
 
                 a[(i, j)] = if a[(i, j)].is_some() {
                     union(&a[(i, j)], &Some(literal))

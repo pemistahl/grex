@@ -83,7 +83,7 @@ impl Expression {
         match self {
             Expression::CharacterClass(_) => true,
             Expression::Literal(graphemes) => {
-                graphemes.len() == 1 && graphemes.get(0).unwrap().chars().collect_vec().len() == 1
+                graphemes.len() == 1 && graphemes.first().unwrap().chars().count() == 1
             }
             _ => false,
         }
@@ -91,7 +91,7 @@ impl Expression {
 
     fn len(&self) -> usize {
         match self {
-            Expression::Alternation(options) => options.get(0).unwrap().len(),
+            Expression::Alternation(options) => options.first().unwrap().len(),
             Expression::CharacterClass(_) => 1,
             Expression::Concatenation(expr1, expr2) => expr1.len() + expr2.len(),
             Expression::Literal(graphemes) => graphemes.len(),

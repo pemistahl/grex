@@ -110,6 +110,7 @@ fn format_character_class(f: &mut Formatter<'_>, char_set: &BTreeSet<char>) -> R
         }
     }
 
+    /*
     let char_class_strs_escaped = char_class_strs
         .iter()
         .map(|it| {
@@ -120,8 +121,9 @@ fn format_character_class(f: &mut Formatter<'_>, char_set: &BTreeSet<char>) -> R
             }
         })
         .collect_vec();
+    */
 
-    write!(f, "[{}]", char_class_strs_escaped.join(""))
+    write!(f, "[{}]", char_class_strs.join(""))
 }
 
 fn format_concatenation(
@@ -174,6 +176,7 @@ fn format_literal(f: &mut Formatter<'_>, graphemes: &[String]) -> Result {
             "$" => "\\$",
             _ => it,
         })
+        /*
         .map(|it| {
             if it.is_ascii() {
                 it.to_string()
@@ -181,6 +184,7 @@ fn format_literal(f: &mut Formatter<'_>, graphemes: &[String]) -> Result {
                 it.escape_unicode().to_string()
             }
         })
+        */
         .join("");
 
     write!(f, "{}", literal_str)

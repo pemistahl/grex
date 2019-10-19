@@ -110,6 +110,7 @@ mod tests {
         }
     }
 
+    /*
     #[test]
     fn ensure_correct_string_representations_of_literals() {
         let params = hashmap![
@@ -158,6 +159,7 @@ mod tests {
         assert_no_match(&re, "I \\u{2665} cake");
         assert_no_match(&re, "I \\u\\{2665\\} cake");
     }
+    */
 
     #[test]
     fn ensure_correct_removal_of_prefix_in_literal() {
@@ -301,11 +303,13 @@ mod tests {
             vec!["abxy", "efgh", "cxy"] => "^(ab|c)xy|efgh$",
             vec!["efgh", "abxy", "cxy"] => "^(ab|c)xy|efgh$",
 
-            vec!["a", "ä", "o", "ö", "u", "ü", "♥"] => "^[aou\\u{e4}\\u{f6}\\u{fc}\\u{2665}]$",
-            vec!["y̆", "a", "z"] => "^[az]|\\u{79}\\u{306}$", // goal: "^[az]|y\\u{306}$"
+            vec!["a", "ä", "o", "ö", "u", "ü", "♥"] => "^[aouäöü♥]$",
+            vec!["y̆", "a", "z"] => "^[az]|y̆$", // goal: "^[az]|y\\u{306}$"
 
             vec!["a", "b\n", "c"] => "^b\\n|[ac]$",
-            vec!["a", "b\\n", "c"] => "^b\\\\n|[ac]$"
+            vec!["a", "b\\n", "c"] => "^b\\\\n|[ac]$",
+
+            vec!["[a-z]", "(d,e,f)"] => "^\\(d,e,f\\)|\\[a\\-z\\]$"
         ]
     }
 }

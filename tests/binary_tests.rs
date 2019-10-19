@@ -29,15 +29,16 @@ fn assert_that_grex_succeeds_with_direct_input() {
 }
 
 #[test]
+#[allow(unused_must_use)]
 fn assert_that_grex_suceeds_with_file_input() {
     let mut file = NamedTempFile::new().unwrap();
     writeln!(file, "a\nb\\n\nc\näöü\n♥");
 
     let mut grex = call_grex();
     grex.args(&["-f", file.path().to_str().unwrap()]);
-    grex.assert().success().stdout(predicate::eq(
-        "^b\\\\n|\\u{e4}\\u{f6}\\u{fc}|[ac\\u{2665}]$\n",
-    ));
+    grex.assert()
+        .success()
+        .stdout(predicate::eq("^b\\\\n|äöü|[ac♥]$\n"));
 }
 
 #[test]
