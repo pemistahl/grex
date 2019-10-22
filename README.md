@@ -3,6 +3,7 @@
 [![Build Status](https://travis-ci.org/pemistahl/grex.svg?branch=master)](https://travis-ci.org/pemistahl/grex)
 [![codecov](https://codecov.io/gh/pemistahl/grex/branch/master/graph/badge.svg)](https://codecov.io/gh/pemistahl/grex)
 [![Crates.io](https://img.shields.io/crates/v/grex.svg)](https://crates.io/crates/grex)
+[![Downloads](https://img.shields.io/crates/d/grex.svg)](https://crates.io/crates/grex)
 [![license](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0)
 
 #### Download
