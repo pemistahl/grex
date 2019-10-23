@@ -110,19 +110,6 @@ fn format_character_class(f: &mut Formatter<'_>, char_set: &BTreeSet<char>) -> R
         }
     }
 
-    /*
-    let char_class_strs_escaped = char_class_strs
-        .iter()
-        .map(|it| {
-            if it.is_ascii() {
-                it.to_string()
-            } else {
-                it.escape_unicode().to_string()
-            }
-        })
-        .collect_vec();
-    */
-
     write!(f, "[{}]", char_class_strs.join(""))
 }
 
@@ -152,39 +139,25 @@ fn format_concatenation(
 }
 
 fn format_literal(f: &mut Formatter<'_>, graphemes: &[String]) -> Result {
+    let chars_to_escape = [
+        "(", ")", "[", "]", "{", "}", "\\", "+", "*", "-", ".", "?", "|", "^", "$",
+    ];
     let literal_str = graphemes
         .iter()
-        .map(|it| match it.as_str() {
-            //"\u{C}" => "\\u{C}", // represents \f
-            "\t" => "\\t",
-            "\n" => "\\n",
-            "\r" => "\\r",
-            "(" => "\\(",
-            ")" => "\\)",
-            "[" => "\\[",
-            "]" => "\\]",
-            "{" => "\\{",
-            "}" => "\\}",
-            "\\" => "\\\\",
-            "+" => "\\+",
-            "*" => "\\*",
-            "-" => "\\-",
-            "." => "\\.",
-            "?" => "\\?",
-            "|" => "\\|",
-            "^" => "\\^",
-            "$" => "\\$",
-            _ => it,
-        })
-        /*
         .map(|it| {
-            if it.is_ascii() {
-                it.to_string()
+            let s = it.as_str();
+            if chars_to_escape.contains(&s) {
+                format!("{}{}", "\\", it)
+            } else if s == "\t" {
+                "\\t".to_string()
+            } else if s == "\n" {
+                "\\n".to_string()
+            } else if s == "\r" {
+                "\\r".to_string()
             } else {
-                it.escape_unicode().to_string()
+                it.to_string()
             }
         })
-        */
         .join("");
 
     write!(f, "{}", literal_str)

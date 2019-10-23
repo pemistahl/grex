@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+use std::cmp::Ordering;
 use std::io::ErrorKind;
 use std::path::PathBuf;
 
@@ -21,13 +22,14 @@ use itertools::Itertools;
 use structopt::StructOpt;
 
 use crate::dfa::DFA;
-use std::cmp::Ordering;
+use crate::postprocessing::escape_non_ascii_chars;
 
 #[macro_use]
 mod macros;
 mod ast;
 mod dfa;
 mod fmt;
+mod postprocessing;
 
 #[derive(StructOpt)]
 #[structopt(author, about)]
@@ -50,6 +52,21 @@ struct CLI {
         help = "Reads input strings from a file with each string on a separate line"
     )]
     file_path: Option<PathBuf>,
+
+    #[structopt(
+        name = "escape",
+        long,
+        help = "Replaces all non-ASCII characters with unicode escape sequences"
+    )]
+    escape_non_ascii_chars: bool,
+
+    #[structopt(
+        name = "with-surrogate-pairs",
+        long,
+        requires = "escape",
+        help = "Converts astral code points to surrogate pairs if --escape is set"
+    )]
+    use_surrogate_pairs: bool,
 }
 
 fn main() {
@@ -58,13 +75,31 @@ fn main() {
     if !cli.input.is_empty() {
         let mut input = cli.input.iter().map(|it| it.as_str()).collect_vec();
         sort_input(&mut input);
-        println_regex(input);
+
+        let regex = DFA::from(input).to_regex();
+        if cli.escape_non_ascii_chars {
+            println!(
+                "{}",
+                escape_non_ascii_chars(&regex, cli.use_surrogate_pairs)
+            );
+        } else {
+            println!("{}", regex);
+        }
     } else if let Some(file_path) = cli.file_path {
         match std::fs::read_to_string(&file_path) {
             Ok(file_content) => {
                 let mut input = file_content.lines().collect_vec();
                 sort_input(&mut input);
-                println_regex(input);
+
+                let regex = DFA::from(input).to_regex();
+                if cli.escape_non_ascii_chars {
+                    println!(
+                        "{}",
+                        escape_non_ascii_chars(&regex, cli.use_surrogate_pairs)
+                    );
+                } else {
+                    println!("{}", regex);
+                }
             }
             Err(error) => match error.kind() {
                 ErrorKind::NotFound => {
@@ -86,10 +121,6 @@ fn sort_input(strs: &mut Vec<&str>) {
         Ordering::Equal => a.cmp(&b),
         other => other,
     });
-}
-
-fn println_regex(strs: Vec<&str>) {
-    println!("{}", DFA::from(strs).to_regex());
 }
 
 #[cfg(test)]
