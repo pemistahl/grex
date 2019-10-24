@@ -73,33 +73,13 @@ fn main() {
     let cli = CLI::from_args();
 
     if !cli.input.is_empty() {
-        let mut input = cli.input.iter().map(|it| it.as_str()).collect_vec();
-        sort_input(&mut input);
-
-        let regex = DFA::from(input).to_regex();
-        if cli.escape_non_ascii_chars {
-            println!(
-                "{}",
-                escape_non_ascii_chars(&regex, cli.use_surrogate_pairs)
-            );
-        } else {
-            println!("{}", regex);
-        }
+        let input = cli.input.iter().map(|it| it.as_str()).collect_vec();
+        handle_input(input, cli.escape_non_ascii_chars, cli.use_surrogate_pairs);
     } else if let Some(file_path) = cli.file_path {
         match std::fs::read_to_string(&file_path) {
             Ok(file_content) => {
-                let mut input = file_content.lines().collect_vec();
-                sort_input(&mut input);
-
-                let regex = DFA::from(input).to_regex();
-                if cli.escape_non_ascii_chars {
-                    println!(
-                        "{}",
-                        escape_non_ascii_chars(&regex, cli.use_surrogate_pairs)
-                    );
-                } else {
-                    println!("{}", regex);
-                }
+                let input = file_content.lines().collect_vec();
+                handle_input(input, cli.escape_non_ascii_chars, cli.use_surrogate_pairs);
             }
             Err(error) => match error.kind() {
                 ErrorKind::NotFound => {
@@ -111,6 +91,16 @@ fn main() {
                 ),
             },
         }
+    }
+}
+
+fn handle_input(mut strs: Vec<&str>, escape_chars: bool, use_surrogate_pairs: bool) {
+    sort_input(&mut strs);
+    let regex = DFA::from(strs).to_regex();
+    if escape_chars {
+        println!("{}", escape_non_ascii_chars(&regex, use_surrogate_pairs));
+    } else {
+        println!("{}", regex);
     }
 }
 
