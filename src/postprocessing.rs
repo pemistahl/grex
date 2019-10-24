@@ -42,17 +42,18 @@ fn convert_to_surrogate_pair(c: char) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use maplit::hashmap;
 
     #[test]
     fn test_escaping_non_ascii_chars() {
-        let input = "My ♥ and 💩 is yours. 🤪";
+        let input = "My ♥ and 💩 is yours.";
         assert_eq!(
             escape_non_ascii_chars(input, false),
-            "My \\u{2665} and \\u{1f4a9} is yours. \\u{1f92a}"
+            "My \\u{2665} and \\u{1f4a9} is yours."
         );
         assert_eq!(
             escape_non_ascii_chars(input, true),
-            "My \\u{2665} and \\u{d83d}\\u{dca9} is yours. \\u{d83e}\\u{dd2a}"
+            "My \\u{2665} and \\u{d83d}\\u{dca9} is yours."
         );
     }
 

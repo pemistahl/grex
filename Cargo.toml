@@ -30,6 +30,7 @@ keywords = ["pattern", "regex", "regexp"]
 [dependencies]
 itertools = "0.8.0"
 linked-list = "0.0.3"
+maplit = "1.0.2"
 ndarray = "0.13.0"
 petgraph = "0.4.13"
 structopt = "0.3.3"

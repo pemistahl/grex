@@ -18,6 +18,7 @@ use std::collections::BTreeSet;
 
 use itertools::EitherOrBoth::Both;
 use itertools::Itertools;
+use maplit::btreeset;
 use unicode_segmentation::UnicodeSegmentation;
 
 #[derive(Clone, Eq, PartialEq)]
@@ -313,7 +314,7 @@ fn extract_character_set(expr: Expression) -> BTreeSet<char> {
     match expr {
         Expression::Literal(graphemes) => {
             let single_char = graphemes.first().unwrap().chars().next().unwrap();
-            btree_set![single_char]
+            btreeset![single_char]
         }
         Expression::CharacterClass(char_set) => char_set,
         _ => BTreeSet::new(),
@@ -364,5 +365,83 @@ fn find_common_substring(a: &Expression, b: &Expression, substring: &Substring) 
         None
     } else {
         Some(common_graphemes.join(""))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn ensure_correct_string_representation_of_alternation_1() {
+        let literal1 = Expression::new_literal("abc");
+        let literal2 = Expression::new_literal("def");
+        let alternation = Expression::new_alternation(literal1, literal2);
+        assert_eq!(alternation.to_string(), "abc|def");
+    }
+
+    #[test]
+    fn ensure_correct_string_representation_of_alternation_2() {
+        let literal1 = Expression::new_literal("a");
+        let literal2 = Expression::new_literal("ab");
+        let literal3 = Expression::new_literal("abc");
+        let alternation1 = Expression::new_alternation(literal1, literal2);
+        let alternation2 = Expression::new_alternation(alternation1, literal3);
+        assert_eq!(alternation2.to_string(), "abc|ab|a");
+    }
+
+    #[test]
+    fn ensure_correct_string_representation_of_concatenation_1() {
+        let literal1 = Expression::new_literal("abc");
+        let literal2 = Expression::new_literal("def");
+        let concatenation = Expression::new_concatenation(literal1, literal2);
+        assert_eq!(concatenation.to_string(), "abcdef");
+    }
+
+    #[test]
+    fn ensure_correct_string_representation_of_concatenation_2() {
+        let literal1 = Expression::new_literal("abc");
+        let literal2 = Expression::new_literal("def");
+        let repetition = Expression::new_repetition(literal1, Quantifier::KleeneStar);
+        let concatenation = Expression::new_concatenation(repetition, literal2);
+        assert_eq!(concatenation.to_string(), "(abc)*def");
+    }
+
+    #[test]
+    fn ensure_correct_removal_of_prefix_in_literal() {
+        let mut literal = Expression::new_literal("abcdef");
+        assert_eq!(
+            literal.value(None),
+            Some(vec!["a", "b", "c", "d", "e", "f"])
+        );
+
+        literal.remove_substring(&Substring::Prefix, 2);
+        assert_eq!(literal.value(None), Some(vec!["c", "d", "e", "f"]));
+    }
+
+    #[test]
+    fn ensure_correct_removal_of_suffix_in_literal() {
+        let mut literal = Expression::new_literal("abcdef");
+        assert_eq!(
+            literal.value(None),
+            Some(vec!["a", "b", "c", "d", "e", "f"])
+        );
+
+        literal.remove_substring(&Substring::Suffix, 2);
+        assert_eq!(literal.value(None), Some(vec!["a", "b", "c", "d"]));
+    }
+
+    #[test]
+    fn ensure_correct_string_representation_of_repetition_1() {
+        let literal = Expression::new_literal("abc");
+        let repetition = Expression::new_repetition(literal, Quantifier::KleeneStar);
+        assert_eq!(repetition.to_string(), "(abc)*");
+    }
+
+    #[test]
+    fn ensure_correct_string_representation_of_repetition_2() {
+        let literal = Expression::new_literal("a");
+        let repetition = Expression::new_repetition(literal, Quantifier::QuestionMark);
+        assert_eq!(repetition.to_string(), "a?");
     }
 }
