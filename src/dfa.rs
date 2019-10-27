@@ -40,7 +40,7 @@ pub struct DFA {
 }
 
 impl DFA {
-    pub fn new() -> Self {
+    fn new() -> Self {
         let mut graph = StableGraph::new();
         let initial_state = graph.add_node("".to_string());
         Self {
@@ -94,7 +94,7 @@ impl DFA {
         next_state
     }
 
-    pub fn minimize(&mut self) {
+    fn minimize(&mut self) {
         let mut p = self.get_initial_partition();
         let mut w = p.iter().cloned().collect_vec();
         let mut p_cursor = p.cursor();
@@ -276,5 +276,39 @@ impl DFA {
         } else {
             String::from("^$")
         }
+    }
+
+    #[allow(dead_code)]
+    fn state_count(&self) -> usize {
+        self.graph.node_count()
+    }
+
+    #[allow(dead_code)]
+    fn edge_count(&self) -> usize {
+        self.graph.edge_count()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_minimization_algorithm() {
+        let mut dfa = DFA::new();
+        assert_eq!(dfa.state_count(), 1);
+        assert_eq!(dfa.edge_count(), 0);
+
+        dfa.insert("abcd");
+        assert_eq!(dfa.state_count(), 5);
+        assert_eq!(dfa.edge_count(), 4);
+
+        dfa.insert("abxd");
+        assert_eq!(dfa.state_count(), 7);
+        assert_eq!(dfa.edge_count(), 6);
+
+        dfa.minimize();
+        assert_eq!(dfa.state_count(), 5);
+        assert_eq!(dfa.edge_count(), 5);
     }
 }
