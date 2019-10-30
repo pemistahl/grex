@@ -32,13 +32,24 @@ In the current version, *grex* generates the most specific regular expression po
 
 ## How to install?
 
-You can download the self-contained executable for your platform above and put it in a place of your choice. *grex* is also hosted on [crates.io](https://crates.io/crates/grex), the official Rust package registry. If you are a Rust developer and already have the Rust toolchain installed, the easiest way to download and install is by compiling from source using [*cargo*](https://doc.rust-lang.org/cargo/), the Rust package manager:
+Pre-compiled binaries are available within the package managers [Scoop](https://scoop.sh) (for Windows) and [Homebrew](https://brew.sh) (for macOS and Linux).
+
+### Scoop
+```
+scoop install grex
+```
+
+### Homebrew
+```
+brew tap pemistahl/grex
+brew install grex
+```
+
+Alternatively, you can download the self-contained executable for your platform above and put it in a place of your choice. *grex* is also hosted on [crates.io](https://crates.io/crates/grex), the official Rust package registry. If you are a Rust developer and already have the Rust toolchain installed, you can install by compiling from source using [*cargo*](https://doc.rust-lang.org/cargo/), the Rust package manager:
 
 ```
 cargo install grex
 ```
-
-Support for other popular package managers will be added soon.
 
 ## How to use?
 ```
