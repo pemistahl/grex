@@ -19,7 +19,11 @@ use std::collections::BTreeSet;
 use itertools::EitherOrBoth::Both;
 use itertools::Itertools;
 use maplit::btreeset;
+use ndarray::{Array1, Array2};
+use petgraph::prelude::EdgeRef;
 use unicode_segmentation::UnicodeSegmentation;
+
+use crate::dfa::DFA;
 
 #[derive(Clone, Eq, PartialEq)]
 pub(crate) enum Expression {
@@ -42,7 +46,57 @@ pub(crate) enum Substring {
 }
 
 impl Expression {
-    pub(crate) fn new_alternation(expr1: Expression, expr2: Expression) -> Self {
+    pub(crate) fn from(dfa: DFA) -> Self {
+        let states = dfa.states_in_depth_first_order();
+        let state_count = dfa.state_count();
+
+        let mut a = Array2::<Option<Expression>>::default((state_count, state_count));
+        let mut b = Array1::<Option<Expression>>::default(state_count);
+
+        for (i, state) in states.iter().enumerate() {
+            if dfa.is_final_state(*state) {
+                b[i] = Some(Expression::new_literal(""));
+            }
+
+            for edge in dfa.outgoing_edges(*state) {
+                let edge_label = edge.weight();
+                let literal = Expression::new_literal(edge_label);
+                let j = states.iter().position(|&it| it == edge.target()).unwrap();
+
+                a[(i, j)] = if a[(i, j)].is_some() {
+                    union(&a[(i, j)], &Some(literal))
+                } else {
+                    Some(literal)
+                }
+            }
+        }
+
+        for n in (0..state_count).rev() {
+            if a[(n, n)].is_some() {
+                b[n] = concatenate(&repeat_zero_or_more_times(&a[(n, n)]), &b[n]);
+                for j in 0..n {
+                    a[(n, j)] = concatenate(&repeat_zero_or_more_times(&a[(n, n)]), &a[(n, j)]);
+                }
+            }
+
+            for i in 0..n {
+                if a[(i, n)].is_some() {
+                    b[i] = union(&b[i], &concatenate(&a[(i, n)], &b[n]));
+                    for j in 0..n {
+                        a[(i, j)] = union(&a[(i, j)], &concatenate(&a[(i, n)], &a[(n, j)]));
+                    }
+                }
+            }
+        }
+
+        if !b.is_empty() && b[0].is_some() {
+            b[0].as_ref().unwrap().clone()
+        } else {
+            Expression::new_literal("")
+        }
+    }
+
+    fn new_alternation(expr1: Expression, expr2: Expression) -> Self {
         let mut options: Vec<Expression> = vec![];
         flatten_alternations(&mut options, vec![expr1, expr2]);
         options.sort_by(|a, b| b.len().cmp(&a.len()));
@@ -57,11 +111,11 @@ impl Expression {
         Expression::CharacterClass(union_set)
     }
 
-    pub(crate) fn new_concatenation(expr1: Expression, expr2: Expression) -> Self {
+    fn new_concatenation(expr1: Expression, expr2: Expression) -> Self {
         Expression::Concatenation(Box::from(expr1), Box::from(expr2))
     }
 
-    pub(crate) fn new_literal(value: &str) -> Self {
+    fn new_literal(value: &str) -> Self {
         Expression::Literal(
             UnicodeSegmentation::graphemes(value, true)
                 .map(|it| it.to_string())
@@ -69,7 +123,7 @@ impl Expression {
         )
     }
 
-    pub(crate) fn new_repetition(expr: Expression, quantifier: Quantifier) -> Self {
+    fn new_repetition(expr: Expression, quantifier: Quantifier) -> Self {
         Expression::Repetition(Box::from(expr), quantifier)
     }
 

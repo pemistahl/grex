@@ -22,14 +22,14 @@ use itertools::Itertools;
 use structopt::StructOpt;
 
 use crate::dfa::DFA;
-use crate::postprocessing::escape_non_ascii_chars;
+use crate::regexp::RegExp;
 
 #[macro_use]
 mod macros;
 mod ast;
 mod dfa;
 mod fmt;
-mod postprocessing;
+mod regexp;
 
 #[derive(StructOpt)]
 #[structopt(author, about)]
@@ -61,7 +61,7 @@ struct CLI {
     escape_non_ascii_chars: bool,
 
     #[structopt(
-        name = "with-surrogate-pairs",
+        name = "with-surrogates",
         long,
         requires = "escape",
         help = "Converts astral code points to surrogate pairs if --escape is set"
@@ -73,12 +73,18 @@ fn main() {
     let cli = CLI::from_args();
 
     if !cli.input.is_empty() {
-        let input = cli.input.iter().map(|it| it.as_str()).collect_vec();
-        handle_input(input, cli.escape_non_ascii_chars, cli.use_surrogate_pairs);
+        handle_input(
+            cli.input,
+            cli.escape_non_ascii_chars,
+            cli.use_surrogate_pairs,
+        );
     } else if let Some(file_path) = cli.file_path {
         match std::fs::read_to_string(&file_path) {
             Ok(file_content) => {
-                let input = file_content.lines().collect_vec();
+                let input = file_content
+                    .lines()
+                    .map(|it| String::from(it))
+                    .collect_vec();
                 handle_input(input, cli.escape_non_ascii_chars, cli.use_surrogate_pairs);
             }
             Err(error) => match error.kind() {
@@ -94,20 +100,16 @@ fn main() {
     }
 }
 
-fn handle_input(mut strs: Vec<&str>, escape_chars: bool, use_surrogate_pairs: bool) {
+fn handle_input(mut strs: Vec<String>, escape_chars: bool, use_surrogate_pairs: bool) {
     sort_input(&mut strs);
-    let regex = DFA::from(strs).to_regex();
-    if escape_chars {
-        println!("{}", escape_non_ascii_chars(&regex, use_surrogate_pairs));
-    } else {
-        println!("{}", regex);
-    }
+    let regex = RegExp::from(DFA::from(strs), escape_chars, use_surrogate_pairs);
+    println!("{}", regex);
 }
 
-fn sort_input(strs: &mut Vec<&str>) {
+fn sort_input(strs: &mut Vec<String>) {
     strs.sort();
     strs.dedup();
-    strs.sort_by(|&a, &b| match a.len().cmp(&b.len()) {
+    strs.sort_by(|a, b| match a.len().cmp(&b.len()) {
         Ordering::Equal => a.cmp(&b),
         other => other,
     });

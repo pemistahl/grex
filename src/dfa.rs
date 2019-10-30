@@ -18,21 +18,17 @@ use std::collections::{BTreeSet, HashMap, HashSet};
 
 use itertools::Itertools;
 use linked_list::LinkedList;
-use ndarray::{Array1, Array2};
 use petgraph::graph::NodeIndex;
-use petgraph::prelude::EdgeRef;
-use petgraph::stable_graph::StableGraph;
+use petgraph::stable_graph::{Edges, StableGraph};
 use petgraph::visit::Dfs;
-use petgraph::Direction;
+use petgraph::{Directed, Direction};
 use unicode_segmentation::UnicodeSegmentation;
-
-use crate::ast::{concatenate, repeat_zero_or_more_times, union, Expression};
 
 type State = NodeIndex<u32>;
 type StateLabel = String;
 type EdgeLabel = String;
 
-pub struct DFA {
+pub(crate) struct DFA {
     alphabet: BTreeSet<String>,
     graph: StableGraph<StateLabel, EdgeLabel>,
     initial_state: State,
@@ -40,6 +36,36 @@ pub struct DFA {
 }
 
 impl DFA {
+    pub(crate) fn from(strs: Vec<String>) -> Self {
+        let mut dfa = Self::new();
+        for elem in strs {
+            dfa.insert(elem);
+        }
+        dfa.minimize();
+        dfa
+    }
+
+    pub(crate) fn state_count(&self) -> usize {
+        self.graph.node_count()
+    }
+
+    pub(crate) fn states_in_depth_first_order(&self) -> Vec<State> {
+        let mut depth_first_search = Dfs::new(&self.graph, self.initial_state);
+        let mut states = vec![];
+        while let Some(state) = depth_first_search.next(&self.graph) {
+            states.push(state);
+        }
+        states
+    }
+
+    pub(crate) fn outgoing_edges(&self, state: State) -> Edges<String, Directed> {
+        self.graph.edges_directed(state, Direction::Outgoing)
+    }
+
+    pub(crate) fn is_final_state(&self, state: State) -> bool {
+        self.final_state_indices.contains(&state.index())
+    }
+
     fn new() -> Self {
         let mut graph = StableGraph::new();
         let initial_state = graph.add_node("".to_string());
@@ -51,18 +77,9 @@ impl DFA {
         }
     }
 
-    pub fn from(strs: Vec<&str>) -> Self {
-        let mut dfa = Self::new();
-        for elem in strs {
-            dfa.insert(elem);
-        }
-        dfa.minimize();
-        dfa
-    }
-
-    fn insert(&mut self, s: &str) {
+    fn insert(&mut self, s: String) {
         let mut current_state = self.initial_state;
-        for grapheme in UnicodeSegmentation::graphemes(s, true) {
+        for grapheme in UnicodeSegmentation::graphemes(&s[..], true) {
             self.alphabet.insert(grapheme.to_string());
             current_state = self.get_next_state(current_state, &grapheme);
         }
@@ -217,76 +234,6 @@ impl DFA {
         self.final_state_indices = final_state_indices;
         self.graph = graph;
     }
-
-    fn is_final_state(&self, state: State) -> bool {
-        self.final_state_indices.contains(&state.index())
-    }
-
-    pub fn to_regex(&self) -> String {
-        let state_count = self.graph.node_count();
-
-        let mut a = Array2::<Option<Expression>>::default((state_count, state_count));
-        let mut b = Array1::<Option<Expression>>::default(state_count);
-
-        let mut depth_first_search = Dfs::new(&self.graph, self.initial_state);
-        let mut states = vec![];
-
-        while let Some(state) = depth_first_search.next(&self.graph) {
-            states.push(state);
-        }
-
-        for (i, state) in states.iter().enumerate() {
-            if self.is_final_state(*state) {
-                b[i] = Some(Expression::new_literal(""));
-            }
-
-            for edge in self.graph.edges_directed(*state, Direction::Outgoing) {
-                let edge_label = edge.weight();
-                let literal = Expression::new_literal(edge_label);
-                let j = states.iter().position(|&it| it == edge.target()).unwrap();
-
-                a[(i, j)] = if a[(i, j)].is_some() {
-                    union(&a[(i, j)], &Some(literal))
-                } else {
-                    Some(literal)
-                }
-            }
-        }
-
-        for n in (0..state_count).rev() {
-            if a[(n, n)].is_some() {
-                b[n] = concatenate(&repeat_zero_or_more_times(&a[(n, n)]), &b[n]);
-                for j in 0..n {
-                    a[(n, j)] = concatenate(&repeat_zero_or_more_times(&a[(n, n)]), &a[(n, j)]);
-                }
-            }
-
-            for i in 0..n {
-                if a[(i, n)].is_some() {
-                    b[i] = union(&b[i], &concatenate(&a[(i, n)], &b[n]));
-                    for j in 0..n {
-                        a[(i, j)] = union(&a[(i, j)], &concatenate(&a[(i, n)], &a[(n, j)]));
-                    }
-                }
-            }
-        }
-
-        if !b.is_empty() && b[0].is_some() {
-            format!("^{}$", b[0].as_ref().unwrap().to_string())
-        } else {
-            String::from("^$")
-        }
-    }
-
-    #[allow(dead_code)]
-    fn state_count(&self) -> usize {
-        self.graph.node_count()
-    }
-
-    #[allow(dead_code)]
-    fn edge_count(&self) -> usize {
-        self.graph.edge_count()
-    }
 }
 
 #[cfg(test)]
@@ -296,19 +243,26 @@ mod tests {
     #[test]
     fn test_minimization_algorithm() {
         let mut dfa = DFA::new();
-        assert_eq!(dfa.state_count(), 1);
-        assert_eq!(dfa.edge_count(), 0);
+        assert_eq!(dfa.graph.node_count(), 1);
+        assert_eq!(dfa.graph.edge_count(), 0);
 
-        dfa.insert("abcd");
-        assert_eq!(dfa.state_count(), 5);
-        assert_eq!(dfa.edge_count(), 4);
+        dfa.insert(String::from("abcd"));
+        assert_eq!(dfa.graph.node_count(), 5);
+        assert_eq!(dfa.graph.edge_count(), 4);
 
-        dfa.insert("abxd");
-        assert_eq!(dfa.state_count(), 7);
-        assert_eq!(dfa.edge_count(), 6);
+        dfa.insert(String::from("abxd"));
+        assert_eq!(dfa.graph.node_count(), 7);
+        assert_eq!(dfa.graph.edge_count(), 6);
 
         dfa.minimize();
-        assert_eq!(dfa.state_count(), 5);
-        assert_eq!(dfa.edge_count(), 5);
+        assert_eq!(dfa.graph.node_count(), 5);
+        assert_eq!(dfa.graph.edge_count(), 5);
+    }
+
+    #[test]
+    fn test_dfa_constructor() {
+        let dfa = DFA::from(vec![String::from("abcd"), String::from("abxd")]);
+        assert_eq!(dfa.graph.node_count(), 5);
+        assert_eq!(dfa.graph.edge_count(), 5);
     }
 }

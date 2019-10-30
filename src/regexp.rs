@@ -14,9 +14,39 @@
  * limitations under the License.
  */
 
+use crate::ast::Expression;
+use crate::dfa::DFA;
 use itertools::Itertools;
+use std::fmt::{Display, Formatter, Result};
 
-pub(crate) fn escape_non_ascii_chars(regex: &str, use_surrogate_pairs: bool) -> String {
+pub(crate) struct RegExp {
+    ast: Expression,
+    escape_non_ascii_chars: bool,
+    use_surrogate_pairs: bool,
+}
+
+impl RegExp {
+    pub(crate) fn from(dfa: DFA, escape_non_ascii_chars: bool, use_surrogate_pairs: bool) -> Self {
+        Self {
+            ast: Expression::from(dfa),
+            escape_non_ascii_chars,
+            use_surrogate_pairs,
+        }
+    }
+}
+
+impl Display for RegExp {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
+        let regex_str = if self.escape_non_ascii_chars {
+            escape_non_ascii_chars(self.ast.to_string(), self.use_surrogate_pairs)
+        } else {
+            self.ast.to_string()
+        };
+        write!(f, "^{}$", regex_str)
+    }
+}
+
+fn escape_non_ascii_chars(regex: String, use_surrogate_pairs: bool) -> String {
     let surrogate_range = '\u{10000}'..'\u{10ffff}';
     regex
         .chars()
@@ -41,18 +71,19 @@ fn convert_to_surrogate_pair(c: char) -> String {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use maplit::hashmap;
+
+    use super::*;
 
     #[test]
     fn test_escaping_non_ascii_chars() {
         let input = "My ♥ and 💩 is yours.";
         assert_eq!(
-            escape_non_ascii_chars(input, false),
+            escape_non_ascii_chars(input.to_string(), false),
             "My \\u{2665} and \\u{1f4a9} is yours."
         );
         assert_eq!(
-            escape_non_ascii_chars(input, true),
+            escape_non_ascii_chars(input.to_string(), true),
             "My \\u{2665} and \\u{d83d}\\u{dca9} is yours."
         );
     }
