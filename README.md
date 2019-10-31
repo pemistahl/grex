@@ -41,7 +41,7 @@ scoop install grex
 
 ### Homebrew
 ```
-brew tap pemistahl/grex
+brew tap pemistahl/formulas
 brew install grex
 ```
 
