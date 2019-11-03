@@ -15,7 +15,7 @@
  */
 
 use std::cmp::Ordering;
-use std::io::ErrorKind;
+use std::io::{Error, ErrorKind};
 use std::path::PathBuf;
 
 use itertools::Itertools;
@@ -72,45 +72,47 @@ struct CLI {
 fn main() {
     let cli = CLI::from_args();
 
-    if !cli.input.is_empty() {
-        handle_input(
-            cli.input,
-            cli.escape_non_ascii_chars,
-            cli.use_surrogate_pairs,
-        );
+    let input = if !cli.input.is_empty() {
+        Ok(cli.input)
     } else if let Some(file_path) = cli.file_path {
         match std::fs::read_to_string(&file_path) {
-            Ok(file_content) => {
-                let input = file_content
-                    .lines()
-                    .map(|it| String::from(it))
-                    .collect_vec();
-                handle_input(input, cli.escape_non_ascii_chars, cli.use_surrogate_pairs);
-            }
-            Err(error) => match error.kind() {
-                ErrorKind::NotFound => {
-                    eprintln!("error: The file {:?} could not be found", file_path)
-                }
-                _ => eprintln!(
-                    "error: The file {:?} was found but could not be opened",
-                    file_path
-                ),
-            },
+            Ok(file_content) => Ok(file_content
+                .lines()
+                .map(|it| String::from(it))
+                .collect_vec()),
+            Err(error) => Err(error),
         }
+    } else {
+        Err(Error::new(
+            ErrorKind::InvalidInput,
+            "error: no valid input could be found whatsoever",
+        ))
+    };
+
+    match input {
+        Ok(mut test_cases) => {
+            test_cases.sort();
+            test_cases.dedup();
+            test_cases.sort_by(|a, b| match a.len().cmp(&b.len()) {
+                Ordering::Equal => a.cmp(&b),
+                other => other,
+            });
+            let regex = RegExp::from(
+                DFA::from(test_cases),
+                cli.escape_non_ascii_chars,
+                cli.use_surrogate_pairs,
+            );
+            println!("{}", regex);
+        }
+        Err(error) => match error.kind() {
+            ErrorKind::NotFound => eprintln!("error: the specified file could not be found"),
+            ErrorKind::InvalidData => {
+                eprintln!("error: the specified file's encoding is not valid UTF-8")
+            }
+            ErrorKind::PermissionDenied => {
+                eprintln!("permission denied: the specified file could not be opened")
+            }
+            _ => eprintln!("error: {}", error),
+        },
     }
-}
-
-fn handle_input(mut strs: Vec<String>, escape_chars: bool, use_surrogate_pairs: bool) {
-    sort_input(&mut strs);
-    let regex = RegExp::from(DFA::from(strs), escape_chars, use_surrogate_pairs);
-    println!("{}", regex);
-}
-
-fn sort_input(strs: &mut Vec<String>) {
-    strs.sort();
-    strs.dedup();
-    strs.sort_by(|a, b| match a.len().cmp(&b.len()) {
-        Ordering::Equal => a.cmp(&b),
-        other => other,
-    });
 }

@@ -73,7 +73,7 @@ fn assert_that_grex_fails_when_file_does_not_exist() {
         .success()
         .stdout(predicate::str::is_empty())
         .stderr(predicate::eq(
-            "error: The file \"/path/to/non-existing/file\" could not be found\n",
+            "error: the specified file could not be found\n",
         ));
 }
 
