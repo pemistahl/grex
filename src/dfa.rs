@@ -36,10 +36,10 @@ pub(crate) struct DFA {
 }
 
 impl DFA {
-    pub(crate) fn from(strs: Vec<String>) -> Self {
+    pub(crate) fn from(strs: &[String]) -> Self {
         let mut dfa = Self::new();
         for elem in strs {
-            dfa.insert(elem);
+            dfa.insert(elem.clone());
         }
         dfa.minimize();
         dfa
@@ -111,6 +111,7 @@ impl DFA {
         next_state
     }
 
+    #[allow(clippy::many_single_char_names)]
     fn minimize(&mut self) {
         let mut p = self.get_initial_partition();
         let mut w = p.iter().cloned().collect_vec();
@@ -241,6 +242,86 @@ mod tests {
     use super::*;
 
     #[test]
+    fn test_state_count() {
+        let mut dfa = DFA::new();
+        assert_eq!(dfa.state_count(), 1);
+
+        dfa.insert(String::from("abcd"));
+        assert_eq!(dfa.state_count(), 5);
+    }
+
+    #[test]
+    fn test_is_final_state() {
+        let dfa = DFA::from(&vec![String::from("abcd")]);
+
+        let intermediate_state = State::new(3);
+        assert_eq!(dfa.is_final_state(intermediate_state), false);
+
+        let final_state = State::new(4);
+        assert_eq!(dfa.is_final_state(final_state), true);
+    }
+
+    #[test]
+    fn test_outgoing_edges() {
+        let dfa = DFA::from(&vec![String::from("abcd"), String::from("abxd")]);
+        let state = State::new(2);
+        let mut edges = dfa.outgoing_edges(state);
+
+        let first_edge = edges.next();
+        assert!(first_edge.is_some());
+        assert_eq!(first_edge.unwrap().weight(), &String::from("c"));
+
+        let second_edge = edges.next();
+        assert!(second_edge.is_some());
+        assert_eq!(second_edge.unwrap().weight(), &String::from("x"));
+
+        let third_edge = edges.next();
+        assert!(third_edge.is_none());
+    }
+
+    #[test]
+    fn test_states_in_depth_first_order() {
+        let dfa = DFA::from(&vec![String::from("abcd"), String::from("axyz")]);
+        let states = dfa.states_in_depth_first_order();
+        assert_eq!(states.len(), 7);
+
+        let first_state = states.get(0).unwrap();
+        let mut edges = dfa.outgoing_edges(*first_state);
+        assert_eq!(edges.next().unwrap().weight(), &String::from("a"));
+        assert!(edges.next().is_none());
+
+        let second_state = states.get(1).unwrap();
+        edges = dfa.outgoing_edges(*second_state);
+        assert_eq!(edges.next().unwrap().weight(), &String::from("b"));
+        assert_eq!(edges.next().unwrap().weight(), &String::from("x"));
+        assert!(edges.next().is_none());
+
+        let third_state = states.get(2).unwrap();
+        edges = dfa.outgoing_edges(*third_state);
+        assert_eq!(edges.next().unwrap().weight(), &String::from("y"));
+        assert!(edges.next().is_none());
+
+        let fourth_state = states.get(3).unwrap();
+        edges = dfa.outgoing_edges(*fourth_state);
+        assert_eq!(edges.next().unwrap().weight(), &String::from("z"));
+        assert!(edges.next().is_none());
+
+        let fifth_state = states.get(4).unwrap();
+        edges = dfa.outgoing_edges(*fifth_state);
+        assert!(edges.next().is_none());
+
+        let sixth_state = states.get(5).unwrap();
+        edges = dfa.outgoing_edges(*sixth_state);
+        assert_eq!(edges.next().unwrap().weight(), &String::from("c"));
+        assert!(edges.next().is_none());
+
+        let seventh_state = states.get(6).unwrap();
+        edges = dfa.outgoing_edges(*seventh_state);
+        assert_eq!(edges.next().unwrap().weight(), &String::from("d"));
+        assert!(edges.next().is_none());
+    }
+
+    #[test]
     fn test_minimization_algorithm() {
         let mut dfa = DFA::new();
         assert_eq!(dfa.graph.node_count(), 1);
@@ -261,7 +342,7 @@ mod tests {
 
     #[test]
     fn test_dfa_constructor() {
-        let dfa = DFA::from(vec![String::from("abcd"), String::from("abxd")]);
+        let dfa = DFA::from(&vec![String::from("abcd"), String::from("abxd")]);
         assert_eq!(dfa.graph.node_count(), 5);
         assert_eq!(dfa.graph.edge_count(), 5);
     }

@@ -14,22 +14,13 @@
  * limitations under the License.
  */
 
-use std::cmp::Ordering;
 use std::io::{Error, ErrorKind};
 use std::path::PathBuf;
 
 use itertools::Itertools;
 use structopt::StructOpt;
 
-use crate::dfa::DFA;
-use crate::regexp::RegExp;
-
-#[macro_use]
-mod macros;
-mod ast;
-mod dfa;
-mod fmt;
-mod regexp;
+use grex::RegExpBuilder;
 
 #[derive(StructOpt)]
 #[structopt(author, about)]
@@ -38,7 +29,7 @@ struct CLI {
         value_name = "INPUT",
         required_unless = "file",
         conflicts_with = "file",
-        help = "One or more strings separated by blank space"
+        help = "One or more test cases separated by blank space"
     )]
     input: Vec<String>,
 
@@ -49,7 +40,7 @@ struct CLI {
         long,
         parse(from_os_str),
         required_unless = "input",
-        help = "Reads input strings from a file with each string on a separate line"
+        help = "Reads test cases separated by newline characters from a file"
     )]
     file_path: Option<PathBuf>,
 
@@ -71,15 +62,15 @@ struct CLI {
 
 fn main() {
     let cli = CLI::from_args();
+    handle_input(&cli, obtain_input(&cli));
+}
 
-    let input = if !cli.input.is_empty() {
-        Ok(cli.input)
-    } else if let Some(file_path) = cli.file_path {
+fn obtain_input(cli: &CLI) -> Result<Vec<String>, Error> {
+    if !cli.input.is_empty() {
+        Ok(cli.input.clone())
+    } else if let Some(file_path) = &cli.file_path {
         match std::fs::read_to_string(&file_path) {
-            Ok(file_content) => Ok(file_content
-                .lines()
-                .map(|it| String::from(it))
-                .collect_vec()),
+            Ok(file_content) => Ok(file_content.lines().map(|it| it.to_string()).collect_vec()),
             Err(error) => Err(error),
         }
     } else {
@@ -87,22 +78,20 @@ fn main() {
             ErrorKind::InvalidInput,
             "error: no valid input could be found whatsoever",
         ))
-    };
+    }
+}
 
+fn handle_input(cli: &CLI, input: Result<Vec<String>, Error>) {
     match input {
-        Ok(mut test_cases) => {
-            test_cases.sort();
-            test_cases.dedup();
-            test_cases.sort_by(|a, b| match a.len().cmp(&b.len()) {
-                Ordering::Equal => a.cmp(&b),
-                other => other,
-            });
-            let regex = RegExp::from(
-                DFA::from(test_cases),
-                cli.escape_non_ascii_chars,
-                cli.use_surrogate_pairs,
-            );
-            println!("{}", regex);
+        Ok(test_cases) => {
+            let regexp = if cli.escape_non_ascii_chars {
+                RegExpBuilder::from(test_cases)
+                    .with_escaped_non_ascii_chars(cli.use_surrogate_pairs)
+                    .build()
+            } else {
+                RegExpBuilder::from(test_cases).build()
+            };
+            println!("{}", regexp);
         }
         Err(error) => match error.kind() {
             ErrorKind::NotFound => eprintln!("error: the specified file could not be found"),

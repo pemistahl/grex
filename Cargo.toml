@@ -14,10 +14,10 @@
 
 [package]
 name = "grex"
-version = "0.2.0"
+version = "0.3.0"
 authors = ["Peter M. Stahl <pemistahl@gmail.com>"]
 description = """
-grex generates regular expressions from user-provided input strings.
+grex generates regular expressions from user-provided test cases.
 """
 homepage = "https://github.com/pemistahl/grex"
 repository = "https://github.com/pemistahl/grex"
@@ -28,14 +28,14 @@ categories = ["command-line-utilities"]
 keywords = ["pattern", "regex", "regexp"]
 
 [dependencies]
-itertools = "0.8.0"
+itertools = "0.8.1"
 linked-list = "0.0.3"
 maplit = "1.0.2"
 ndarray = "0.13.0"
 petgraph = "0.4.13"
-structopt = "0.3.3"
+structopt = "0.3.4"
 unic-char-range = "0.9.0"
-unicode-segmentation = "1.3.0"
+unicode-segmentation = "1.6.0"
 
 [dev-dependencies]
 assert_cmd = "0.11.1"

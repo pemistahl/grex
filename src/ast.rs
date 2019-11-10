@@ -219,7 +219,7 @@ fn flatten_alternations(flattened_options: &mut Vec<Expression>, current_options
     }
 }
 
-pub(crate) fn repeat_zero_or_more_times(expr: &Option<Expression>) -> Option<Expression> {
+fn repeat_zero_or_more_times(expr: &Option<Expression>) -> Option<Expression> {
     if let Some(value) = expr {
         Some(Expression::new_repetition(
             value.clone(),
@@ -230,7 +230,7 @@ pub(crate) fn repeat_zero_or_more_times(expr: &Option<Expression>) -> Option<Exp
     }
 }
 
-pub(crate) fn concatenate(a: &Option<Expression>, b: &Option<Expression>) -> Option<Expression> {
+fn concatenate(a: &Option<Expression>, b: &Option<Expression>) -> Option<Expression> {
     if a.is_none() || b.is_none() {
         return None;
     }
@@ -276,7 +276,7 @@ pub(crate) fn concatenate(a: &Option<Expression>, b: &Option<Expression>) -> Opt
     Some(Expression::new_concatenation(expr1.clone(), expr2.clone()))
 }
 
-pub(crate) fn union(a: &Option<Expression>, b: &Option<Expression>) -> Option<Expression> {
+fn union(a: &Option<Expression>, b: &Option<Expression>) -> Option<Expression> {
     if let (Some(mut expr1), Some(mut expr2)) = (a.clone(), b.clone()) {
         if expr1 != expr2 {
             let common_prefix = remove_common_substring(&mut expr1, &mut expr2, Substring::Prefix);
@@ -442,6 +442,18 @@ mod tests {
         let alternation1 = Expression::new_alternation(literal1, literal2);
         let alternation2 = Expression::new_alternation(alternation1, literal3);
         assert_eq!(alternation2.to_string(), "abc|ab|a");
+    }
+
+    #[test]
+    fn ensure_correct_string_representation_of_character_class_1() {
+        let char_class = Expression::new_character_class(btreeset!['a'], btreeset!['b']);
+        assert_eq!(char_class.to_string(), "[ab]");
+    }
+
+    #[test]
+    fn ensure_correct_string_representation_of_character_class_2() {
+        let char_class = Expression::new_character_class(btreeset!['a', 'b'], btreeset!['c']);
+        assert_eq!(char_class.to_string(), "[a-c]");
     }
 
     #[test]
