@@ -21,6 +21,7 @@ mod ast;
 mod dfa;
 mod fmt;
 mod regexp;
+mod repetition;
 
 pub use regexp::RegExp;
 pub use regexp::RegExpBuilder;
