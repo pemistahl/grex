@@ -16,7 +16,7 @@
 
 use crate::ast::Expression;
 use crate::dfa::DFA;
-use crate::str::GraphemeCluster;
+use crate::grapheme::GraphemeCluster;
 use itertools::Itertools;
 use std::cmp::Ordering;
 use std::fmt::{Display, Formatter, Result};
@@ -66,7 +66,7 @@ impl RegExp {
     ) -> Self {
         Self::sort(test_cases);
         Self {
-            ast: Expression::from(DFA::from(Self::convert_to_graphemes(&test_cases))),
+            ast: Expression::from(DFA::from(Self::grapheme_clusters(&test_cases))),
             escape_non_ascii_chars,
             use_surrogate_pairs,
         }
@@ -81,15 +81,8 @@ impl RegExp {
         });
     }
 
-    fn convert_to_graphemes(test_cases: &Vec<String>) -> Vec<Vec<GraphemeCluster>> {
-        let mut graphemes_vecs = vec![];
-        for test_case in test_cases.iter() {
-            let graphemes = UnicodeSegmentation::graphemes(&test_case[..], true)
-                .map(|it| GraphemeCluster::from(it))
-                .collect_vec();
-            graphemes_vecs.push(graphemes);
-        }
-        graphemes_vecs
+    fn grapheme_clusters(test_cases: &Vec<String>) -> Vec<GraphemeCluster> {
+        test_cases.iter().map(|it| GraphemeCluster::from(it)).collect_vec()
     }
 
     fn escape(&self, use_surrogate_pairs: bool) -> String {

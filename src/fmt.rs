@@ -21,6 +21,7 @@ use itertools::Itertools;
 use unic_char_range::CharRange;
 
 use crate::ast::{Expression, Quantifier};
+use crate::grapheme::GraphemeCluster;
 
 impl Display for Expression {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
@@ -28,7 +29,7 @@ impl Display for Expression {
             Expression::Alternation(options) => format_alternation(f, &self, options),
             Expression::CharacterClass(char_set) => format_character_class(f, char_set),
             Expression::Concatenation(expr1, expr2) => format_concatenation(f, &self, expr1, expr2),
-            Expression::Literal(graphemes) => format_literal(f, graphemes),
+            Expression::Literal(cluster) => format_literal(f, cluster),
             Expression::Repetition(expr, quantifier) => {
                 format_repetition(f, &self, expr, quantifier)
             }
@@ -138,14 +139,14 @@ fn format_concatenation(
     )
 }
 
-fn format_literal(f: &mut Formatter<'_>, graphemes: &[String]) -> Result {
+fn format_literal(f: &mut Formatter<'_>, cluster: &GraphemeCluster) -> Result {
     let chars_to_escape = [
         "(", ")", "[", "]", "{", "}", "\\", "+", "*", "-", ".", "?", "|", "^", "$",
     ];
-    let literal_str = graphemes
+    let literal_str = cluster.graphemes()
         .iter()
         .map(|it| {
-            let s = it.as_str();
+            let s = it.value().as_str();
             if chars_to_escape.contains(&s) {
                 format!("{}{}", "\\", it)
             } else if s == "\t" {
@@ -155,7 +156,7 @@ fn format_literal(f: &mut Formatter<'_>, graphemes: &[String]) -> Result {
             } else if s == "\r" {
                 "\\r".to_string()
             } else {
-                it.to_string()
+                it.value().clone()
             }
         })
         .join("");

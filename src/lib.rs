@@ -22,7 +22,7 @@ mod dfa;
 mod fmt;
 mod regexp;
 mod repetition;
-mod str;
+mod grapheme;
 
 pub use regexp::RegExp;
 pub use regexp::RegExpBuilder;

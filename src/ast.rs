@@ -24,14 +24,14 @@ use petgraph::prelude::EdgeRef;
 use unicode_segmentation::UnicodeSegmentation;
 
 use crate::dfa::DFA;
-use crate::str::GraphemeCluster;
+use crate::grapheme::GraphemeCluster;
 
 #[derive(Clone, Eq, PartialEq)]
 pub(crate) enum Expression {
     Alternation(Vec<Expression>),
     CharacterClass(BTreeSet<char>),
     Concatenation(Box<Expression>, Box<Expression>),
-    Literal(Vec<String>),
+    Literal(GraphemeCluster),
     Repetition(Box<Expression>, Quantifier),
 }
 
@@ -56,12 +56,12 @@ impl Expression {
 
         for (i, state) in states.iter().enumerate() {
             if dfa.is_final_state(*state) {
-                b[i] = Some(Expression::new_literal(""));
+                b[i] = Some(Expression::new_literal(GraphemeCluster::from("")));
             }
 
             for edge in dfa.outgoing_edges(*state) {
-                let edge_label = edge.weight();
-                let literal = Expression::new_literal(&edge_label.value);
+                let grapheme = edge.weight();
+                let literal = Expression::new_literal(GraphemeCluster::new(grapheme.clone()));
                 let j = states.iter().position(|&it| it == edge.target()).unwrap();
 
                 a[(i, j)] = if a[(i, j)].is_some() {
@@ -93,7 +93,7 @@ impl Expression {
         if !b.is_empty() && b[0].is_some() {
             b[0].as_ref().unwrap().clone()
         } else {
-            Expression::new_literal("")
+            Expression::new_literal(GraphemeCluster::from(""))
         }
     }
 
@@ -116,12 +116,8 @@ impl Expression {
         Expression::Concatenation(Box::from(expr1), Box::from(expr2))
     }
 
-    fn new_literal(value: &str) -> Self {
-        Expression::Literal(
-            UnicodeSegmentation::graphemes(value, true)
-                .map(|it| it.to_string())
-                .collect_vec(),
-        )
+    fn new_literal(cluster: GraphemeCluster) -> Self {
+        Expression::Literal(cluster)
     }
 
     fn new_repetition(expr: Expression, quantifier: Quantifier) -> Self {
@@ -130,7 +126,7 @@ impl Expression {
 
     fn is_empty(&self) -> bool {
         match self {
-            Expression::Literal(graphemes) => graphemes.is_empty(),
+            Expression::Literal(cluster) => cluster.is_empty(),
             _ => false,
         }
     }
@@ -138,9 +134,7 @@ impl Expression {
     pub(crate) fn is_single_codepoint(&self) -> bool {
         match self {
             Expression::CharacterClass(_) => true,
-            Expression::Literal(graphemes) => {
-                graphemes.len() == 1 && graphemes.first().unwrap().chars().count() == 1
-            }
+            Expression::Literal(cluster) => cluster.char_count() == 1,
             _ => false,
         }
     }
@@ -150,7 +144,7 @@ impl Expression {
             Expression::Alternation(options) => options.first().unwrap().len(),
             Expression::CharacterClass(_) => 1,
             Expression::Concatenation(expr1, expr2) => expr1.len() + expr2.len(),
-            Expression::Literal(graphemes) => graphemes.len(),
+            Expression::Literal(cluster) => cluster.size(),
             Expression::Repetition(expr, _) => expr.len(),
         }
     }
@@ -177,11 +171,12 @@ impl Expression {
                     }
                 }
             },
-            Expression::Literal(graphemes) => match substring {
+            Expression::Literal(cluster) => match substring {
                 Substring::Prefix => {
-                    graphemes.drain(..length);
+                    cluster.graphemes_mut().drain(..length);
                 }
                 Substring::Suffix => {
+                    let mut graphemes = cluster.graphemes_mut();
                     graphemes.drain(graphemes.len() - length..);
                 }
             },
@@ -198,10 +193,10 @@ impl Expression {
                 },
                 None => None,
             },
-            Expression::Literal(graphemes) => {
+            Expression::Literal(cluster) => {
                 let mut v = vec![];
-                for grapheme in graphemes {
-                    v.push(grapheme.as_str());
+                for grapheme in cluster.graphemes() {
+                    v.push(grapheme.value().as_str());
                 }
                 Some(v)
             }
@@ -247,18 +242,14 @@ fn concatenate(a: &Option<Expression>, b: &Option<Expression>) -> Option<Express
     }
 
     if let (Expression::Literal(graphemes_a), Expression::Literal(graphemes_b)) = (&expr1, &expr2) {
-        return Some(Expression::new_literal(
-            format!("{}{}", graphemes_a.join(""), graphemes_b.join("")).as_str(),
-        ));
+        return Some(Expression::new_literal(GraphemeCluster::merge(graphemes_a, graphemes_b)));
     }
 
     if let (Expression::Literal(graphemes_a), Expression::Concatenation(first, second)) =
         (&expr1, &expr2)
     {
         if let Expression::Literal(graphemes_first) = &**first {
-            let literal = Expression::new_literal(
-                format!("{}{}", graphemes_a.join(""), graphemes_first.join("")).as_str(),
-            );
+            let literal = Expression::new_literal(GraphemeCluster::merge(graphemes_a, graphemes_first));
             return Some(Expression::new_concatenation(literal, *second.clone()));
         }
     }
@@ -267,9 +258,7 @@ fn concatenate(a: &Option<Expression>, b: &Option<Expression>) -> Option<Express
         (&expr2, &expr1)
     {
         if let Expression::Literal(graphemes_second) = &**second {
-            let literal = Expression::new_literal(
-                format!("{}{}", graphemes_second.join(""), graphemes_b.join("")).as_str(),
-            );
+            let literal = Expression::new_literal(GraphemeCluster::merge(graphemes_second, graphemes_b));
             return Some(Expression::new_concatenation(*first.clone(), literal));
         }
     }
@@ -336,7 +325,7 @@ fn union(a: &Option<Expression>, b: &Option<Expression>) -> Option<Expression> {
 
             if let Some(prefix) = common_prefix {
                 result = Some(Expression::new_concatenation(
-                    Expression::new_literal(&prefix),
+                    Expression::new_literal(GraphemeCluster::from(&prefix)),
                     result.unwrap(),
                 ));
             }
@@ -344,7 +333,7 @@ fn union(a: &Option<Expression>, b: &Option<Expression>) -> Option<Expression> {
             if let Some(suffix) = common_suffix {
                 result = Some(Expression::new_concatenation(
                     result.unwrap(),
-                    Expression::new_literal(&suffix),
+                    Expression::new_literal(GraphemeCluster::from(&suffix)),
                 ));
             }
 
@@ -367,8 +356,8 @@ fn union(a: &Option<Expression>, b: &Option<Expression>) -> Option<Expression> {
 
 fn extract_character_set(expr: Expression) -> BTreeSet<char> {
     match expr {
-        Expression::Literal(graphemes) => {
-            let single_char = graphemes.first().unwrap().chars().next().unwrap();
+        Expression::Literal(cluster) => {
+            let single_char = cluster.graphemes().first().unwrap().value().chars().next().unwrap();
             btreeset![single_char]
         }
         Expression::CharacterClass(char_set) => char_set,
@@ -426,20 +415,21 @@ fn find_common_substring(a: &Expression, b: &Expression, substring: &Substring) 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use unicode_segmentation::UnicodeSegmentation;
 
     #[test]
     fn ensure_correct_string_representation_of_alternation_1() {
-        let literal1 = Expression::new_literal("abc");
-        let literal2 = Expression::new_literal("def");
+        let literal1 = Expression::new_literal(GraphemeCluster::from("abc"));
+        let literal2 = Expression::new_literal(GraphemeCluster::from("def"));
         let alternation = Expression::new_alternation(literal1, literal2);
         assert_eq!(alternation.to_string(), "abc|def");
     }
 
     #[test]
     fn ensure_correct_string_representation_of_alternation_2() {
-        let literal1 = Expression::new_literal("a");
-        let literal2 = Expression::new_literal("ab");
-        let literal3 = Expression::new_literal("abc");
+        let literal1 = Expression::new_literal(GraphemeCluster::from("a"));
+        let literal2 = Expression::new_literal(GraphemeCluster::from("ab"));
+        let literal3 = Expression::new_literal(GraphemeCluster::from("abc"));
         let alternation1 = Expression::new_alternation(literal1, literal2);
         let alternation2 = Expression::new_alternation(alternation1, literal3);
         assert_eq!(alternation2.to_string(), "abc|ab|a");
@@ -459,16 +449,16 @@ mod tests {
 
     #[test]
     fn ensure_correct_string_representation_of_concatenation_1() {
-        let literal1 = Expression::new_literal("abc");
-        let literal2 = Expression::new_literal("def");
+        let literal1 = Expression::new_literal(GraphemeCluster::from("abc"));
+        let literal2 = Expression::new_literal(GraphemeCluster::from("def"));
         let concatenation = Expression::new_concatenation(literal1, literal2);
         assert_eq!(concatenation.to_string(), "abcdef");
     }
 
     #[test]
     fn ensure_correct_string_representation_of_concatenation_2() {
-        let literal1 = Expression::new_literal("abc");
-        let literal2 = Expression::new_literal("def");
+        let literal1 = Expression::new_literal(GraphemeCluster::from("abc"));
+        let literal2 = Expression::new_literal(GraphemeCluster::from("def"));
         let repetition = Expression::new_repetition(literal1, Quantifier::KleeneStar);
         let concatenation = Expression::new_concatenation(repetition, literal2);
         assert_eq!(concatenation.to_string(), "(abc)*def");
@@ -476,7 +466,7 @@ mod tests {
 
     #[test]
     fn ensure_correct_removal_of_prefix_in_literal() {
-        let mut literal = Expression::new_literal("abcdef");
+        let mut literal = Expression::new_literal(GraphemeCluster::from("abcdef"));
         assert_eq!(
             literal.value(None),
             Some(vec!["a", "b", "c", "d", "e", "f"])
@@ -488,7 +478,7 @@ mod tests {
 
     #[test]
     fn ensure_correct_removal_of_suffix_in_literal() {
-        let mut literal = Expression::new_literal("abcdef");
+        let mut literal = Expression::new_literal(GraphemeCluster::from("abcdef"));
         assert_eq!(
             literal.value(None),
             Some(vec!["a", "b", "c", "d", "e", "f"])
@@ -500,14 +490,14 @@ mod tests {
 
     #[test]
     fn ensure_correct_string_representation_of_repetition_1() {
-        let literal = Expression::new_literal("abc");
+        let literal = Expression::new_literal(GraphemeCluster::from("abc"));
         let repetition = Expression::new_repetition(literal, Quantifier::KleeneStar);
         assert_eq!(repetition.to_string(), "(abc)*");
     }
 
     #[test]
     fn ensure_correct_string_representation_of_repetition_2() {
-        let literal = Expression::new_literal("a");
+        let literal = Expression::new_literal(GraphemeCluster::from("a"));
         let repetition = Expression::new_repetition(literal, Quantifier::QuestionMark);
         assert_eq!(repetition.to_string(), "a?");
     }

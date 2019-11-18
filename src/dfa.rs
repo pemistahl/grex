@@ -16,7 +16,7 @@
 
 use std::collections::{BTreeSet, HashMap, HashSet};
 
-use crate::str::GraphemeCluster;
+use crate::grapheme::{GraphemeCluster, Grapheme};
 use itertools::Itertools;
 use linked_list::LinkedList;
 use petgraph::graph::NodeIndex;
@@ -27,20 +27,20 @@ use unicode_segmentation::UnicodeSegmentation;
 
 type State = NodeIndex<u32>;
 type StateLabel = String;
-type EdgeLabel = GraphemeCluster;
+type EdgeLabel = Grapheme;
 
 pub(crate) struct DFA {
-    alphabet: BTreeSet<String>,
+    alphabet: BTreeSet<Grapheme>,
     graph: StableGraph<StateLabel, EdgeLabel>,
     initial_state: State,
     final_state_indices: HashSet<usize>,
 }
 
 impl DFA {
-    pub(crate) fn from(graphemes_vecs: Vec<Vec<GraphemeCluster>>) -> Self {
+    pub(crate) fn from(grapheme_clusters: Vec<GraphemeCluster>) -> Self {
         let mut dfa = Self::new();
-        for graphemes in graphemes_vecs {
-            dfa.insert(graphemes);
+        for cluster in grapheme_clusters {
+            dfa.insert(cluster);
         }
         dfa.minimize();
         dfa
@@ -59,7 +59,7 @@ impl DFA {
         states
     }
 
-    pub(crate) fn outgoing_edges(&self, state: State) -> Edges<GraphemeCluster, Directed> {
+    pub(crate) fn outgoing_edges(&self, state: State) -> Edges<Grapheme, Directed> {
         self.graph.edges_directed(state, Direction::Outgoing)
     }
 
@@ -78,24 +78,24 @@ impl DFA {
         }
     }
 
-    fn insert(&mut self, graphemes: Vec<GraphemeCluster>) {
+    fn insert(&mut self, cluster: GraphemeCluster) {
         let mut current_state = self.initial_state;
 
-        for grapheme in graphemes.iter() {
-            self.alphabet.insert(grapheme.value.clone());
-            current_state = self.get_next_state(current_state, &grapheme);
+        for grapheme in cluster.graphemes() {
+            self.alphabet.insert(grapheme.clone());
+            current_state = self.get_next_state(current_state, grapheme);
         }
         self.final_state_indices.insert(current_state.index());
     }
 
-    fn get_next_state(&mut self, current_state: State, edge_label: &GraphemeCluster) -> State {
+    fn get_next_state(&mut self, current_state: State, edge_label: &Grapheme) -> State {
         match self.find_next_state(current_state, edge_label) {
             Some(next_state) => next_state,
             None => self.add_new_state(current_state, edge_label),
         }
     }
 
-    fn find_next_state(&self, current_state: State, edge_label: &GraphemeCluster) -> Option<State> {
+    fn find_next_state(&self, current_state: State, edge_label: &Grapheme) -> Option<State> {
         for next_state in self.graph.neighbors(current_state) {
             let edge_idx = self.graph.find_edge(current_state, next_state).unwrap();
             let current_label = self.graph.edge_weight(edge_idx).unwrap();
@@ -106,12 +106,12 @@ impl DFA {
         None
     }
 
-    fn add_new_state(&mut self, current_state: State, edge_label: &GraphemeCluster) -> State {
+    fn add_new_state(&mut self, current_state: State, edge_label: &Grapheme) -> State {
         let next_state = self.graph.add_node("".to_string());
         self.graph.add_edge(
             current_state,
             next_state,
-            GraphemeCluster::from(&edge_label.value[..]),
+            edge_label.clone(),
         );
         next_state
     }
@@ -182,15 +182,15 @@ impl DFA {
         linked_list![final_states, non_final_states]
     }
 
-    fn get_parent_states(&self, a: &HashSet<State>, label: &str) -> HashSet<State> {
+    fn get_parent_states(&self, a: &HashSet<State>, label: &Grapheme) -> HashSet<State> {
         let mut x = HashSet::new();
 
         for &state in a {
             let direct_parent_states = self.graph.neighbors_directed(state, Direction::Incoming);
             for parent_state in direct_parent_states {
                 let edge = self.graph.find_edge(parent_state, state).unwrap();
-                let grapheme_cluster = self.graph.edge_weight(edge).unwrap();
-                if grapheme_cluster.value == label {
+                let grapheme = self.graph.edge_weight(edge).unwrap();
+                if grapheme == label {
                     x.insert(parent_state);
                     break;
                 }
@@ -255,13 +255,13 @@ mod tests {
         let mut dfa = DFA::new();
         assert_eq!(dfa.state_count(), 1);
 
-        dfa.insert(graphemes("abcd"));
+        dfa.insert(GraphemeCluster::from("abcd"));
         assert_eq!(dfa.state_count(), 5);
     }
 
     #[test]
     fn test_is_final_state() {
-        let dfa = DFA::from(vec![graphemes("abcd")]);
+        let dfa = DFA::from(vec![GraphemeCluster::from("abcd")]);
 
         let intermediate_state = State::new(3);
         assert_eq!(dfa.is_final_state(intermediate_state), false);
@@ -272,17 +272,17 @@ mod tests {
 
     #[test]
     fn test_outgoing_edges() {
-        let dfa = DFA::from(vec![graphemes("abcd"), graphemes("abxd")]);
+        let dfa = DFA::from(vec![GraphemeCluster::from("abcd"), GraphemeCluster::from("abxd")]);
         let state = State::new(2);
         let mut edges = dfa.outgoing_edges(state);
 
         let first_edge = edges.next();
         assert!(first_edge.is_some());
-        assert_eq!(first_edge.unwrap().weight(), &grapheme("c"));
+        assert_eq!(first_edge.unwrap().weight(), &Grapheme::from("c"));
 
         let second_edge = edges.next();
         assert!(second_edge.is_some());
-        assert_eq!(second_edge.unwrap().weight(), &grapheme("x"));
+        assert_eq!(second_edge.unwrap().weight(), &Grapheme::from("x"));
 
         let third_edge = edges.next();
         assert!(third_edge.is_none());
@@ -290,29 +290,29 @@ mod tests {
 
     #[test]
     fn test_states_in_depth_first_order() {
-        let dfa = DFA::from(vec![graphemes("abcd"), graphemes("axyz")]);
+        let dfa = DFA::from(vec![GraphemeCluster::from("abcd"), GraphemeCluster::from("axyz")]);
         let states = dfa.states_in_depth_first_order();
         assert_eq!(states.len(), 7);
 
         let first_state = states.get(0).unwrap();
         let mut edges = dfa.outgoing_edges(*first_state);
-        assert_eq!(edges.next().unwrap().weight(), &grapheme("a"));
+        assert_eq!(edges.next().unwrap().weight(), &Grapheme::from("a"));
         assert!(edges.next().is_none());
 
         let second_state = states.get(1).unwrap();
         edges = dfa.outgoing_edges(*second_state);
-        assert_eq!(edges.next().unwrap().weight(), &grapheme("b"));
-        assert_eq!(edges.next().unwrap().weight(), &grapheme("x"));
+        assert_eq!(edges.next().unwrap().weight(), &Grapheme::from("b"));
+        assert_eq!(edges.next().unwrap().weight(), &Grapheme::from("x"));
         assert!(edges.next().is_none());
 
         let third_state = states.get(2).unwrap();
         edges = dfa.outgoing_edges(*third_state);
-        assert_eq!(edges.next().unwrap().weight(), &grapheme("y"));
+        assert_eq!(edges.next().unwrap().weight(), &Grapheme::from("y"));
         assert!(edges.next().is_none());
 
         let fourth_state = states.get(3).unwrap();
         edges = dfa.outgoing_edges(*fourth_state);
-        assert_eq!(edges.next().unwrap().weight(), &grapheme("z"));
+        assert_eq!(edges.next().unwrap().weight(), &Grapheme::from("z"));
         assert!(edges.next().is_none());
 
         let fifth_state = states.get(4).unwrap();
@@ -321,12 +321,12 @@ mod tests {
 
         let sixth_state = states.get(5).unwrap();
         edges = dfa.outgoing_edges(*sixth_state);
-        assert_eq!(edges.next().unwrap().weight(), &grapheme("c"));
+        assert_eq!(edges.next().unwrap().weight(), &Grapheme::from("c"));
         assert!(edges.next().is_none());
 
         let seventh_state = states.get(6).unwrap();
         edges = dfa.outgoing_edges(*seventh_state);
-        assert_eq!(edges.next().unwrap().weight(), &grapheme("d"));
+        assert_eq!(edges.next().unwrap().weight(), &Grapheme::from("d"));
         assert!(edges.next().is_none());
     }
 
@@ -336,11 +336,11 @@ mod tests {
         assert_eq!(dfa.graph.node_count(), 1);
         assert_eq!(dfa.graph.edge_count(), 0);
 
-        dfa.insert(graphemes("abcd"));
+        dfa.insert(GraphemeCluster::from("abcd"));
         assert_eq!(dfa.graph.node_count(), 5);
         assert_eq!(dfa.graph.edge_count(), 4);
 
-        dfa.insert(graphemes("abxd"));
+        dfa.insert(GraphemeCluster::from("abxd"));
         assert_eq!(dfa.graph.node_count(), 7);
         assert_eq!(dfa.graph.edge_count(), 6);
 
@@ -351,18 +351,8 @@ mod tests {
 
     #[test]
     fn test_dfa_constructor() {
-        let dfa = DFA::from(vec![graphemes("abcd"), graphemes("abxd")]);
+        let dfa = DFA::from(vec![GraphemeCluster::from("abcd"), GraphemeCluster::from("abxd")]);
         assert_eq!(dfa.graph.node_count(), 5);
         assert_eq!(dfa.graph.edge_count(), 5);
-    }
-
-    fn grapheme(s: &str) -> GraphemeCluster {
-        graphemes(s).first().unwrap().clone()
-    }
-
-    fn graphemes(s: &str) -> Vec<GraphemeCluster> {
-        UnicodeSegmentation::graphemes(s, true)
-            .map(|it| GraphemeCluster::from(it))
-            .collect_vec()
     }
 }
