@@ -16,9 +16,11 @@
 
 use crate::ast::Expression;
 use crate::dfa::DFA;
+use crate::str::GraphemeCluster;
 use itertools::Itertools;
 use std::cmp::Ordering;
 use std::fmt::{Display, Formatter, Result};
+use unicode_segmentation::UnicodeSegmentation;
 
 pub struct RegExpBuilder {
     test_cases: Vec<String>,
@@ -62,17 +64,32 @@ impl RegExp {
         escape_non_ascii_chars: bool,
         use_surrogate_pairs: bool,
     ) -> Self {
+        Self::sort(test_cases);
+        Self {
+            ast: Expression::from(DFA::from(Self::convert_to_graphemes(&test_cases))),
+            escape_non_ascii_chars,
+            use_surrogate_pairs,
+        }
+    }
+
+    fn sort(test_cases: &mut Vec<String>) {
         test_cases.sort();
         test_cases.dedup();
         test_cases.sort_by(|a, b| match a.len().cmp(&b.len()) {
             Ordering::Equal => a.cmp(&b),
             other => other,
         });
-        Self {
-            ast: Expression::from(DFA::from(&test_cases)),
-            escape_non_ascii_chars,
-            use_surrogate_pairs,
+    }
+
+    fn convert_to_graphemes(test_cases: &Vec<String>) -> Vec<Vec<GraphemeCluster>> {
+        let mut graphemes_vecs = vec![];
+        for test_case in test_cases.iter() {
+            let graphemes = UnicodeSegmentation::graphemes(&test_case[..], true)
+                .map(|it| GraphemeCluster::from(it))
+                .collect_vec();
+            graphemes_vecs.push(graphemes);
         }
+        graphemes_vecs
     }
 
     fn escape(&self, use_surrogate_pairs: bool) -> String {

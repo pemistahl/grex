@@ -24,6 +24,7 @@ use petgraph::prelude::EdgeRef;
 use unicode_segmentation::UnicodeSegmentation;
 
 use crate::dfa::DFA;
+use crate::str::GraphemeCluster;
 
 #[derive(Clone, Eq, PartialEq)]
 pub(crate) enum Expression {
@@ -60,7 +61,7 @@ impl Expression {
 
             for edge in dfa.outgoing_edges(*state) {
                 let edge_label = edge.weight();
-                let literal = Expression::new_literal(edge_label);
+                let literal = Expression::new_literal(&edge_label.value);
                 let j = states.iter().position(|&it| it == edge.target()).unwrap();
 
                 a[(i, j)] = if a[(i, j)].is_some() {

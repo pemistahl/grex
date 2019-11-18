@@ -61,15 +61,9 @@ fn count_repetitions(
         let end = *range.end();
         let range_length = end - start + 1;
         let slice_length = graphemes[start..=end].iter().unique().count();
-        let mut repetitions = range_length / slice_length;
-
-        let slice = if repetitions == 1 {
-            repetitions = slice_length;
-            graphemes[start].clone()
-        } else {
-            let new_end = start + slice_length;
-            graphemes[start..new_end].join("")
-        };
+        let repetitions = range_length / slice_length;
+        let new_end = start + slice_length;
+        let slice = graphemes[start..new_end].join("");
 
         if counts.contains_key(&start) {
             let indices = counts.get_mut(&start).unwrap();

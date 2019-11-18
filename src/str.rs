@@ -14,15 +14,19 @@
  * limitations under the License.
  */
 
-#[macro_use]
-mod macros;
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub(crate) struct GraphemeCluster {
+    pub(crate) value: String,
+    pub(crate) min_occurrence: u32,
+    pub(crate) max_occurrence: u32,
+}
 
-mod ast;
-mod dfa;
-mod fmt;
-mod regexp;
-mod repetition;
-mod str;
-
-pub use regexp::RegExp;
-pub use regexp::RegExpBuilder;
+impl GraphemeCluster {
+    pub(crate) fn from(s: &str) -> Self {
+        Self {
+            value: s.to_string(),
+            min_occurrence: 1,
+            max_occurrence: 1,
+        }
+    }
+}
