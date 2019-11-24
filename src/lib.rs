@@ -20,9 +20,9 @@ mod macros;
 mod ast;
 mod dfa;
 mod fmt;
+mod grapheme;
 mod regexp;
 mod repetition;
-mod grapheme;
 
 pub use regexp::RegExp;
 pub use regexp::RegExpBuilder;

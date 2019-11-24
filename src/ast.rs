@@ -21,12 +21,11 @@ use itertools::Itertools;
 use maplit::btreeset;
 use ndarray::{Array1, Array2};
 use petgraph::prelude::EdgeRef;
-use unicode_segmentation::UnicodeSegmentation;
 
 use crate::dfa::DFA;
 use crate::grapheme::GraphemeCluster;
 
-#[derive(Clone, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub(crate) enum Expression {
     Alternation(Vec<Expression>),
     CharacterClass(BTreeSet<char>),
@@ -35,7 +34,7 @@ pub(crate) enum Expression {
     Repetition(Box<Expression>, Quantifier),
 }
 
-#[derive(Clone, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub(crate) enum Quantifier {
     KleeneStar,
     QuestionMark,
@@ -134,7 +133,9 @@ impl Expression {
     pub(crate) fn is_single_codepoint(&self) -> bool {
         match self {
             Expression::CharacterClass(_) => true,
-            Expression::Literal(cluster) => cluster.char_count() == 1,
+            Expression::Literal(cluster) => {
+                cluster.char_count() == 1 && cluster.graphemes().first().unwrap().maximum() == 1
+            }
             _ => false,
         }
     }
@@ -176,7 +177,7 @@ impl Expression {
                     cluster.graphemes_mut().drain(..length);
                 }
                 Substring::Suffix => {
-                    let mut graphemes = cluster.graphemes_mut();
+                    let graphemes = cluster.graphemes_mut();
                     graphemes.drain(graphemes.len() - length..);
                 }
             },
@@ -242,14 +243,18 @@ fn concatenate(a: &Option<Expression>, b: &Option<Expression>) -> Option<Express
     }
 
     if let (Expression::Literal(graphemes_a), Expression::Literal(graphemes_b)) = (&expr1, &expr2) {
-        return Some(Expression::new_literal(GraphemeCluster::merge(graphemes_a, graphemes_b)));
+        return Some(Expression::new_literal(GraphemeCluster::merge(
+            graphemes_a,
+            graphemes_b,
+        )));
     }
 
     if let (Expression::Literal(graphemes_a), Expression::Concatenation(first, second)) =
         (&expr1, &expr2)
     {
         if let Expression::Literal(graphemes_first) = &**first {
-            let literal = Expression::new_literal(GraphemeCluster::merge(graphemes_a, graphemes_first));
+            let literal =
+                Expression::new_literal(GraphemeCluster::merge(graphemes_a, graphemes_first));
             return Some(Expression::new_concatenation(literal, *second.clone()));
         }
     }
@@ -258,7 +263,8 @@ fn concatenate(a: &Option<Expression>, b: &Option<Expression>) -> Option<Express
         (&expr2, &expr1)
     {
         if let Expression::Literal(graphemes_second) = &**second {
-            let literal = Expression::new_literal(GraphemeCluster::merge(graphemes_second, graphemes_b));
+            let literal =
+                Expression::new_literal(GraphemeCluster::merge(graphemes_second, graphemes_b));
             return Some(Expression::new_concatenation(*first.clone(), literal));
         }
     }
@@ -357,7 +363,14 @@ fn union(a: &Option<Expression>, b: &Option<Expression>) -> Option<Expression> {
 fn extract_character_set(expr: Expression) -> BTreeSet<char> {
     match expr {
         Expression::Literal(cluster) => {
-            let single_char = cluster.graphemes().first().unwrap().value().chars().next().unwrap();
+            let single_char = cluster
+                .graphemes()
+                .first()
+                .unwrap()
+                .value()
+                .chars()
+                .next()
+                .unwrap();
             btreeset![single_char]
         }
         Expression::CharacterClass(char_set) => char_set,
@@ -381,6 +394,11 @@ fn remove_common_substring(
 fn find_common_substring(a: &Expression, b: &Expression, substring: &Substring) -> Option<String> {
     let mut graphemes_a = a.value(Some(substring)).unwrap_or_else(|| vec![]);
     let mut graphemes_b = b.value(Some(substring)).unwrap_or_else(|| vec![]);
+
+    if graphemes_a.len() < 2 || graphemes_b.len() < 2 {
+        return None;
+    }
+
     let mut common_graphemes = vec![];
 
     if let Substring::Suffix = substring {

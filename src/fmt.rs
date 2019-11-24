@@ -143,12 +143,13 @@ fn format_literal(f: &mut Formatter<'_>, cluster: &GraphemeCluster) -> Result {
     let chars_to_escape = [
         "(", ")", "[", "]", "{", "}", "\\", "+", "*", "-", ".", "?", "|", "^", "$",
     ];
-    let literal_str = cluster.graphemes()
+    let literal_str = cluster
+        .graphemes()
         .iter()
         .map(|it| {
-            let s = it.value().as_str();
-            if chars_to_escape.contains(&s) {
-                format!("{}{}", "\\", it)
+            let s = it.to_string();
+            if chars_to_escape.contains(&&s[..]) {
+                format!("{}{}", "\\", s)
             } else if s == "\t" {
                 "\\t".to_string()
             } else if s == "\n" {
@@ -156,7 +157,7 @@ fn format_literal(f: &mut Formatter<'_>, cluster: &GraphemeCluster) -> Result {
             } else if s == "\r" {
                 "\\r".to_string()
             } else {
-                it.value().clone()
+                s
             }
         })
         .join("");

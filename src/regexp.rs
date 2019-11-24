@@ -20,12 +20,12 @@ use crate::grapheme::GraphemeCluster;
 use itertools::Itertools;
 use std::cmp::Ordering;
 use std::fmt::{Display, Formatter, Result};
-use unicode_segmentation::UnicodeSegmentation;
 
 pub struct RegExpBuilder {
     test_cases: Vec<String>,
     escape_non_ascii_chars: bool,
     use_surrogate_pairs: bool,
+    use_finite_repetition: bool,
 }
 
 impl RegExpBuilder {
@@ -34,6 +34,7 @@ impl RegExpBuilder {
             test_cases,
             escape_non_ascii_chars: false,
             use_surrogate_pairs: false,
+            use_finite_repetition: false,
         }
     }
 
@@ -43,11 +44,17 @@ impl RegExpBuilder {
         self
     }
 
+    pub fn with_finite_repetition(&mut self) -> &mut Self {
+        self.use_finite_repetition = true;
+        self
+    }
+
     pub fn build(&mut self) -> RegExp {
         RegExp::from(
             &mut self.test_cases,
             self.escape_non_ascii_chars,
             self.use_surrogate_pairs,
+            self.use_finite_repetition,
         )
     }
 }
@@ -63,10 +70,14 @@ impl RegExp {
         test_cases: &mut Vec<String>,
         escape_non_ascii_chars: bool,
         use_surrogate_pairs: bool,
+        use_finite_repetition: bool,
     ) -> Self {
         Self::sort(test_cases);
         Self {
-            ast: Expression::from(DFA::from(Self::grapheme_clusters(&test_cases))),
+            ast: Expression::from(DFA::from(Self::grapheme_clusters(
+                &test_cases,
+                use_finite_repetition,
+            ))),
             escape_non_ascii_chars,
             use_surrogate_pairs,
         }
@@ -81,8 +92,22 @@ impl RegExp {
         });
     }
 
-    fn grapheme_clusters(test_cases: &Vec<String>) -> Vec<GraphemeCluster> {
-        test_cases.iter().map(|it| GraphemeCluster::from(it)).collect_vec()
+    fn grapheme_clusters(
+        test_cases: &[String],
+        use_finite_repetition: bool,
+    ) -> Vec<GraphemeCluster> {
+        let mut clusters = test_cases
+            .iter()
+            .map(|it| GraphemeCluster::from(it))
+            .collect_vec();
+
+        if use_finite_repetition {
+            for cluster in clusters.iter_mut() {
+                cluster.conflate_repetitions();
+            }
+        }
+
+        clusters
     }
 
     fn escape(&self, use_surrogate_pairs: bool) -> String {
@@ -139,6 +164,17 @@ mod tests {
     }
 
     #[test]
+    fn test_regexp_builder_with_finite_repetition() {
+        for (input, expected_output) in finite_repetition_params() {
+            let test_cases = convert_input(input);
+            let regexp = RegExpBuilder::from(test_cases)
+                .with_finite_repetition()
+                .build();
+            assert_eq!(regexp.to_string(), expected_output);
+        }
+    }
+
+    #[test]
     fn test_regexp_builder_with_escaping() {
         for (input, expected_output) in escaped_params() {
             let test_cases = convert_input(input);
@@ -161,8 +197,22 @@ mod tests {
     }
 
     #[test]
-    fn ensure_regular_expressions_match_input() {
+    fn ensure_default_regular_expressions_match_input() {
         for (input, expected_output) in default_params() {
+            let re = Regex::new(expected_output).unwrap();
+            for input_str in input {
+                assert!(
+                    re.is_match(input_str),
+                    "\"{}\" does not match regex",
+                    input_str
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn ensure_regular_expressions_with_finite_repetition_match_input() {
+        for (input, expected_output) in finite_repetition_params() {
             let re = Regex::new(expected_output).unwrap();
             for input_str in input {
                 assert!(
@@ -180,40 +230,40 @@ mod tests {
 
     fn default_params() -> HashMap<Vec<&'static str>, &'static str> {
         hashmap![
-            vec![""] => "^$",
-            vec![" "] => "^ $",
+            vec![""]    => "^$",
+            vec![" "]   => "^ $",
             vec!["   "] => "^   $",
 
-            vec!["a", "b"] => "^[ab]$",
-            vec!["a", "b", "c"] => "^[a-c]$",
-            vec!["a", "c", "d", "e", "f"] => "^[ac-f]$",
-            vec!["a", "b", "x", "d", "e"] => "^[abdex]$",
-            vec!["a", "b", "x", "de"] => "^de|[abx]$",
-            vec!["a", "b", "c", "x", "d", "e"] => "^[a-ex]$",
-            vec!["a", "b", "c", "x", "de"] => "^de|[a-cx]$",
+            vec!["a", "b"]                                         => "^[ab]$",
+            vec!["a", "b", "c"]                                    => "^[a-c]$",
+            vec!["a", "c", "d", "e", "f"]                          => "^[ac-f]$",
+            vec!["a", "b", "x", "d", "e"]                          => "^[abdex]$",
+            vec!["a", "b", "x", "de"]                              => "^de|[abx]$",
+            vec!["a", "b", "c", "x", "d", "e"]                     => "^[a-ex]$",
+            vec!["a", "b", "c", "x", "de"]                         => "^de|[a-cx]$",
             vec!["a", "b", "c", "d", "e", "f", "o", "x", "y", "z"] => "^[a-fox-z]$",
-            vec!["a", "b", "d", "e", "f", "o", "x", "y", "z"] => "^[abd-fox-z]$",
+            vec!["a", "b", "d", "e", "f", "o", "x", "y", "z"]      => "^[abd-fox-z]$",
 
-            vec!["1", "2"] => "^[12]$",
-            vec!["1", "2", "3"] => "^[1-3]$",
-            vec!["1", "3", "4", "5", "6"] => "^[13-6]$",
-            vec!["1", "2", "8", "4", "5"] => "^[12458]$",
-            vec!["1", "2", "8", "45"] => "^45|[128]$",
-            vec!["1", "2", "3", "8", "4", "5"] => "^[1-58]$",
-            vec!["1", "2", "3", "8", "45"] => "^45|[1-38]$",
+            vec!["1", "2"]                          => "^[12]$",
+            vec!["1", "2", "3"]                     => "^[1-3]$",
+            vec!["1", "3", "4", "5", "6"]           => "^[13-6]$",
+            vec!["1", "2", "8", "4", "5"]           => "^[12458]$",
+            vec!["1", "2", "8", "45"]               => "^45|[128]$",
+            vec!["1", "2", "3", "8", "4", "5"]      => "^[1-58]$",
+            vec!["1", "2", "3", "8", "45"]          => "^45|[1-38]$",
             vec!["1", "2", "3", "5", "7", "8", "9"] => "^[1-357-9]$",
 
-            vec!["a", "b", "bc"] => "^bc?|a$",
-            vec!["a", "b", "bcd"] => "^b(cd)?|a$",
-            vec!["a", "ab", "abc"] => "^a(bc?)?$",
-            vec!["ac", "bc"] => "^[ab]c$",
-            vec!["ab", "ac"] => "^a[bc]$",
-            vec!["abx", "cdx"] => "^(ab|cd)x$",
-            vec!["abd", "acd"] => "^a[bc]d$",
-            vec!["abc", "abcd"] => "^abcd?$",
-            vec!["abc", "abcde"] => "^abc(de)?$",
-            vec!["ade", "abcde"] => "^a(bc)?de$",
-            vec!["abcxy", "adexy"] => "^a(bc|de)xy$",
+            vec!["a", "b", "bc"]          => "^bc?|a$",
+            vec!["a", "b", "bcd"]         => "^b(cd)?|a$",
+            vec!["a", "ab", "abc"]        => "^a(bc?)?$",
+            vec!["ac", "bc"]              => "^[ab]c$",
+            vec!["ab", "ac"]              => "^a[bc]$",
+            vec!["abx", "cdx"]            => "^(ab|cd)x$",
+            vec!["abd", "acd"]            => "^a[bc]d$",
+            vec!["abc", "abcd"]           => "^abcd?$",
+            vec!["abc", "abcde"]          => "^abc(de)?$",
+            vec!["ade", "abcde"]          => "^a(bc)?de$",
+            vec!["abcxy", "adexy"]        => "^a(bc|de)xy$",
             vec!["axy", "abcxy", "adexy"] => "^a((bc)?|de)xy$", // goal: "^a(bc|de)?xy$",
 
             vec!["abcxy", "abcw", "efgh"] => "^abc(xy|w)|efgh$",
@@ -225,18 +275,39 @@ mod tests {
             vec!["efgh", "abxy", "cxy"] => "^(ab|c)xy|efgh$",
 
             vec!["a", "ä", "o", "ö", "u", "ü"] => "^[aouäöü]$",
-            vec!["y̆", "a", "z"] => "^[az]|y̆$", // goal: "^[az]|y\\u{306}$"
+            vec!["y̆", "a", "z"]                => "^[az]|y̆$", // goal: "^[az]|y\\u{306}$"
 
-            vec!["a", "b\n", "c"] => "^b\\n|[ac]$",
+            vec!["a", "b\n", "c"]  => "^b\\n|[ac]$",
             vec!["a", "b\\n", "c"] => "^b\\\\n|[ac]$",
 
-            vec!["[a-z]", "(d,e,f)"] => "^\\(d,e,f\\)|\\[a\\-z\\]$",
+            vec!["[a-z]", "(d,e,f)"]  => "^\\(d,e,f\\)|\\[a\\-z\\]$",
             vec!["3.5", "4.5", "4,5"] => "^3\\.5|4[,.]5$",
 
-            vec!["I ♥ cake"] => "^I ♥ cake$",
-            vec!["I \u{2665} cake"] => "^I ♥ cake$",
+            vec!["I ♥ cake"]         => "^I ♥ cake$",
+            vec!["I \u{2665} cake"]  => "^I ♥ cake$",
             vec!["I \\u{2665} cake"] => "^I \\\\u\\{2665\\} cake$",
-            vec!["I \\u2665 cake"] => "^I \\\\u2665 cake$"
+            vec!["I \\u2665 cake"]   => "^I \\\\u2665 cake$"
+        ]
+    }
+
+    fn finite_repetition_params() -> HashMap<Vec<&'static str>, &'static str> {
+        hashmap![
+            vec!["a"]               => "^a$",
+            vec!["aa"]              => "^a{2}$",
+            vec!["aaa"]             => "^a{3}$",
+            vec!["a", "aa"]         => "^a{1,2}$",
+            vec!["aaa", "a", "aa"]  => "^a{1,3}$",
+            vec!["aaaa", "a", "aa"] => "^a{1,2}|a{4}$",
+
+            vec!["ababab"] => "^(ab){3}$",
+            vec!["abababa"] => "^(ab){3}a$",
+            //vec!["aababab"] => "^a(ab){3}$", // NOT WORKING YET
+            //vec!["abababaa"] => "^(ab){3}a{2}$", // NOT WORKING YET
+
+            vec!["b", "ba"]                 => "^ba?$",
+            vec!["b", "ba", "baa"]          => "^b(a{1,2})?$",
+            vec!["b", "ba", "baaa", "baa"]  => "^b(a{1,3})?$",
+            vec!["b", "ba", "baaaa", "baa"] => "^b(a{1,2}|a{4})?$"
         ]
     }
 

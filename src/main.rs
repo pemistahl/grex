@@ -45,6 +45,13 @@ struct CLI {
     file_path: Option<PathBuf>,
 
     #[structopt(
+        name = "finite-repetition",
+        long,
+        help = "Detects repeated substrings and conflates them using {min,max} quantifiers"
+    )]
+    use_finite_repetition: bool,
+
+    #[structopt(
         name = "escape",
         long,
         help = "Replaces all non-ASCII characters with unicode escape sequences"
@@ -84,13 +91,17 @@ fn obtain_input(cli: &CLI) -> Result<Vec<String>, Error> {
 fn handle_input(cli: &CLI, input: Result<Vec<String>, Error>) {
     match input {
         Ok(test_cases) => {
-            let regexp = if cli.escape_non_ascii_chars {
-                RegExpBuilder::from(test_cases)
-                    .with_escaped_non_ascii_chars(cli.use_surrogate_pairs)
-                    .build()
-            } else {
-                RegExpBuilder::from(test_cases).build()
-            };
+            let mut builder = RegExpBuilder::from(test_cases);
+
+            if cli.use_finite_repetition {
+                builder.with_finite_repetition();
+            }
+            if cli.escape_non_ascii_chars {
+                builder.with_escaped_non_ascii_chars(cli.use_surrogate_pairs);
+            }
+
+            let regexp = builder.build();
+
             println!("{}", regexp);
         }
         Err(error) => match error.kind() {

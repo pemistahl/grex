@@ -14,9 +14,10 @@
  * limitations under the License.
  */
 
+use crate::repetition::conflate_repetitions;
+use itertools::Itertools;
 use std::fmt::{Display, Formatter, Result};
 use unicode_segmentation::UnicodeSegmentation;
-use itertools::Itertools;
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub(crate) struct GraphemeCluster {
@@ -26,23 +27,27 @@ pub(crate) struct GraphemeCluster {
 impl GraphemeCluster {
     pub(crate) fn from(s: &str) -> Self {
         Self {
-            graphemes: UnicodeSegmentation::graphemes(s, true).map(|it| Grapheme::from(it)).collect_vec(),
+            graphemes: UnicodeSegmentation::graphemes(s, true)
+                .map(|it| Grapheme::from(it))
+                .collect_vec(),
         }
     }
 
     pub(crate) fn new(grapheme: Grapheme) -> Self {
         Self {
-            graphemes: vec![grapheme]
+            graphemes: vec![grapheme],
         }
+    }
+
+    pub(crate) fn conflate_repetitions(&mut self) {
+        conflate_repetitions(self.graphemes_mut())
     }
 
     pub(crate) fn merge(first: &GraphemeCluster, second: &GraphemeCluster) -> Self {
         let mut graphemes = vec![];
         graphemes.extend_from_slice(&first.graphemes);
         graphemes.extend_from_slice(&second.graphemes);
-        Self {
-            graphemes
-        }
+        Self { graphemes }
     }
 
     pub(crate) fn graphemes(&self) -> &Vec<Grapheme> {
@@ -70,7 +75,7 @@ impl GraphemeCluster {
 pub(crate) struct Grapheme {
     value: String,
     min: u32,
-    max: u32
+    max: u32,
 }
 
 impl Grapheme {
@@ -78,12 +83,24 @@ impl Grapheme {
         Self {
             value: s.to_string(),
             min: 1,
-            max: 1
+            max: 1,
         }
+    }
+
+    pub(crate) fn new(value: String, min: u32, max: u32) -> Self {
+        Self { value, min, max }
     }
 
     pub(crate) fn value(&self) -> &String {
         &self.value
+    }
+
+    pub(crate) fn minimum(&self) -> u32 {
+        self.min
+    }
+
+    pub(crate) fn maximum(&self) -> u32 {
+        self.max
     }
 
     pub(crate) fn char_count(&self) -> usize {
@@ -91,14 +108,19 @@ impl Grapheme {
     }
 }
 
-impl Display for GraphemeCluster {
-    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
-        unimplemented!()
-    }
-}
-
 impl Display for Grapheme {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
-        write!(f, "{}", self.value)
+        let result = if self.min == self.max && self.min > 1 && self.value.len() == 1 {
+            format!("{}{{{}}}", self.value, self.min)
+        } else if self.min == self.max && self.min > 1 && self.value.len() > 1 {
+            format!("({}){{{}}}", self.value, self.min)
+        } else if self.min < self.max && self.value.len() == 1 {
+            format!("{}{{{},{}}}", self.value, self.min, self.max)
+        } else if self.min < self.max && self.value.len() > 1 {
+            format!("({}){{{},{}}}", self.value, self.min, self.max)
+        } else {
+            self.value.clone()
+        };
+        write!(f, "{}", result)
     }
 }
