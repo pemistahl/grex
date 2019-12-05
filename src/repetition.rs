@@ -16,21 +16,44 @@
 
 use crate::grapheme::Grapheme;
 use itertools::Itertools;
-use maplit::hashmap;
 use std::cmp::{max, min};
 use std::collections::HashMap;
 use std::ops::RangeInclusive;
 use unicode_segmentation::UnicodeSegmentation;
 
-pub(crate) fn conflate_repetitions(graphemes: &mut Vec<Grapheme>) {
+pub(crate) fn conflate_repetitions(graphemes: &[Grapheme]) -> Vec<Grapheme> {
     let mut ranges = vec![];
-    collect_ranges(&mut ranges, graphemes, 0);
+    collect_ranges(&mut ranges, &graphemes, 0);
     if ranges.is_empty() {
-        return;
+        return graphemes.to_owned();
     }
     ranges = merge_overlapping_ranges(ranges);
     let repetitions = count_repetitions(ranges, graphemes);
     replace_graphemes(graphemes, repetitions);
+}
+
+fn convert_graphemes(graphemes: &[Grapheme], ranges: Vec<Range<usize>>) -> Vec<Grapheme> {
+    ranges
+        .iter()
+        .map(|range| {
+            graphemes[range.clone()]
+                .iter()
+                .map(|grapheme| grapheme.value().clone())
+                .join("")
+        })
+        .coalesce(|x, y| {
+            if *x.split("`__`").collect_vec().last().unwrap() == y {
+                Ok(format!("{}`__`{}", x, y))
+            } else {
+                Err((x, y))
+            }
+        })
+        .map(|it| {
+            let parts = it.split("`__`").collect_vec();
+            let repetition = parts.len() as u32;
+            Grapheme::new(parts.first().unwrap().to_string(), repetition, repetition)
+        })
+        .collect_vec()
 }
 
 fn replace_graphemes(

@@ -40,7 +40,7 @@ impl GraphemeCluster {
     }
 
     pub(crate) fn conflate_repetitions(&mut self) {
-        conflate_repetitions(self.graphemes_mut())
+        self.graphemes = conflate_repetitions(self.graphemes());
     }
 
     pub(crate) fn merge(first: &GraphemeCluster, second: &GraphemeCluster) -> Self {

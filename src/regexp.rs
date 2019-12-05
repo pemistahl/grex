@@ -301,8 +301,8 @@ mod tests {
 
             vec!["ababab"] => "^(ab){3}$",
             vec!["abababa"] => "^(ab){3}a$",
-            //vec!["aababab"] => "^a(ab){3}$", // NOT WORKING YET
-            //vec!["abababaa"] => "^(ab){3}a{2}$", // NOT WORKING YET
+            vec!["aababab"] => "^a(ab){3}$",
+            vec!["abababaa"] => "^(ab){3}a{2}$",
 
             vec!["b", "ba"]                 => "^ba?$",
             vec!["b", "ba", "baa"]          => "^b(a{1,2})?$",

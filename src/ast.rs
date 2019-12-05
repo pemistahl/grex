@@ -433,7 +433,6 @@ fn find_common_substring(a: &Expression, b: &Expression, substring: &Substring) 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use unicode_segmentation::UnicodeSegmentation;
 
     #[test]
     fn ensure_correct_string_representation_of_alternation_1() {
