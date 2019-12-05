@@ -17,9 +17,7 @@
 use crate::grapheme::Grapheme;
 use itertools::Itertools;
 use std::cmp::{max, min};
-use std::collections::HashMap;
-use std::ops::RangeInclusive;
-use unicode_segmentation::UnicodeSegmentation;
+use std::ops::Range;
 
 pub(crate) fn conflate_repetitions(graphemes: &[Grapheme]) -> Vec<Grapheme> {
     let mut ranges = vec![];
@@ -27,9 +25,8 @@ pub(crate) fn conflate_repetitions(graphemes: &[Grapheme]) -> Vec<Grapheme> {
     if ranges.is_empty() {
         return graphemes.to_owned();
     }
-    ranges = merge_overlapping_ranges(ranges);
-    let repetitions = count_repetitions(ranges, graphemes);
-    replace_graphemes(graphemes, repetitions);
+    ranges = convert_ranges(&ranges, &graphemes);
+    convert_graphemes(graphemes, ranges)
 }
 
 fn convert_graphemes(graphemes: &[Grapheme], ranges: Vec<Range<usize>>) -> Vec<Grapheme> {
@@ -56,102 +53,131 @@ fn convert_graphemes(graphemes: &[Grapheme], ranges: Vec<Range<usize>>) -> Vec<G
         .collect_vec()
 }
 
-fn replace_graphemes(
-    graphemes: &mut Vec<Grapheme>,
-    repetitions: HashMap<usize, HashMap<String, usize>>,
-) {
-    for (start_idx, graphemes_map) in repetitions.iter().sorted_by(|a, b| Ord::cmp(&b.0, &a.0)) {
-        for (grapheme, repetition) in graphemes_map {
-            let grapheme_len = UnicodeSegmentation::graphemes(&grapheme[..], true).count();
-            let end_idx = start_idx + grapheme_len * *repetition;
-            let range_to_replace = start_idx..&end_idx;
-            let replacement = [Grapheme::new(
-                grapheme.clone(),
-                *repetition as u32,
-                *repetition as u32,
-            )];
-            graphemes.splice(range_to_replace, replacement.iter().cloned());
-        }
-    }
-}
-
-fn count_repetitions(
-    ranges: Vec<RangeInclusive<usize>>,
-    graphemes: &[Grapheme],
-) -> HashMap<usize, HashMap<String, usize>> {
-    let mut counts = HashMap::<usize, HashMap<String, usize>>::new();
-
-    for range in ranges {
-        let start = *range.start();
-        let end = *range.end();
-        let range_length = end - start + 1;
-        let slice_length = graphemes[start..=end]
-            .iter()
-            .map(|it| it.value())
-            .unique()
-            .count();
-        let repetitions = range_length / slice_length;
-        let new_end = start + slice_length;
-        let slice = graphemes[start..new_end]
-            .iter()
-            .map(|it| it.value())
-            .join("");
-
-        if counts.contains_key(&start) {
-            let indices = counts.get_mut(&start).unwrap();
-            if indices.contains_key(&slice) {
-                *indices.get_mut(&slice).unwrap() += 1;
-            } else {
-                indices.insert(slice, repetitions);
-            }
-        } else {
-            counts.insert(start, hashmap![slice => repetitions]);
-        }
-    }
-    counts
-}
-
-fn merge_overlapping_ranges(mut ranges: Vec<RangeInclusive<usize>>) -> Vec<RangeInclusive<usize>> {
-    ranges.sort_by(|a, b| a.start().cmp(b.start()));
-
-    let mut merged_ranges = vec![];
-    let mut it = ranges.iter().peekable();
-
-    while let Some(range) = it.next() {
-        let mut current = range.clone();
-
-        while let Some(next) = it.peek() {
-            if current.contains(next.start()) {
-                if next.end() > current.end() {
-                    current = *current.start()..=*next.end();
-                }
-                it.next();
-            } else {
-                break;
-            }
-        }
-        merged_ranges.push(current);
-    }
-
+fn convert_ranges(ranges: &[Range<usize>], graphemes: &[Grapheme]) -> Vec<Range<usize>> {
+    let mut optional_ranges = ranges.iter().cloned().map(|it| Some(it)).collect_vec();
     let mut indices = vec![];
-    for i in 0..merged_ranges.len() - 1 {
-        let first_range = &merged_ranges[i];
-        let second_range = &merged_ranges[i + 1];
-        if first_range.contains(second_range.start())
-            && second_range.start() - first_range.start() > 1
-        {
-            indices.push(i + 1);
+
+    for i in 0..optional_ranges.len() - 1 {
+        let first_range = optional_ranges[i].as_ref().unwrap();
+        let second_range = optional_ranges[i + 1].as_ref().unwrap();
+
+        let first_start = first_range.start;
+        let first_end = first_range.end;
+
+        let second_start = second_range.start;
+        let second_end = second_range.end;
+
+        if first_start == second_start {
+            if first_end > second_end {
+                indices.push(i);
+            } else if first_end < second_end {
+                indices.push(i + 1);
+            }
         }
     }
 
-    for i in indices {
-        merged_ranges.remove(i);
+    for i in indices.iter() {
+        optional_ranges[*i].take();
     }
 
-    merged_ranges
+    indices.clear();
+
+    optional_ranges = optional_ranges
+        .iter()
+        .cloned()
+        .filter(|it| it.is_some())
+        .collect_vec();
+
+    let mut split_ranges = vec![];
+
+    for range in optional_ranges.iter() {
+        let old_start = range.as_ref().unwrap().start;
+        let old_end = range.as_ref().unwrap().end;
+        let new_end = old_start + (old_end - old_start) / 2;
+
+        split_ranges.push(Some(old_start..new_end));
+        split_ranges.push(Some(new_end..old_end));
+    }
+
+    split_ranges.sort_by(|a, b| a.as_ref().unwrap().start.cmp(&b.as_ref().unwrap().start));
+    split_ranges.dedup();
+
+    for i in 0..split_ranges.len() - 1 {
+        let first_range = split_ranges[i].as_ref().unwrap();
+        let second_range = split_ranges[i + 1].as_ref().unwrap();
+
+        let first_start = first_range.start;
+        let second_start = second_range.start;
+
+        if first_start == second_start {
+            let first_graphemes = graphemes[first_range.clone()]
+                .iter()
+                .map(|it| it.value())
+                .collect_vec();
+            let second_graphemes = graphemes[second_range.clone()]
+                .iter()
+                .map(|it| it.value())
+                .collect_vec();
+
+            let second_contains_first = first_graphemes
+                .iter()
+                .all(|it| second_graphemes.contains(it));
+
+            if second_contains_first {
+                indices.push(i);
+            } else {
+                indices.push(i + 1);
+            }
+        }
+    }
+
+    for i in indices.iter() {
+        split_ranges[*i].take();
+    }
+
+    indices.clear();
+
+    split_ranges = split_ranges
+        .iter()
+        .cloned()
+        .filter(|it| it.is_some())
+        .collect_vec();
+
+    let mut current_end = split_ranges.first().unwrap().as_ref().unwrap().end;
+    for i in 1..split_ranges.len() {
+        let current_range = &split_ranges[i];
+        if current_range.as_ref().unwrap().start == current_end {
+            current_end = current_range.as_ref().unwrap().end;
+        } else {
+            indices.push(i);
+        }
+    }
+
+    for i in indices.iter() {
+        split_ranges[*i].take();
+    }
+
+    let mut new_ranges = split_ranges
+        .iter()
+        .cloned()
+        .filter(|it| it.is_some())
+        .map(|it| it.unwrap())
+        .collect_vec();
+
+    let first_start = new_ranges.first().unwrap().start;
+    let last_end = new_ranges.last().unwrap().end;
+
+    if first_start > 0 {
+        new_ranges.insert(0, 0..first_start);
+    }
+    if last_end < graphemes.len() {
+        new_ranges.push(last_end..graphemes.len());
+    }
+
+    new_ranges
 }
 
-fn collect_ranges(ranges: &mut Vec<RangeInclusive<usize>>, graphemes: &[Grapheme], shift: i32) {
+fn collect_ranges(ranges: &mut Vec<Range<usize>>, graphemes: &[Grapheme], shift: i32) {
     let n = graphemes.len() as i32;
     if n == 1 {
         return;
@@ -209,10 +235,12 @@ fn collect_ranges(ranges: &mut Vec<RangeInclusive<usize>>, graphemes: &[Grapheme
                 let start = shift + (if left { cntr - l1 } else { cntr - l - l1 + 1 });
                 let end = start + 2 * l - 1;
 
-                ranges.push((start as usize)..=(end as usize));
+                ranges.push((start as usize)..((end + 1) as usize));
             }
         }
     }
+
+    ranges.sort_by(|a, b| a.start.cmp(&b.start));
 }
 
 fn z_function(graphemes: &[Grapheme]) -> Vec<usize> {
