@@ -22,8 +22,6 @@ mod dfa;
 mod fmt;
 mod grapheme;
 mod regexp;
-mod repetition;
-mod suffixtable;
 
 pub use regexp::RegExp;
 pub use regexp::RegExpBuilder;
