@@ -40,17 +40,16 @@ impl GraphemeCluster {
         }
     }
 
-    pub(crate) fn detect_repetitions(&mut self) {
-        let mut repetitions = HashMap::<Grapheme, Vec<(Range<usize>, u32)>>::new();
+    pub(crate) fn convert_repetitions(&mut self) {
+        let mut repetitions = HashMap::<String, Vec<(Range<usize>, u32)>>::new();
 
         for n in 1..=self.graphemes.len() / 2 {
             for start in 0..n {
                 let mut chunks = vec![];
 
                 for chunk in self.graphemes[start..].chunks(n) {
-                    let substr =
-                        Grapheme::new(chunk.iter().map(|it| it.value.clone()).join(""), 1, 1);
-                    if chunk.len() == n {
+                    let substr = chunk.iter().map(|it| it.value()).join("");
+                    if substr.chars().count() == n {
                         chunks.push(substr);
                     }
                 }
@@ -92,13 +91,14 @@ impl GraphemeCluster {
             }
         }
 
-        let mut sorted_ranges = vec![];
+        let mut sorted_repetitions = vec![];
+
         for substr in repetitions.keys() {
             for (range, count) in repetitions.get(substr).unwrap() {
-                sorted_ranges.push(Some((substr, range.clone(), *count)));
+                sorted_repetitions.push(Some((substr, range.clone(), *count)));
             }
         }
-        sorted_ranges.sort_by_key(|it| match it {
+        sorted_repetitions.sort_by_key(|it| match it {
             Some((substr, range, count)) => range.start,
             None => 0,
         });
@@ -106,7 +106,7 @@ impl GraphemeCluster {
         let mut indices = vec![];
 
         for ((first_idx, first_tup), (second_idx, second_tup)) in
-            sorted_ranges.iter().enumerate().tuple_windows()
+            sorted_repetitions.iter().enumerate().tuple_windows()
         {
             if let (
                 Some((first_substr, first_range, first_count)),
@@ -119,9 +119,13 @@ impl GraphemeCluster {
                     indices.push(second_idx);
                 } else if first_range.contains(&second_range.start) {
                     let first_chars_to_remove =
-                        (first_count - 1) * first_substr.char_count() as u32;
+                        (first_count - 1) * first_substr.chars().count() as u32;
                     let second_chars_to_remove =
-                        (second_count - 1) * second_substr.char_count() as u32;
+                        (second_count - 1) * second_substr.chars().count() as u32;
+
+                    if indices.contains(&first_idx) || indices.contains(&second_idx) {
+                        continue;
+                    }
 
                     if first_chars_to_remove < second_chars_to_remove {
                         indices.push(first_idx);
@@ -133,14 +137,14 @@ impl GraphemeCluster {
         }
 
         for i in indices.iter() {
-            sorted_ranges[*i].take();
+            sorted_repetitions[*i].take();
         }
 
-        for elem in sorted_ranges.iter().filter(|it| it.is_some()).rev() {
+        for elem in sorted_repetitions.iter().filter(|it| it.is_some()).rev() {
             if let Some((substr, range, count)) = elem {
                 self.graphemes_mut().splice(
                     range.clone(),
-                    [Grapheme::new(substr.value.clone(), *count, *count)]
+                    [Grapheme::new(substr.to_string(), *count, *count)]
                         .iter()
                         .cloned(),
                 );
@@ -176,8 +180,8 @@ impl GraphemeCluster {
     }
 }
 
-#[derive(Clone, Debug, Hash, Ord, PartialOrd, Eq, PartialEq)]
-pub(crate) struct Grapheme {
+#[derive(Clone, Debug, Ord, PartialOrd, Eq, PartialEq)]
+pub struct Grapheme {
     value: String,
     min: u32,
     max: u32,
