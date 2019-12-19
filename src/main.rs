@@ -45,26 +45,31 @@ struct CLI {
     file_path: Option<PathBuf>,
 
     #[structopt(
-        name = "finite-repetition",
+        name = "convert-repetitions",
+        short = "r",
         long,
-        help = "Detects repeated substrings and conflates them using {min,max} quantifiers"
+        help = "Detects repeated substrings and converts them using {min,max} quantifiers",
+        display_order = 1
     )]
-    use_finite_repetition: bool,
+    is_repetition_converted: bool,
 
     #[structopt(
         name = "escape",
+        short,
         long,
-        help = "Replaces all non-ASCII characters with unicode escape sequences"
+        help = "Replaces all non-ASCII characters with unicode escape sequences",
+        display_order = 2
     )]
-    escape_non_ascii_chars: bool,
+    is_non_ascii_char_escaped: bool,
 
     #[structopt(
         name = "with-surrogates",
         long,
         requires = "escape",
-        help = "Converts astral code points to surrogate pairs if --escape is set"
+        help = "Converts astral code points to surrogate pairs if --escape is set",
+        display_order = 3
     )]
-    use_surrogate_pairs: bool,
+    is_astral_code_point_converted_to_surrogate: bool,
 }
 
 fn main() {
@@ -91,13 +96,14 @@ fn obtain_input(cli: &CLI) -> Result<Vec<String>, Error> {
 fn handle_input(cli: &CLI, input: Result<Vec<String>, Error>) {
     match input {
         Ok(test_cases) => {
-            let mut builder = RegExpBuilder::from(test_cases);
+            let mut builder = RegExpBuilder::from(&test_cases);
 
-            if cli.use_finite_repetition {
-                builder.with_finite_repetition();
+            if cli.is_repetition_converted {
+                builder.with_converting_repetitions();
             }
-            if cli.escape_non_ascii_chars {
-                builder.with_escaped_non_ascii_chars(cli.use_surrogate_pairs);
+            if cli.is_non_ascii_char_escaped {
+                builder
+                    .with_escaping_non_ascii_chars(cli.is_astral_code_point_converted_to_surrogate);
             }
 
             let regexp = builder.build();

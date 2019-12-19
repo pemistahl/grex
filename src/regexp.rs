@@ -23,63 +23,63 @@ use std::fmt::{Display, Formatter, Result};
 
 pub struct RegExpBuilder {
     test_cases: Vec<String>,
-    escape_non_ascii_chars: bool,
-    use_surrogate_pairs: bool,
-    use_finite_repetition: bool,
+    is_non_ascii_char_escaped: bool,
+    is_astral_code_point_converted_to_surrogate: bool,
+    is_repetition_converted: bool,
 }
 
 impl RegExpBuilder {
-    pub fn from(test_cases: Vec<String>) -> Self {
+    pub fn from(test_cases: &[String]) -> Self {
         Self {
-            test_cases,
-            escape_non_ascii_chars: false,
-            use_surrogate_pairs: false,
-            use_finite_repetition: false,
+            test_cases: test_cases.to_vec(),
+            is_non_ascii_char_escaped: false,
+            is_astral_code_point_converted_to_surrogate: false,
+            is_repetition_converted: false,
         }
     }
 
-    pub fn with_escaped_non_ascii_chars(&mut self, use_surrogate_pairs: bool) -> &mut Self {
-        self.escape_non_ascii_chars = true;
-        self.use_surrogate_pairs = use_surrogate_pairs;
+    pub fn with_escaping_non_ascii_chars(&mut self, use_surrogate_pairs: bool) -> &mut Self {
+        self.is_non_ascii_char_escaped = true;
+        self.is_astral_code_point_converted_to_surrogate = use_surrogate_pairs;
         self
     }
 
-    pub fn with_finite_repetition(&mut self) -> &mut Self {
-        self.use_finite_repetition = true;
+    pub fn with_converting_repetitions(&mut self) -> &mut Self {
+        self.is_repetition_converted = true;
         self
     }
 
     pub fn build(&mut self) -> RegExp {
         RegExp::from(
             &mut self.test_cases,
-            self.escape_non_ascii_chars,
-            self.use_surrogate_pairs,
-            self.use_finite_repetition,
+            self.is_non_ascii_char_escaped,
+            self.is_astral_code_point_converted_to_surrogate,
+            self.is_repetition_converted,
         )
     }
 }
 
 pub struct RegExp {
     ast: Expression,
-    escape_non_ascii_chars: bool,
-    use_surrogate_pairs: bool,
+    is_non_ascii_char_escaped: bool,
+    is_astral_code_point_converted_to_surrogate: bool,
 }
 
 impl RegExp {
     fn from(
         test_cases: &mut Vec<String>,
-        escape_non_ascii_chars: bool,
-        use_surrogate_pairs: bool,
-        use_finite_repetition: bool,
+        is_non_ascii_char_escaped: bool,
+        is_astral_code_point_converted_to_surrogate: bool,
+        is_repetition_converted: bool,
     ) -> Self {
         Self::sort(test_cases);
         Self {
             ast: Expression::from(DFA::from(Self::grapheme_clusters(
                 &test_cases,
-                use_finite_repetition,
+                is_repetition_converted,
             ))),
-            escape_non_ascii_chars,
-            use_surrogate_pairs,
+            is_non_ascii_char_escaped,
+            is_astral_code_point_converted_to_surrogate,
         }
     }
 
@@ -94,14 +94,14 @@ impl RegExp {
 
     fn grapheme_clusters(
         test_cases: &[String],
-        use_finite_repetition: bool,
+        is_repetition_converted: bool,
     ) -> Vec<GraphemeCluster> {
         let mut clusters = test_cases
             .iter()
             .map(|it| GraphemeCluster::from(it))
             .collect_vec();
 
-        if use_finite_repetition {
+        if is_repetition_converted {
             for cluster in clusters.iter_mut() {
                 cluster.convert_repetitions();
             }
@@ -137,8 +137,8 @@ impl RegExp {
 
 impl Display for RegExp {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
-        let regex_str = if self.escape_non_ascii_chars {
-            self.escape(self.use_surrogate_pairs)
+        let regex_str = if self.is_non_ascii_char_escaped {
+            self.escape(self.is_astral_code_point_converted_to_surrogate)
         } else {
             self.ast.to_string()
         };
@@ -158,17 +158,17 @@ mod tests {
     fn test_regexp_builder_with_default_options() {
         for (input, expected_output) in default_params() {
             let test_cases = convert_input(input);
-            let regexp = RegExpBuilder::from(test_cases).build();
+            let regexp = RegExpBuilder::from(&test_cases).build();
             assert_eq!(regexp.to_string(), expected_output);
         }
     }
 
     #[test]
-    fn test_regexp_builder_with_finite_repetition() {
-        for (input, expected_output) in finite_repetition_params() {
+    fn test_regexp_builder_with_converting_repetitions() {
+        for (input, expected_output) in repetition_conversion_params() {
             let test_cases = convert_input(input);
-            let regexp = RegExpBuilder::from(test_cases)
-                .with_finite_repetition()
+            let regexp = RegExpBuilder::from(&test_cases)
+                .with_converting_repetitions()
                 .build();
             assert_eq!(regexp.to_string(), expected_output);
         }
@@ -178,8 +178,8 @@ mod tests {
     fn test_regexp_builder_with_escaping() {
         for (input, expected_output) in escaped_params() {
             let test_cases = convert_input(input);
-            let regexp = RegExpBuilder::from(test_cases)
-                .with_escaped_non_ascii_chars(false)
+            let regexp = RegExpBuilder::from(&test_cases)
+                .with_escaping_non_ascii_chars(false)
                 .build();
             assert_eq!(regexp.to_string(), expected_output);
         }
@@ -189,8 +189,8 @@ mod tests {
     fn test_regexp_builder_with_escaping_and_surrogates() {
         for (input, expected_output) in escaped_params_with_surrogates() {
             let test_cases = convert_input(input);
-            let regexp = RegExpBuilder::from(test_cases)
-                .with_escaped_non_ascii_chars(true)
+            let regexp = RegExpBuilder::from(&test_cases)
+                .with_escaping_non_ascii_chars(true)
                 .build();
             assert_eq!(regexp.to_string(), expected_output);
         }
@@ -211,8 +211,8 @@ mod tests {
     }
 
     #[test]
-    fn ensure_regular_expressions_with_finite_repetition_match_input() {
-        for (input, expected_output) in finite_repetition_params() {
+    fn ensure_regular_expressions_with_converted_repetitions_match_input() {
+        for (input, expected_output) in repetition_conversion_params() {
             let re = Regex::new(expected_output).unwrap();
             for input_str in input {
                 assert!(
@@ -230,6 +230,7 @@ mod tests {
 
     fn default_params() -> HashMap<Vec<&'static str>, &'static str> {
         hashmap![
+            vec![]      => "^$",
             vec![""]    => "^$",
             vec![" "]   => "^ $",
             vec!["   "] => "^   $",
@@ -290,8 +291,13 @@ mod tests {
         ]
     }
 
-    fn finite_repetition_params() -> HashMap<Vec<&'static str>, &'static str> {
+    fn repetition_conversion_params() -> HashMap<Vec<&'static str>, &'static str> {
         hashmap![
+            vec![]      => "^$",
+            vec![""]    => "^$",
+            vec![" "]   => "^ $",
+            vec!["   "] => "^ {3}$",
+
             vec!["a"]               => "^a$",
             vec!["aa"]              => "^a{2}$",
             vec!["aaa"]             => "^a{3}$",
@@ -307,7 +313,18 @@ mod tests {
             vec!["b", "ba"]                 => "^ba?$",
             vec!["b", "ba", "baa"]          => "^b(a{1,2})?$",
             vec!["b", "ba", "baaa", "baa"]  => "^b(a{1,3})?$",
-            vec!["b", "ba", "baaaa", "baa"] => "^b(a{1,2}|a{4})?$"
+            vec!["b", "ba", "baaaa", "baa"] => "^b(a{1,2}|a{4})?$",
+
+            vec!["axy", "abcxyxy", "adexy"] => "^a((de)?xy|bc(xy){2})$",
+
+            vec!["xy̆y̆y̆y̆z"]         => "^x(y̆){4}z$",
+            vec!["xy̆y̆z", "xy̆y̆y̆z"]  => "^x(y̆){2,3}z$",
+            vec!["xy̆y̆z", "xy̆y̆y̆y̆z"] => "^x((y̆){2}|(y̆){4})z$",
+
+            //vec!["a", "b\n\n", "c"]  => "^b\\n{2}|[ac]$",
+
+            vec!["I ♥♥ cake"]             => "^I ♥{2} cake$",
+            vec!["I ♥ cake", "I ♥♥ cake"] => "^I ♥{1,2} cake$",
         ]
     }
 

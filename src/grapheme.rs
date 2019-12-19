@@ -48,8 +48,8 @@ impl GraphemeCluster {
                 let mut chunks = vec![];
 
                 for chunk in self.graphemes[start..].chunks(n) {
-                    let substr = chunk.iter().map(|it| it.value()).join("");
-                    if substr.chars().count() == n {
+                    if chunk.len() == n {
+                        let substr = chunk.iter().map(|it| it.value()).join("");
                         chunks.push(substr);
                     }
                 }
@@ -99,7 +99,7 @@ impl GraphemeCluster {
             }
         }
         sorted_repetitions.sort_by_key(|it| match it {
-            Some((substr, range, count)) => range.start,
+            Some((_, range, _)) => range.start,
             None => 0,
         });
 
@@ -219,13 +219,17 @@ impl Grapheme {
 
 impl Display for Grapheme {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
-        let result = if self.min == self.max && self.min > 1 && self.value.len() == 1 {
+        let is_single_char = self.value.chars().count() == 1;
+        let is_range = self.min < self.max;
+        let is_repetition = self.min > 1;
+
+        let result = if !is_range && is_repetition && is_single_char {
             format!("{}{{{}}}", self.value, self.min)
-        } else if self.min == self.max && self.min > 1 && self.value.len() > 1 {
+        } else if !is_range && is_repetition && !is_single_char {
             format!("({}){{{}}}", self.value, self.min)
-        } else if self.min < self.max && self.value.len() == 1 {
+        } else if is_range && is_single_char {
             format!("{}{{{},{}}}", self.value, self.min, self.max)
-        } else if self.min < self.max && self.value.len() > 1 {
+        } else if is_range && !is_single_char {
             format!("({}){{{},{}}}", self.value, self.min, self.max)
         } else {
             self.value.clone()
