@@ -48,7 +48,7 @@ struct CLI {
         name = "convert-repetitions",
         short = "r",
         long,
-        help = "Detects repeated substrings and converts them using {min,max} quantifiers",
+        help = "Detects repeated non-overlapping substrings and converts them to {min,max} quantifier notation",
         display_order = 1
     )]
     is_repetition_converted: bool,
@@ -99,11 +99,11 @@ fn handle_input(cli: &CLI, input: Result<Vec<String>, Error>) {
             let mut builder = RegExpBuilder::from(&test_cases);
 
             if cli.is_repetition_converted {
-                builder.with_converting_repetitions();
+                builder.with_converted_repetitions();
             }
             if cli.is_non_ascii_char_escaped {
                 builder
-                    .with_escaping_non_ascii_chars(cli.is_astral_code_point_converted_to_surrogate);
+                    .with_escaped_non_ascii_chars(cli.is_astral_code_point_converted_to_surrogate);
             }
 
             let regexp = builder.build();

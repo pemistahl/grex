@@ -18,6 +18,7 @@ use crate::ast::Expression;
 use crate::dfa::DFA;
 use crate::grapheme::GraphemeCluster;
 use itertools::Itertools;
+use std::clone::Clone;
 use std::cmp::Ordering;
 use std::fmt::{Display, Formatter, Result};
 
@@ -29,22 +30,22 @@ pub struct RegExpBuilder {
 }
 
 impl RegExpBuilder {
-    pub fn from(test_cases: &[String]) -> Self {
+    pub fn from<T: Clone + Into<String>>(test_cases: &[T]) -> Self {
         Self {
-            test_cases: test_cases.to_vec(),
+            test_cases: test_cases.iter().cloned().map(|it| it.into()).collect_vec(),
             is_non_ascii_char_escaped: false,
             is_astral_code_point_converted_to_surrogate: false,
             is_repetition_converted: false,
         }
     }
 
-    pub fn with_escaping_non_ascii_chars(&mut self, use_surrogate_pairs: bool) -> &mut Self {
+    pub fn with_escaped_non_ascii_chars(&mut self, use_surrogate_pairs: bool) -> &mut Self {
         self.is_non_ascii_char_escaped = true;
         self.is_astral_code_point_converted_to_surrogate = use_surrogate_pairs;
         self
     }
 
-    pub fn with_converting_repetitions(&mut self) -> &mut Self {
+    pub fn with_converted_repetitions(&mut self) -> &mut Self {
         self.is_repetition_converted = true;
         self
     }
@@ -127,26 +128,23 @@ impl Display for RegExp {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use itertools::Itertools;
     use maplit::hashmap;
     use regex::Regex;
     use std::collections::HashMap;
 
     #[test]
     fn test_regexp_builder_with_default_options() {
-        for (input, expected_output) in default_params() {
-            let test_cases = convert_input(input);
+        for (test_cases, expected_output) in default_params() {
             let regexp = RegExpBuilder::from(&test_cases).build();
             assert_eq!(regexp, expected_output);
         }
     }
 
     #[test]
-    fn test_regexp_builder_with_converting_repetitions() {
-        for (input, expected_output) in repetition_conversion_params() {
-            let test_cases = convert_input(input);
+    fn test_regexp_builder_with_converted_repetitions() {
+        for (test_cases, expected_output) in repetition_conversion_params() {
             let regexp = RegExpBuilder::from(&test_cases)
-                .with_converting_repetitions()
+                .with_converted_repetitions()
                 .build();
             assert_eq!(regexp, expected_output);
         }
@@ -154,10 +152,9 @@ mod tests {
 
     #[test]
     fn test_regexp_builder_with_escaping() {
-        for (input, expected_output) in escaping_params() {
-            let test_cases = convert_input(input);
+        for (test_cases, expected_output) in escaping_params() {
             let regexp = RegExpBuilder::from(&test_cases)
-                .with_escaping_non_ascii_chars(false)
+                .with_escaped_non_ascii_chars(false)
                 .build();
             assert_eq!(regexp, expected_output);
         }
@@ -165,35 +162,32 @@ mod tests {
 
     #[test]
     fn test_regexp_builder_with_escaping_and_surrogates() {
-        for (input, expected_output) in escaping_params_with_surrogates() {
-            let test_cases = convert_input(input);
+        for (test_cases, expected_output) in escaping_params_with_surrogates() {
             let regexp = RegExpBuilder::from(&test_cases)
-                .with_escaping_non_ascii_chars(true)
+                .with_escaped_non_ascii_chars(true)
                 .build();
             assert_eq!(regexp, expected_output);
         }
     }
 
     #[test]
-    fn test_regexp_builder_with_converting_repetitions_and_escaping() {
-        for (input, expected_output) in repetition_conversion_and_escaping_params() {
-            let test_cases = convert_input(input);
+    fn test_regexp_builder_with_converted_repetitions_and_escaping() {
+        for (test_cases, expected_output) in repetition_conversion_and_escaping_params() {
             let regexp = RegExpBuilder::from(&test_cases)
-                .with_converting_repetitions()
-                .with_escaping_non_ascii_chars(false)
+                .with_converted_repetitions()
+                .with_escaped_non_ascii_chars(false)
                 .build();
             assert_eq!(regexp, expected_output);
         }
     }
 
     #[test]
-    fn test_regexp_builder_with_converting_repetitions_and_escaping_and_surrogates() {
-        for (input, expected_output) in repetition_conversion_and_escaping_params_with_surrogates()
+    fn test_regexp_builder_with_converted_repetitions_and_escaping_and_surrogates() {
+        for (test_cases, expected_output) in repetition_conversion_and_escaping_params_with_surrogates()
         {
-            let test_cases = convert_input(input);
             let regexp = RegExpBuilder::from(&test_cases)
-                .with_converting_repetitions()
-                .with_escaping_non_ascii_chars(true)
+                .with_converted_repetitions()
+                .with_escaped_non_ascii_chars(true)
                 .build();
             assert_eq!(regexp, expected_output);
         }
@@ -225,10 +219,6 @@ mod tests {
                 );
             }
         }
-    }
-
-    fn convert_input(strs: Vec<&str>) -> Vec<String> {
-        strs.iter().map(|&it| it.to_string()).collect_vec()
     }
 
     fn default_params() -> HashMap<Vec<&'static str>, &'static str> {
