@@ -31,7 +31,7 @@ type StateLabel = String;
 type EdgeLabel = Grapheme;
 
 pub(crate) struct DFA {
-    alphabet: BTreeSet<String>,
+    alphabet: BTreeSet<Grapheme>,
     graph: StableGraph<StateLabel, EdgeLabel>,
     initial_state: State,
     final_state_indices: HashSet<usize>,
@@ -93,7 +93,7 @@ impl DFA {
         let mut current_state = self.initial_state;
 
         for grapheme in cluster.graphemes() {
-            self.alphabet.insert(grapheme.value().clone());
+            self.alphabet.insert(grapheme.clone());
             current_state = self.get_next_state(current_state, grapheme);
         }
         self.final_state_indices.insert(current_state.index());
@@ -111,15 +111,14 @@ impl DFA {
             let edge_idx = self.graph.find_edge(current_state, next_state).unwrap();
             let current_grapheme = self.graph.edge_weight(edge_idx).unwrap();
             let is_same_value = current_grapheme.value() == grapheme.value();
-            let has_same_bounds = current_grapheme.minimum() == grapheme.minimum()
-                && current_grapheme.maximum() == grapheme.maximum();
+            let has_same_bounds = current_grapheme.range().contains(&grapheme.minimum());
             let is_bound_in_range = current_grapheme.maximum() == grapheme.maximum() - 1;
 
             if is_same_value {
                 if is_bound_in_range {
                     let min = min(current_grapheme.minimum(), grapheme.minimum());
                     let max = max(current_grapheme.maximum(), grapheme.maximum());
-                    let new_grapheme = Grapheme::new(grapheme.value().clone(), min, max);
+                    let new_grapheme = Grapheme::new(grapheme.chars().clone(), min, max);
                     self.graph
                         .update_edge(current_state, next_state, new_grapheme);
                     return Some(next_state);
@@ -205,7 +204,7 @@ impl DFA {
         linked_list![final_states, non_final_states]
     }
 
-    fn get_parent_states(&self, a: &HashSet<State>, label: &str) -> HashSet<State> {
+    fn get_parent_states(&self, a: &HashSet<State>, label: &Grapheme) -> HashSet<State> {
         let mut x = HashSet::new();
 
         for &state in a {
@@ -213,7 +212,7 @@ impl DFA {
             for parent_state in direct_parent_states {
                 let edge = self.graph.find_edge(parent_state, state).unwrap();
                 let grapheme = self.graph.edge_weight(edge).unwrap();
-                if grapheme.value() == label {
+                if grapheme.value() == label.value() && grapheme.maximum() == label.maximum() {
                     x.insert(parent_state);
                     break;
                 }

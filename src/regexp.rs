@@ -49,20 +49,19 @@ impl RegExpBuilder {
         self
     }
 
-    pub fn build(&mut self) -> RegExp {
+    pub fn build(&mut self) -> String {
         RegExp::from(
             &mut self.test_cases,
             self.is_non_ascii_char_escaped,
             self.is_astral_code_point_converted_to_surrogate,
             self.is_repetition_converted,
         )
+        .to_string()
     }
 }
 
-pub struct RegExp {
+pub(crate) struct RegExp {
     ast: Expression,
-    is_non_ascii_char_escaped: bool,
-    is_astral_code_point_converted_to_surrogate: bool,
 }
 
 impl RegExp {
@@ -76,10 +75,10 @@ impl RegExp {
         Self {
             ast: Expression::from(DFA::from(Self::grapheme_clusters(
                 &test_cases,
+                is_non_ascii_char_escaped,
+                is_astral_code_point_converted_to_surrogate,
                 is_repetition_converted,
             ))),
-            is_non_ascii_char_escaped,
-            is_astral_code_point_converted_to_surrogate,
         }
     }
 
@@ -94,6 +93,8 @@ impl RegExp {
 
     fn grapheme_clusters(
         test_cases: &[String],
+        is_non_ascii_char_escaped: bool,
+        is_astral_code_point_converted_to_surrogate: bool,
         is_repetition_converted: bool,
     ) -> Vec<GraphemeCluster> {
         let mut clusters = test_cases
@@ -107,42 +108,19 @@ impl RegExp {
             }
         }
 
+        if is_non_ascii_char_escaped {
+            for cluster in clusters.iter_mut() {
+                cluster.escape_non_ascii_chars(is_astral_code_point_converted_to_surrogate);
+            }
+        }
+
         clusters
-    }
-
-    fn escape(&self, use_surrogate_pairs: bool) -> String {
-        let surrogate_range = '\u{10000}'..'\u{10ffff}';
-        self.ast
-            .to_string()
-            .chars()
-            .map(|it| {
-                if it.is_ascii() {
-                    it.to_string()
-                } else if use_surrogate_pairs && surrogate_range.contains(&it) {
-                    self.convert_to_surrogate_pair(it)
-                } else {
-                    it.escape_unicode().to_string()
-                }
-            })
-            .join("")
-    }
-
-    fn convert_to_surrogate_pair(&self, c: char) -> String {
-        c.encode_utf16(&mut [0; 2])
-            .iter()
-            .map(|it| format!("\\u{{{:x}}}", it))
-            .join("")
     }
 }
 
 impl Display for RegExp {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
-        let regex_str = if self.is_non_ascii_char_escaped {
-            self.escape(self.is_astral_code_point_converted_to_surrogate)
-        } else {
-            self.ast.to_string()
-        };
-        write!(f, "^{}$", regex_str)
+        write!(f, "^{}$", self.ast.to_string())
     }
 }
 
@@ -159,7 +137,7 @@ mod tests {
         for (input, expected_output) in default_params() {
             let test_cases = convert_input(input);
             let regexp = RegExpBuilder::from(&test_cases).build();
-            assert_eq!(regexp.to_string(), expected_output);
+            assert_eq!(regexp, expected_output);
         }
     }
 
@@ -170,29 +148,54 @@ mod tests {
             let regexp = RegExpBuilder::from(&test_cases)
                 .with_converting_repetitions()
                 .build();
-            assert_eq!(regexp.to_string(), expected_output);
+            assert_eq!(regexp, expected_output);
         }
     }
 
     #[test]
     fn test_regexp_builder_with_escaping() {
-        for (input, expected_output) in escaped_params() {
+        for (input, expected_output) in escaping_params() {
             let test_cases = convert_input(input);
             let regexp = RegExpBuilder::from(&test_cases)
                 .with_escaping_non_ascii_chars(false)
                 .build();
-            assert_eq!(regexp.to_string(), expected_output);
+            assert_eq!(regexp, expected_output);
         }
     }
 
     #[test]
     fn test_regexp_builder_with_escaping_and_surrogates() {
-        for (input, expected_output) in escaped_params_with_surrogates() {
+        for (input, expected_output) in escaping_params_with_surrogates() {
             let test_cases = convert_input(input);
             let regexp = RegExpBuilder::from(&test_cases)
                 .with_escaping_non_ascii_chars(true)
                 .build();
-            assert_eq!(regexp.to_string(), expected_output);
+            assert_eq!(regexp, expected_output);
+        }
+    }
+
+    #[test]
+    fn test_regexp_builder_with_converting_repetitions_and_escaping() {
+        for (input, expected_output) in repetition_conversion_and_escaping_params() {
+            let test_cases = convert_input(input);
+            let regexp = RegExpBuilder::from(&test_cases)
+                .with_converting_repetitions()
+                .with_escaping_non_ascii_chars(false)
+                .build();
+            assert_eq!(regexp, expected_output);
+        }
+    }
+
+    #[test]
+    fn test_regexp_builder_with_converting_repetitions_and_escaping_and_surrogates() {
+        for (input, expected_output) in repetition_conversion_and_escaping_params_with_surrogates()
+        {
+            let test_cases = convert_input(input);
+            let regexp = RegExpBuilder::from(&test_cases)
+                .with_converting_repetitions()
+                .with_escaping_non_ascii_chars(true)
+                .build();
+            assert_eq!(regexp, expected_output);
         }
     }
 
@@ -287,7 +290,9 @@ mod tests {
             vec!["I ♥ cake"]         => "^I ♥ cake$",
             vec!["I \u{2665} cake"]  => "^I ♥ cake$",
             vec!["I \\u{2665} cake"] => "^I \\\\u\\{2665\\} cake$",
-            vec!["I \\u2665 cake"]   => "^I \\\\u2665 cake$"
+            vec!["I \\u2665 cake"]   => "^I \\\\u2665 cake$",
+
+            vec!["My ♥ is yours.", "My 💩 is yours."] => "^My [♥💩] is yours\\.$",
         ]
     }
 
@@ -321,22 +326,53 @@ mod tests {
             vec!["xy̆y̆z", "xy̆y̆y̆z"]  => "^x(y̆){2,3}z$",
             vec!["xy̆y̆z", "xy̆y̆y̆y̆z"] => "^x((y̆){2}|(y̆){4})z$",
 
-            //vec!["a", "b\n\n", "c"]  => "^b\\n{2}|[ac]$",
+            vec!["a", "b\n\n", "c"]                   => "^b\\n{2}|[ac]$",
+            vec!["a", "b\nb\nb", "c"]                 => "^(b\\n){2}b|[ac]$",
+            vec!["a", "b\nx\nx", "c"]                 => "^b(\\nx){2}|[ac]$",
+            vec!["a", "b\n\t\n\t", "c"]               => "^b(\\n\\t){2}|[ac]$",
+            vec!["a", "b\n", "b\n\n", "b\n\n\n", "c"] => "^b\\n{1,3}|[ac]$",
 
-            vec!["I ♥♥ cake"]             => "^I ♥{2} cake$",
-            vec!["I ♥ cake", "I ♥♥ cake"] => "^I ♥{1,2} cake$",
+            vec!["4.5", "3.55"]                  => "^4\\.5|3\\.5{2}$",
+            vec!["4.5", "4.55"]                  => "^4\\.5{1,2}$",
+            vec!["4.5", "4.55", "3.5"]           => "^3\\.5|4\\.5{1,2}$",
+            vec!["4.5", "44.5", "44.55", "4.55"] => "^4{1,2}\\.5{1,2}$",
+
+            vec!["I ♥♥ cake"]                 => "^I ♥{2} cake$",
+            vec!["I ♥ cake", "I ♥♥ cake"]     => "^I ♥{1,2} cake$",
+            vec!["I \u{2665}\u{2665} cake"]   => "^I ♥{2} cake$",
+            vec!["I \\u{2665} cake"]          => "^I \\\\u\\{26{2}5\\} cake$",
+            vec!["I \\u{2665}\\u{2665} cake"] => "^I (\\\\u\\{2665\\}){2} cake$",
+            vec!["I \\u2665\\u2665 cake"]     => "^I (\\\\u2665){2} cake$",
+
+            vec!["My ♥♥♥ is yours.", "My 💩💩 is yours."] => "^My (💩{2}|♥{3}) is yours\\.$",
         ]
     }
 
-    fn escaped_params() -> HashMap<Vec<&'static str>, &'static str> {
+    fn escaping_params() -> HashMap<Vec<&'static str>, &'static str> {
         hashmap![
-            vec!["My ♥ and 💩 is yours."] => "^My \\u{2665} and \\u{1f4a9} is yours\\.$"
+            vec!["My ♥ and 💩 is yours."] => "^My \\u{2665} and \\u{1f4a9} is yours\\.$",
+            vec!["My ♥ is yours.", "My 💩 is yours."] => "^My (\\u{2665}|\\u{1f4a9}) is yours\\.$", // goal: "^My [\\u{2665}\\u{1f4a9}] is yours\\.$"
         ]
     }
 
-    fn escaped_params_with_surrogates() -> HashMap<Vec<&'static str>, &'static str> {
+    fn escaping_params_with_surrogates() -> HashMap<Vec<&'static str>, &'static str> {
         hashmap![
             vec!["My ♥ and 💩 is yours."] => "^My \\u{2665} and \\u{d83d}\\u{dca9} is yours\\.$"
+        ]
+    }
+
+    fn repetition_conversion_and_escaping_params() -> HashMap<Vec<&'static str>, &'static str> {
+        hashmap![
+            vec!["My ♥♥♥ and 💩💩 is yours."] => "^My \\u{2665}{3} and \\u{1f4a9}{2} is yours\\.$",
+            vec!["My ♥♥♥ is yours.", "My 💩💩 is yours."] => "^My (\\u{1f4a9}{2}|\\u{2665}{3}) is yours\\.$",
+        ]
+    }
+
+    fn repetition_conversion_and_escaping_params_with_surrogates(
+    ) -> HashMap<Vec<&'static str>, &'static str> {
+        hashmap![
+            vec!["My ♥♥♥ and 💩💩 is yours."] => "^My \\u{2665}{3} and (\\u{d83d}\\u{dca9}){2} is yours\\.$",
+            vec!["My ♥♥♥ is yours.", "My 💩💩 is yours."] => "^My ((\\u{d83d}\\u{dca9}){2}|\\u{2665}{3}) is yours\\.$",
         ]
     }
 }

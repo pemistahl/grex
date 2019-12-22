@@ -185,7 +185,7 @@ impl Expression {
         }
     }
 
-    pub(crate) fn value(&self, substring: Option<&Substring>) -> Option<Vec<&str>> {
+    pub(crate) fn value(&self, substring: Option<&Substring>) -> Option<Vec<String>> {
         match self {
             Expression::Concatenation(expr1, expr2) => match substring {
                 Some(value) => match value {
@@ -197,7 +197,7 @@ impl Expression {
             Expression::Literal(cluster) => {
                 let mut v = vec![];
                 for grapheme in cluster.graphemes() {
-                    v.push(grapheme.value().as_str());
+                    v.push(grapheme.to_string());
                 }
                 Some(v)
             }
@@ -326,7 +326,7 @@ fn union(a: &Option<Expression>, b: &Option<Expression>) -> Option<Expression> {
             }
 
             if result.is_none() {
-                result = Some(Expression::new_alternation(expr1.clone(), expr2.clone()));
+                result = Some(Expression::new_alternation(expr1, expr2));
             }
 
             if let Some(prefix) = common_prefix {
@@ -410,7 +410,7 @@ fn find_common_substring(a: &Expression, b: &Expression, substring: &Substring) 
         match pair {
             Both(grapheme_a, grapheme_b) => {
                 if grapheme_a == grapheme_b {
-                    common_graphemes.push(*grapheme_a);
+                    common_graphemes.push(grapheme_a.clone());
                 } else {
                     break;
                 }
@@ -486,11 +486,24 @@ mod tests {
         let mut literal = Expression::new_literal(GraphemeCluster::from("abcdef"));
         assert_eq!(
             literal.value(None),
-            Some(vec!["a", "b", "c", "d", "e", "f"])
+            Some(
+                vec!["a", "b", "c", "d", "e", "f"]
+                    .iter()
+                    .map(|&it| it.to_string())
+                    .collect_vec()
+            )
         );
 
         literal.remove_substring(&Substring::Prefix, 2);
-        assert_eq!(literal.value(None), Some(vec!["c", "d", "e", "f"]));
+        assert_eq!(
+            literal.value(None),
+            Some(
+                vec!["c", "d", "e", "f"]
+                    .iter()
+                    .map(|&it| it.to_string())
+                    .collect_vec()
+            )
+        );
     }
 
     #[test]
@@ -498,11 +511,24 @@ mod tests {
         let mut literal = Expression::new_literal(GraphemeCluster::from("abcdef"));
         assert_eq!(
             literal.value(None),
-            Some(vec!["a", "b", "c", "d", "e", "f"])
+            Some(
+                vec!["a", "b", "c", "d", "e", "f"]
+                    .iter()
+                    .map(|&it| it.to_string())
+                    .collect_vec()
+            )
         );
 
         literal.remove_substring(&Substring::Suffix, 2);
-        assert_eq!(literal.value(None), Some(vec!["a", "b", "c", "d"]));
+        assert_eq!(
+            literal.value(None),
+            Some(
+                vec!["a", "b", "c", "d"]
+                    .iter()
+                    .map(|&it| it.to_string())
+                    .collect_vec()
+            )
+        );
     }
 
     #[test]

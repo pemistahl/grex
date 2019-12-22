@@ -146,19 +146,25 @@ fn format_literal(f: &mut Formatter<'_>, cluster: &GraphemeCluster) -> Result {
     let literal_str = cluster
         .graphemes()
         .iter()
-        .map(|it| {
-            let s = it.to_string();
-            if chars_to_escape.contains(&&s[..]) {
-                format!("{}{}", "\\", s)
-            } else if s == "\t" {
-                "\\t".to_string()
-            } else if s == "\n" {
-                "\\n".to_string()
-            } else if s == "\r" {
-                "\\r".to_string()
-            } else {
-                s
+        .cloned()
+        .map(|mut it| {
+            let characters = it.chars_mut();
+
+            #[allow(clippy::needless_range_loop)]
+            for i in 0..characters.len() {
+                let c = &characters[i];
+                if chars_to_escape.contains(&&c[..]) {
+                    characters[i] = format!("{}{}", "\\", c);
+                } else if c == "\n" {
+                    characters[i] = "\\n".to_string();
+                } else if c == "\r" {
+                    characters[i] = "\\r".to_string();
+                } else if c == "\t" {
+                    characters[i] = "\\t".to_string();
+                }
             }
+
+            it.to_string()
         })
         .join("");
 

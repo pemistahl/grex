@@ -23,5 +23,4 @@ mod fmt;
 mod grapheme;
 mod regexp;
 
-pub use regexp::RegExp;
 pub use regexp::RegExpBuilder;
