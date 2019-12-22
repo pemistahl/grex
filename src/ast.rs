@@ -23,7 +23,7 @@ use ndarray::{Array1, Array2};
 use petgraph::prelude::EdgeRef;
 
 use crate::dfa::DFA;
-use crate::grapheme::GraphemeCluster;
+use crate::grapheme::{Grapheme, GraphemeCluster};
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub(crate) enum Expression {
@@ -185,7 +185,7 @@ impl Expression {
         }
     }
 
-    pub(crate) fn value(&self, substring: Option<&Substring>) -> Option<Vec<String>> {
+    pub(crate) fn value(&self, substring: Option<&Substring>) -> Option<Vec<Grapheme>> {
         match self {
             Expression::Concatenation(expr1, expr2) => match substring {
                 Some(value) => match value {
@@ -194,13 +194,7 @@ impl Expression {
                 },
                 None => None,
             },
-            Expression::Literal(cluster) => {
-                let mut v = vec![];
-                for grapheme in cluster.graphemes() {
-                    v.push(grapheme.to_string());
-                }
-                Some(v)
-            }
+            Expression::Literal(cluster) => Some(cluster.graphemes().clone()),
             _ => None,
         }
     }
@@ -331,7 +325,7 @@ fn union(a: &Option<Expression>, b: &Option<Expression>) -> Option<Expression> {
 
             if let Some(prefix) = common_prefix {
                 result = Some(Expression::new_concatenation(
-                    Expression::new_literal(GraphemeCluster::from(&prefix)),
+                    Expression::new_literal(GraphemeCluster::from_graphemes(prefix)),
                     result.unwrap(),
                 ));
             }
@@ -339,7 +333,7 @@ fn union(a: &Option<Expression>, b: &Option<Expression>) -> Option<Expression> {
             if let Some(suffix) = common_suffix {
                 result = Some(Expression::new_concatenation(
                     result.unwrap(),
-                    Expression::new_literal(GraphemeCluster::from(&suffix)),
+                    Expression::new_literal(GraphemeCluster::from_graphemes(suffix)),
                 ));
             }
 
@@ -382,7 +376,7 @@ fn remove_common_substring(
     a: &mut Expression,
     b: &mut Expression,
     substring: Substring,
-) -> Option<String> {
+) -> Option<Vec<Grapheme>> {
     let common_substring = find_common_substring(a, b, &substring);
     if let Some(value) = &common_substring {
         a.remove_substring(&substring, value.len());
@@ -391,7 +385,11 @@ fn remove_common_substring(
     common_substring
 }
 
-fn find_common_substring(a: &Expression, b: &Expression, substring: &Substring) -> Option<String> {
+fn find_common_substring(
+    a: &Expression,
+    b: &Expression,
+    substring: &Substring,
+) -> Option<Vec<Grapheme>> {
     let mut graphemes_a = a.value(Some(substring)).unwrap_or_else(|| vec![]);
     let mut graphemes_b = b.value(Some(substring)).unwrap_or_else(|| vec![]);
 
@@ -426,7 +424,7 @@ fn find_common_substring(a: &Expression, b: &Expression, substring: &Substring) 
     if common_graphemes.is_empty() {
         None
     } else {
-        Some(common_graphemes.join(""))
+        Some(common_graphemes)
     }
 }
 
@@ -489,7 +487,7 @@ mod tests {
             Some(
                 vec!["a", "b", "c", "d", "e", "f"]
                     .iter()
-                    .map(|&it| it.to_string())
+                    .map(|&it| Grapheme::from(it))
                     .collect_vec()
             )
         );
@@ -500,7 +498,7 @@ mod tests {
             Some(
                 vec!["c", "d", "e", "f"]
                     .iter()
-                    .map(|&it| it.to_string())
+                    .map(|&it| Grapheme::from(it))
                     .collect_vec()
             )
         );
@@ -514,7 +512,7 @@ mod tests {
             Some(
                 vec!["a", "b", "c", "d", "e", "f"]
                     .iter()
-                    .map(|&it| it.to_string())
+                    .map(|&it| Grapheme::from(it))
                     .collect_vec()
             )
         );
@@ -525,7 +523,7 @@ mod tests {
             Some(
                 vec!["a", "b", "c", "d"]
                     .iter()
-                    .map(|&it| it.to_string())
+                    .map(|&it| Grapheme::from(it))
                     .collect_vec()
             )
         );

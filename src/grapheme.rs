@@ -36,6 +36,10 @@ impl GraphemeCluster {
         }
     }
 
+    pub(crate) fn from_graphemes(graphemes: Vec<Grapheme>) -> Self {
+        Self { graphemes }
+    }
+
     pub(crate) fn new(grapheme: Grapheme) -> Self {
         Self {
             graphemes: vec![grapheme],

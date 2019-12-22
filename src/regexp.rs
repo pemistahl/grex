@@ -326,6 +326,10 @@ mod tests {
             vec!["xy̆y̆z", "xy̆y̆y̆z"]  => "^x(y̆){2,3}z$",
             vec!["xy̆y̆z", "xy̆y̆y̆y̆z"] => "^x((y̆){2}|(y̆){4})z$",
 
+            vec!["zyxx", "yxx"] => "^z?yx{2}$",
+            vec!["zyxx", "yxx", "yxxx"] => "^zyx{2}|yx{2,3}$",
+            vec!["zyxxx", "yxx", "yxxx"] => "^zyx{3}|yx{2,3}$",
+
             vec!["a", "b\n\n", "c"]                   => "^b\\n{2}|[ac]$",
             vec!["a", "b\nb\nb", "c"]                 => "^(b\\n){2}b|[ac]$",
             vec!["a", "b\nx\nx", "c"]                 => "^b(\\nx){2}|[ac]$",

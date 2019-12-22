@@ -212,7 +212,10 @@ impl DFA {
             for parent_state in direct_parent_states {
                 let edge = self.graph.find_edge(parent_state, state).unwrap();
                 let grapheme = self.graph.edge_weight(edge).unwrap();
-                if grapheme.value() == label.value() && grapheme.maximum() == label.maximum() {
+                if grapheme.value() == label.value()
+                    && (grapheme.maximum() == label.maximum()
+                        || grapheme.minimum() == label.minimum())
+                {
                     x.insert(parent_state);
                     break;
                 }
