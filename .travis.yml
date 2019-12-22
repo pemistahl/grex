@@ -33,12 +33,13 @@ before_cache:
   # Travis can't cache files that are not readable by "others"
   - chmod -R a+r $TRAVIS_HOME/.cargo
 
+before_script: rustup target add $TARGET
+
 matrix:
   include:
     - name: Linux Binary 64-Bit
       os: linux
       env: TARGET=x86_64-unknown-linux-musl
-      before_script: rustup target add $TARGET
       addons:
         apt:
           packages:
