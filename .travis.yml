@@ -79,14 +79,14 @@ before_deploy: |
   echo "Created $TRAVIS_OS_NAME binary archive file"
 
 deploy:
-  #- provider: cargo
-  #  skip_cleanup: true
-  #  on:
-  #    tags: true
-  #    branch: master
-  #    condition: $TRAVIS_RUST_VERSION = stable && $TRAVIS_OS_NAME = linux
-  #  token:
-  #    secure: KA+BCrI4/8zKDxTB73p8Z+p7qlXrEtKiHh1Eh9pY+vGO2X1vMq+ArHL9dIKyvjDDLfM+hCuEJ+xrjEsylWF3SOigHt0f7zSOSzEz141olS4eiNHZUyn9tzvYFSclFIggSAAX1dek+twqtCQrTANY2X/l0y/zfgNRPYtx3jIHRtdhfiIfNtY+pe21+9dGiSwihMp/qMaZoskaqrBMZrF7ghE7NeL0DxobO07j9duRg+F8IR/HhrT0hBbeHeFPEepx/9Y8aKer1bA6mVU4N75FowcOrZRN9WxJNZ0RFvPlXTYLyO0z395hIuEBSZa/Qww50+53CVXbuvJJoSWSjalDDTecgAPAQBjy6r4C22VrMdDKk2wEuH8+Llp5i0CI8P+blEw8nWxd1APgFWPFCDVeG1XqyDBOVujC6UW/Vnmb6osMSV2T1+Cy55ZqrWu+6RMz9aLKUBYD+P6tkKIT2FFQORCVkmVt5rvJTkFdYy72ww0Pa4yKHBq39yyVPh/z8D15o2e+lVL93QaRL5toGfxyKhnFxaaP180KQuqXUTHAdVIsp4OCebX0SBOfPeK2IQN3WKdWYq1gSBKcazaXRFZyVxZiTWvCpY86xc5+RJcbKlTdgxhN3K/IVe3g+tPbYzz2EaYzyrOLIhVVJzglm9kONYSRfDQ9zQWi0rcNAYKpHxQ=
+  - provider: cargo
+    skip_cleanup: true
+    on:
+      tags: true
+      branch: master
+      condition: $TRAVIS_RUST_VERSION = stable && $TRAVIS_OS_NAME = linux
+    token:
+      secure: KA+BCrI4/8zKDxTB73p8Z+p7qlXrEtKiHh1Eh9pY+vGO2X1vMq+ArHL9dIKyvjDDLfM+hCuEJ+xrjEsylWF3SOigHt0f7zSOSzEz141olS4eiNHZUyn9tzvYFSclFIggSAAX1dek+twqtCQrTANY2X/l0y/zfgNRPYtx3jIHRtdhfiIfNtY+pe21+9dGiSwihMp/qMaZoskaqrBMZrF7ghE7NeL0DxobO07j9duRg+F8IR/HhrT0hBbeHeFPEepx/9Y8aKer1bA6mVU4N75FowcOrZRN9WxJNZ0RFvPlXTYLyO0z395hIuEBSZa/Qww50+53CVXbuvJJoSWSjalDDTecgAPAQBjy6r4C22VrMdDKk2wEuH8+Llp5i0CI8P+blEw8nWxd1APgFWPFCDVeG1XqyDBOVujC6UW/Vnmb6osMSV2T1+Cy55ZqrWu+6RMz9aLKUBYD+P6tkKIT2FFQORCVkmVt5rvJTkFdYy72ww0Pa4yKHBq39yyVPh/z8D15o2e+lVL93QaRL5toGfxyKhnFxaaP180KQuqXUTHAdVIsp4OCebX0SBOfPeK2IQN3WKdWYq1gSBKcazaXRFZyVxZiTWvCpY86xc5+RJcbKlTdgxhN3K/IVe3g+tPbYzz2EaYzyrOLIhVVJzglm9kONYSRfDQ9zQWi0rcNAYKpHxQ=
   - provider: releases
     skip_cleanup: true
     on:
