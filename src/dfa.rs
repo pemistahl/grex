@@ -16,31 +16,69 @@
 
 use std::collections::{BTreeSet, HashMap, HashSet};
 
+use crate::grapheme::{Grapheme, GraphemeCluster};
 use itertools::Itertools;
 use linked_list::LinkedList;
-use ndarray::{Array1, Array2};
+use petgraph::dot::{Config, Dot};
 use petgraph::graph::NodeIndex;
-use petgraph::prelude::EdgeRef;
-use petgraph::stable_graph::StableGraph;
+use petgraph::stable_graph::{Edges, StableGraph};
 use petgraph::visit::Dfs;
-use petgraph::Direction;
-use unicode_segmentation::UnicodeSegmentation;
-
-use crate::ast::{concatenate, repeat_zero_or_more_times, union, Expression};
+use petgraph::{Directed, Direction};
+use std::cmp::{max, min};
 
 type State = NodeIndex<u32>;
 type StateLabel = String;
-type EdgeLabel = String;
+type EdgeLabel = Grapheme;
 
-pub struct DFA {
-    alphabet: BTreeSet<String>,
+pub(crate) struct DFA {
+    alphabet: BTreeSet<Grapheme>,
     graph: StableGraph<StateLabel, EdgeLabel>,
     initial_state: State,
     final_state_indices: HashSet<usize>,
 }
 
 impl DFA {
-    pub fn new() -> Self {
+    pub(crate) fn from(grapheme_clusters: Vec<GraphemeCluster>) -> Self {
+        let mut dfa = Self::new();
+        for cluster in grapheme_clusters {
+            dfa.insert(cluster);
+        }
+        dfa.minimize();
+        dfa
+    }
+
+    pub(crate) fn state_count(&self) -> usize {
+        self.graph.node_count()
+    }
+
+    pub(crate) fn states_in_depth_first_order(&self) -> Vec<State> {
+        let mut depth_first_search = Dfs::new(&self.graph, self.initial_state);
+        let mut states = vec![];
+        while let Some(state) = depth_first_search.next(&self.graph) {
+            states.push(state);
+        }
+        states
+    }
+
+    pub(crate) fn outgoing_edges(&self, state: State) -> Edges<Grapheme, Directed> {
+        self.graph.edges_directed(state, Direction::Outgoing)
+    }
+
+    pub(crate) fn is_final_state(&self, state: State) -> bool {
+        self.final_state_indices.contains(&state.index())
+    }
+
+    #[allow(dead_code)]
+    pub(crate) fn println(&self, comment: &str) {
+        println!(
+            "{}: {}",
+            comment,
+            Dot::with_config(&self.graph, &[Config::NodeIndexLabel])
+        );
+        println!("{:?}", self.final_state_indices);
+    }
+
+    fn new() -> Self {
         let mut graph = StableGraph::new();
         let initial_state = graph.add_node("".to_string());
         Self {
@@ -51,50 +89,57 @@ impl DFA {
         }
     }
 
-    pub fn from(strs: Vec<&str>) -> Self {
-        let mut dfa = Self::new();
-        for elem in strs {
-            dfa.insert(elem);
-        }
-        dfa.minimize();
-        dfa
-    }
-
-    fn insert(&mut self, s: &str) {
+    fn insert(&mut self, cluster: GraphemeCluster) {
         let mut current_state = self.initial_state;
-        for grapheme in UnicodeSegmentation::graphemes(s, true) {
-            self.alphabet.insert(grapheme.to_string());
-            current_state = self.get_next_state(current_state, &grapheme);
+
+        for grapheme in cluster.graphemes() {
+            self.alphabet.insert(grapheme.clone());
+            current_state = self.get_next_state(current_state, grapheme);
         }
         self.final_state_indices.insert(current_state.index());
     }
 
-    fn get_next_state(&mut self, current_state: State, label: &str) -> State {
-        match self.find_next_state(current_state, label) {
+    fn get_next_state(&mut self, current_state: State, edge_label: &Grapheme) -> State {
+        match self.find_next_state(current_state, edge_label) {
             Some(next_state) => next_state,
-            None => self.add_new_state(current_state, label),
+            None => self.add_new_state(current_state, edge_label),
         }
     }
 
-    fn find_next_state(&self, current_state: State, label: &str) -> Option<State> {
+    fn find_next_state(&mut self, current_state: State, grapheme: &Grapheme) -> Option<State> {
         for next_state in self.graph.neighbors(current_state) {
             let edge_idx = self.graph.find_edge(current_state, next_state).unwrap();
-            let edge_label = self.graph.edge_weight(edge_idx).unwrap();
-            if edge_label == label {
-                return Some(next_state);
+            let current_grapheme = self.graph.edge_weight(edge_idx).unwrap();
+            let is_same_value = current_grapheme.value() == grapheme.value();
+            let has_same_bounds = current_grapheme.range().contains(&grapheme.minimum());
+            let is_bound_in_range = current_grapheme.maximum() == grapheme.maximum() - 1;
+
+            if is_same_value {
+                if is_bound_in_range {
+                    let min = min(current_grapheme.minimum(), grapheme.minimum());
+                    let max = max(current_grapheme.maximum(), grapheme.maximum());
+                    let new_grapheme = Grapheme::new(grapheme.chars().clone(), min, max);
+                    self.graph
+                        .update_edge(current_state, next_state, new_grapheme);
+                    return Some(next_state);
+                }
+                if has_same_bounds {
+                    return Some(next_state);
+                }
             }
         }
         None
     }
 
-    fn add_new_state(&mut self, current_state: State, label: &str) -> State {
+    fn add_new_state(&mut self, current_state: State, edge_label: &Grapheme) -> State {
         let next_state = self.graph.add_node("".to_string());
         self.graph
-            .add_edge(current_state, next_state, label.to_string());
+            .add_edge(current_state, next_state, edge_label.clone());
         next_state
     }
 
-    pub fn minimize(&mut self) {
+    #[allow(clippy::many_single_char_names)]
+    fn minimize(&mut self) {
         let mut p = self.get_initial_partition();
         let mut w = p.iter().cloned().collect_vec();
         let mut p_cursor = p.cursor();
@@ -159,15 +204,18 @@ impl DFA {
         linked_list![final_states, non_final_states]
     }
 
-    fn get_parent_states(&self, a: &HashSet<State>, label: &str) -> HashSet<State> {
+    fn get_parent_states(&self, a: &HashSet<State>, label: &Grapheme) -> HashSet<State> {
         let mut x = HashSet::new();
 
         for &state in a {
             let direct_parent_states = self.graph.neighbors_directed(state, Direction::Incoming);
             for parent_state in direct_parent_states {
                 let edge = self.graph.find_edge(parent_state, state).unwrap();
-                let edge_label = self.graph.edge_weight(edge).unwrap();
-                if edge_label == label {
+                let grapheme = self.graph.edge_weight(edge).unwrap();
+                if grapheme.value() == label.value()
+                    && (grapheme.maximum() == label.maximum()
+                        || grapheme.minimum() == label.minimum())
+                {
                     x.insert(parent_state);
                     break;
                 }
@@ -203,10 +251,10 @@ impl DFA {
                     .find_edge(old_source_state, old_target_state)
                     .unwrap();
 
-                let edge_label = self.graph.edge_weight(edge).unwrap();
+                let grapheme = self.graph.edge_weight(edge).unwrap().clone();
                 let new_target_state = state_mappings.get(&old_target_state).unwrap();
 
-                graph.add_edge(*new_source_state, *new_target_state, edge_label.clone());
+                graph.add_edge(*new_source_state, *new_target_state, grapheme.clone());
 
                 if self.final_state_indices.contains(&old_target_state.index()) {
                     final_state_indices.insert(new_target_state.index());
@@ -217,64 +265,124 @@ impl DFA {
         self.final_state_indices = final_state_indices;
         self.graph = graph;
     }
+}
 
-    fn is_final_state(&self, state: State) -> bool {
-        self.final_state_indices.contains(&state.index())
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_state_count() {
+        let mut dfa = DFA::new();
+        assert_eq!(dfa.state_count(), 1);
+
+        dfa.insert(GraphemeCluster::from("abcd"));
+        assert_eq!(dfa.state_count(), 5);
     }
 
-    pub fn to_regex(&self) -> String {
-        let state_count = self.graph.node_count();
+    #[test]
+    fn test_is_final_state() {
+        let dfa = DFA::from(vec![GraphemeCluster::from("abcd")]);
 
-        let mut a = Array2::<Option<Expression>>::default((state_count, state_count));
-        let mut b = Array1::<Option<Expression>>::default(state_count);
+        let intermediate_state = State::new(3);
+        assert_eq!(dfa.is_final_state(intermediate_state), false);
 
-        let mut depth_first_search = Dfs::new(&self.graph, self.initial_state);
-        let mut states = vec![];
+        let final_state = State::new(4);
+        assert_eq!(dfa.is_final_state(final_state), true);
+    }
 
-        while let Some(state) = depth_first_search.next(&self.graph) {
-            states.push(state);
-        }
+    #[test]
+    fn test_outgoing_edges() {
+        let dfa = DFA::from(vec![
+            GraphemeCluster::from("abcd"),
+            GraphemeCluster::from("abxd"),
+        ]);
+        let state = State::new(2);
+        let mut edges = dfa.outgoing_edges(state);
 
-        for (i, state) in states.iter().enumerate() {
-            if self.is_final_state(*state) {
-                b[i] = Some(Expression::new_literal(""));
-            }
+        let first_edge = edges.next();
+        assert!(first_edge.is_some());
+        assert_eq!(first_edge.unwrap().weight(), &Grapheme::from("c"));
 
-            for edge in self.graph.edges_directed(*state, Direction::Outgoing) {
-                let edge_label = edge.weight();
-                let literal = Expression::new_literal(edge_label);
-                let j = states.iter().position(|&it| it == edge.target()).unwrap();
+        let second_edge = edges.next();
+        assert!(second_edge.is_some());
+        assert_eq!(second_edge.unwrap().weight(), &Grapheme::from("x"));
 
-                a[(i, j)] = if a[(i, j)].is_some() {
-                    union(&a[(i, j)], &Some(literal))
-                } else {
-                    Some(literal)
-                }
-            }
-        }
+        let third_edge = edges.next();
+        assert!(third_edge.is_none());
+    }
 
-        for n in (0..state_count).rev() {
-            if a[(n, n)].is_some() {
-                b[n] = concatenate(&repeat_zero_or_more_times(&a[(n, n)]), &b[n]);
-                for j in 0..n {
-                    a[(n, j)] = concatenate(&repeat_zero_or_more_times(&a[(n, n)]), &a[(n, j)]);
-                }
-            }
+    #[test]
+    fn test_states_in_depth_first_order() {
+        let dfa = DFA::from(vec![
+            GraphemeCluster::from("abcd"),
+            GraphemeCluster::from("axyz"),
+        ]);
+        let states = dfa.states_in_depth_first_order();
+        assert_eq!(states.len(), 7);
 
-            for i in 0..n {
-                if a[(i, n)].is_some() {
-                    b[i] = union(&b[i], &concatenate(&a[(i, n)], &b[n]));
-                    for j in 0..n {
-                        a[(i, j)] = union(&a[(i, j)], &concatenate(&a[(i, n)], &a[(n, j)]));
-                    }
-                }
-            }
-        }
+        let first_state = states.get(0).unwrap();
+        let mut edges = dfa.outgoing_edges(*first_state);
+        assert_eq!(edges.next().unwrap().weight(), &Grapheme::from("a"));
+        assert!(edges.next().is_none());
 
-        if !b.is_empty() && b[0].is_some() {
-            format!("^{}$", b[0].as_ref().unwrap().to_string())
-        } else {
-            String::from("^$")
-        }
+        let second_state = states.get(1).unwrap();
+        edges = dfa.outgoing_edges(*second_state);
+        assert_eq!(edges.next().unwrap().weight(), &Grapheme::from("b"));
+        assert_eq!(edges.next().unwrap().weight(), &Grapheme::from("x"));
+        assert!(edges.next().is_none());
+
+        let third_state = states.get(2).unwrap();
+        edges = dfa.outgoing_edges(*third_state);
+        assert_eq!(edges.next().unwrap().weight(), &Grapheme::from("y"));
+        assert!(edges.next().is_none());
+
+        let fourth_state = states.get(3).unwrap();
+        edges = dfa.outgoing_edges(*fourth_state);
+        assert_eq!(edges.next().unwrap().weight(), &Grapheme::from("z"));
+        assert!(edges.next().is_none());
+
+        let fifth_state = states.get(4).unwrap();
+        edges = dfa.outgoing_edges(*fifth_state);
+        assert!(edges.next().is_none());
+
+        let sixth_state = states.get(5).unwrap();
+        edges = dfa.outgoing_edges(*sixth_state);
+        assert_eq!(edges.next().unwrap().weight(), &Grapheme::from("c"));
+        assert!(edges.next().is_none());
+
+        let seventh_state = states.get(6).unwrap();
+        edges = dfa.outgoing_edges(*seventh_state);
+        assert_eq!(edges.next().unwrap().weight(), &Grapheme::from("d"));
+        assert!(edges.next().is_none());
+    }
+
+    #[test]
+    fn test_minimization_algorithm() {
+        let mut dfa = DFA::new();
+        assert_eq!(dfa.graph.node_count(), 1);
+        assert_eq!(dfa.graph.edge_count(), 0);
+
+        dfa.insert(GraphemeCluster::from("abcd"));
+        assert_eq!(dfa.graph.node_count(), 5);
+        assert_eq!(dfa.graph.edge_count(), 4);
+
+        dfa.insert(GraphemeCluster::from("abxd"));
+        assert_eq!(dfa.graph.node_count(), 7);
+        assert_eq!(dfa.graph.edge_count(), 6);
+
+        dfa.minimize();
+        assert_eq!(dfa.graph.node_count(), 5);
+        assert_eq!(dfa.graph.edge_count(), 5);
+    }
+
+    #[test]
+    fn test_dfa_constructor() {
+        let dfa = DFA::from(vec![
+            GraphemeCluster::from("abcd"),
+            GraphemeCluster::from("abxd"),
+        ]);
+        assert_eq!(dfa.graph.node_count(), 5);
+        assert_eq!(dfa.graph.edge_count(), 5);
     }
 }

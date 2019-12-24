@@ -21,6 +21,7 @@ use itertools::Itertools;
 use unic_char_range::CharRange;
 
 use crate::ast::{Expression, Quantifier};
+use crate::grapheme::GraphemeCluster;
 
 impl Display for Expression {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
@@ -28,7 +29,7 @@ impl Display for Expression {
             Expression::Alternation(options) => format_alternation(f, &self, options),
             Expression::CharacterClass(char_set) => format_character_class(f, char_set),
             Expression::Concatenation(expr1, expr2) => format_concatenation(f, &self, expr1, expr2),
-            Expression::Literal(graphemes) => format_literal(f, graphemes),
+            Expression::Literal(cluster) => format_literal(f, cluster),
             Expression::Repetition(expr, quantifier) => {
                 format_repetition(f, &self, expr, quantifier)
             }
@@ -110,19 +111,6 @@ fn format_character_class(f: &mut Formatter<'_>, char_set: &BTreeSet<char>) -> R
         }
     }
 
-    /*
-    let char_class_strs_escaped = char_class_strs
-        .iter()
-        .map(|it| {
-            if it.is_ascii() {
-                it.to_string()
-            } else {
-                it.escape_unicode().to_string()
-            }
-        })
-        .collect_vec();
-    */
-
     write!(f, "[{}]", char_class_strs.join(""))
 }
 
@@ -151,40 +139,33 @@ fn format_concatenation(
     )
 }
 
-fn format_literal(f: &mut Formatter<'_>, graphemes: &[String]) -> Result {
-    let literal_str = graphemes
+fn format_literal(f: &mut Formatter<'_>, cluster: &GraphemeCluster) -> Result {
+    let chars_to_escape = [
+        "(", ")", "[", "]", "{", "}", "\\", "+", "*", "-", ".", "?", "|", "^", "$",
+    ];
+    let literal_str = cluster
+        .graphemes()
         .iter()
-        .map(|it| match it.as_str() {
-            //"\u{C}" => "\\u{C}", // represents \f
-            "\t" => "\\t",
-            "\n" => "\\n",
-            "\r" => "\\r",
-            "(" => "\\(",
-            ")" => "\\)",
-            "[" => "\\[",
-            "]" => "\\]",
-            "{" => "\\{",
-            "}" => "\\}",
-            "\\" => "\\\\",
-            "+" => "\\+",
-            "*" => "\\*",
-            "-" => "\\-",
-            "." => "\\.",
-            "?" => "\\?",
-            "|" => "\\|",
-            "^" => "\\^",
-            "$" => "\\$",
-            _ => it,
-        })
-        /*
-        .map(|it| {
-            if it.is_ascii() {
-                it.to_string()
-            } else {
-                it.escape_unicode().to_string()
+        .cloned()
+        .map(|mut it| {
+            let characters = it.chars_mut();
+
+            #[allow(clippy::needless_range_loop)]
+            for i in 0..characters.len() {
+                let c = &characters[i];
+                if chars_to_escape.contains(&&c[..]) {
+                    characters[i] = format!("{}{}", "\\", c);
+                } else if c == "\n" {
+                    characters[i] = "\\n".to_string();
+                } else if c == "\r" {
+                    characters[i] = "\\r".to_string();
+                } else if c == "\t" {
+                    characters[i] = "\\t".to_string();
+                }
             }
+
+            it.to_string()
         })
-        */
         .join("");
 
     write!(f, "{}", literal_str)

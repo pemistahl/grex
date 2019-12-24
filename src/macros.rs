@@ -21,22 +21,3 @@ macro_rules! linked_list {
         lst
     }};
 }
-
-macro_rules! btree_set {
-    ( $( $value: expr ),* ) => {{
-        let mut set = std::collections::BTreeSet::new();
-        $( set.insert($value); )*
-        set
-    }};
-}
-
-#[allow(unused_macros)]
-macro_rules! hashmap {
-    ( $( $key: expr => $value: expr ),* ) => {
-        {
-            let mut map = std::collections::HashMap::new();
-            $( map.insert($key, $value); )*
-            map
-        }
-    }
-}
