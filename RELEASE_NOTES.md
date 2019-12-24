@@ -1,3 +1,14 @@
+## grex 0.3.0 (released on 24 Dec 2019)
+
+### Features
+- *grex* is now also available as a library
+- escaping of non-ascii characters is now supported with the `-e` flag
+- astral code points can be converted to surrogate with the `--with-surrogates` flag
+- repeated non-overlapping substrings can be converted to `{min,max}` quantifier notation using the `-r` flag
+
+### Bug Fixes
+- many many many bug fixes :-O
+
 ## grex 0.2.0 (released on 20 Oct 2019)
 
 ### Features

@@ -6,11 +6,10 @@
 [![Docs.rs](https://docs.rs/grex/badge.svg)](https://docs.rs/grex)
 [![Downloads](https://img.shields.io/crates/d/grex.svg)](https://crates.io/crates/grex)
 [![license](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0)
----
+
 [![Linux Download](https://img.shields.io/badge/Linux%20Download-v0.3.0-blue?logo=Linux)](https://github.com/pemistahl/grex/releases/download/v0.3.0/grex-v0.3.0-x86_64-unknown-linux-musl.tar.gz)
 [![MacOS Download](https://img.shields.io/badge/macOS%20Download-v0.3.0-blue?logo=Apple)](https://github.com/pemistahl/grex/releases/download/v0.3.0/grex-v0.3.0-x86_64-apple-darwin.tar.gz)
 [![Windows Download](https://img.shields.io/badge/Windows%20Download-v0.3.0-blue?logo=Windows)](https://github.com/pemistahl/grex/releases/download/v0.3.0/grex-v0.3.0-x86_64-pc-windows-msvc.zip)
----
 
 ## <a name="table-of-contents"></a> Table of Contents
 1. [What does this tool do?](#what-does-tool-do)
