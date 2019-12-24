@@ -28,20 +28,56 @@ fn assert_that_grex_succeeds_with_direct_input() {
 }
 
 #[test]
-fn assert_that_grex_succeeds_with_escape_option() {
+fn assert_that_grex_succeeds_with_repetition_conversion_option() {
     let mut grex = call_grex();
-    grex.args(&["--escape", "My ♥ and 💩 is yours."]);
+    grex.args(&["--convert-repetitions", "xy̆y̆z", "xy̆y̆y̆z"]);
     grex.assert()
         .success()
-        .stdout(predicate::eq("^My \\u{2665} and \\u{1f4a9} is yours\\.$\n"));
+        .stdout(predicate::eq("^x(y̆){2,3}z$\n"));
+}
+
+#[test]
+fn assert_that_grex_succeeds_with_repetition_conversion_and_escape_option() {
+    let mut grex = call_grex();
+    grex.args(&[
+        "--convert-repetitions",
+        "--escape",
+        "My ♥♥♥ and 💩💩 is yours.",
+    ]);
+    grex.assert().success().stdout(predicate::eq(
+        "^My \\u{2665}{3} and \\u{1f4a9}{2} is yours\\.$\n",
+    ));
+}
+
+#[test]
+fn assert_that_grex_succeeds_with_repetition_conversion_and_escape_and_surrogate_option() {
+    let mut grex = call_grex();
+    grex.args(&[
+        "--convert-repetitions",
+        "--escape",
+        "--with-surrogates",
+        "My ♥♥♥ and 💩💩 is yours.",
+    ]);
+    grex.assert().success().stdout(predicate::eq(
+        "^My \\u{2665}{3} and (\\u{d83d}\\u{dca9}){2} is yours\\.$\n",
+    ));
+}
+
+#[test]
+fn assert_that_grex_succeeds_with_escape_option() {
+    let mut grex = call_grex();
+    grex.args(&["--escape", "My ♥♥ and 💩 is yours."]);
+    grex.assert().success().stdout(predicate::eq(
+        "^My \\u{2665}\\u{2665} and \\u{1f4a9} is yours\\.$\n",
+    ));
 }
 
 #[test]
 fn assert_that_grex_succeeds_with_escape_and_surrogate_option() {
     let mut grex = call_grex();
-    grex.args(&["--escape", "--with-surrogates", "My ♥ and 💩 is yours."]);
+    grex.args(&["--escape", "--with-surrogates", "My ♥♥ and 💩 is yours."]);
     grex.assert().success().stdout(predicate::eq(
-        "^My \\u{2665} and \\u{d83d}\\u{dca9} is yours\\.$\n",
+        "^My \\u{2665}\\u{2665} and \\u{d83d}\\u{dca9} is yours\\.$\n",
     ));
 }
 
