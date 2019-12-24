@@ -82,6 +82,8 @@ grex = "0.3.0"
 
 ## 4. <a name="how-to-use"></a> How to use? <sup>[Top ▲](#table-of-contents)</sup>
 
+Every generated regular expression is surrounded by the anchors `^` and `$` so that it does not accidently match substrings.
+
 ### 4.1 <a name="how-to-use-cli"></a> The command-line tool <sup>[Top ▲](#table-of-contents)</sup>
 
 ```
@@ -119,49 +121,59 @@ ARGS:
             One or more test cases separated by blank space 
 ```
 
-### 4.2 <a name="how-to-use-library"></a> The library <sup>[Top ▲](#table-of-contents)</sup>
-
-```rust
-use grex::RegExpBuilder;
-
-// default settings
-// returns "^a(aa?)?$"
-let regexp: String = RegExpBuilder::from(&["a", "aa", "aaa"]).build();
-
-// convert repeated substrings 
-// returns "^a{1,3}$"
-RegExpBuilder::from(&["a", "aa", "aaa"])
-    .with_converted_repetitions()
-    .build();
-
-// escape non-ascii characters
-// returns "^You smell like \u{1f4a9}\.$"
-RegExpBuilder::from(&["You smell like 💩."])
-    .with_escaped_non_ascii_chars(false)
-    .build();
-
-// escape non-ascii characters with surrogate pairs
-// returns "^You smell like \u{d83d}\u{dca9}\.$"
-RegExpBuilder::from(&["You smell like 💩."])
-    .with_escaped_non_ascii_chars(true)
-    .build();
-
-// combine converting repetitions and escaping
-// returns "^You smel{2} like \u{1f4a9}{2}\.$"
-RegExpBuilder::from(&["You smell like 💩."])
-    .with_converted_repetitions()
-    .with_escaped_non_ascii_chars(false)
-    .build();
-```
-
-### 4.3 <a name="examples"></a> Examples <sup>[Top ▲](#table-of-contents)</sup>
-
-Every generated regular expression is surrounded by the anchors `^` and `$` so that it does not accidently match substrings.
 Input strings can be read from the command line or from a file. Every file must be encoded as UTF-8 and every input string must be on a separate line:
                                                                                                                              
 ```
 $ grex -f my-input-file.txt
 ```
+
+### 4.2 <a name="how-to-use-library"></a> The library <sup>[Top ▲](#table-of-contents)</sup>
+
+#### Default settings
+
+```rust
+let regexp = grex::RegExpBuilder::from(&["a", "aa", "aaa"]).build();
+assert_eq!(regexp, "^a(aa?)?$");
+```
+
+#### Convert repeated substrings
+
+```rust
+let regexp = grex::RegExpBuilder::from(&["a", "aa", "aaa"])
+    .with_converted_repetitions()
+    .build();
+assert_eq!(regexp, "^a{1,3}$");
+```
+
+#### Escape non-ascii characters
+
+```rust
+let regexp = grex::RegExpBuilder::from(&["You smell like 💩."])
+    .with_escaped_non_ascii_chars(false)
+    .build();
+assert_eq!(regexp, "^You smell like \\u{1f4a9}\\.$");
+```
+
+#### Escape astral code points using surrogate pairs
+
+```rust
+let regexp = grex::RegExpBuilder::from(&["You smell like 💩."])
+    .with_escaped_non_ascii_chars(true)
+    .build();
+assert_eq!(regexp, "^You smell like \\u{d83d}\\u{dca9}\\.$");
+```
+
+#### Combine multiple features
+
+```rust
+let regexp = grex::RegExpBuilder::from(&["You smell like 💩💩💩."])
+    .with_converted_repetitions()
+    .with_escaped_non_ascii_chars(false)
+    .build();
+assert_eq!(regexp, "^You smel{2} like \\u{1f4a9}{3}\\.$");
+```
+
+### 4.3 <a name="examples"></a> Examples <sup>[Top ▲](#table-of-contents)</sup>
 
 The following table showcases what *grex* can do:                                                                                                                           
 
@@ -176,9 +188,9 @@ The following table showcases what *grex* can do:
 | `$ grex a ab abc` | `^a(bc?)?$` | |
 | `$ grex 3.5 4.5 4,5` | <code>^3\\.5&#124;4[,.]5$</code> | |
 | `$ grex [a-z]` | `^\[a\-z\]$` | Regex syntax characters are escaped. | 
-| `$ grex y̆ a z` | <code>^[az]&#124;y̆$</code> | Grapheme `y̆` consists of two unicode symbols:`U+0079` (Latin Small Letter Y) and`U+0306` (Combining Breve). This is why it is not part of the character class. |
-| `$ grex "I ♥ cake" "I ♥ cookies"` | <code>^I ♥ c(ookies&#124;ake)$</code> | Input containing blank space must be surrounded by quotation marks. |
-| `$ grex "I \u{2665} cake"` | `^I ♥ cake$` | Unicode escape sequences are converted back to the original unicode symbol. | 
+| `$ grex y̆ a z` | <code>^[az]&#124;y̆$</code> | Grapheme `y̆` consists of two unicode symbols:<br>`U+0079` (Latin Small Letter Y)<br>`U+0306` (Combining Breve).<br>This is why it is not part of<br>the character class. |
+| `$ grex "I ♥ cake" "I ♥ cookies"` | <code>^I ♥ c(ookies&#124;ake)$</code> | Input containing blank space must be<br>surrounded by quotation marks. |
+| `$ grex "I \u{2665} cake"` | `^I ♥ cake$` | Unicode escape sequences are converted<br>back to the original unicode symbol. | 
 | `$ grex -r aaa` | `^a{3}$` | |
 | `$ grex -r abababa` | `^(ab){3}a$` | |
 | `$ grex -r aababab` | `^a(ab){3}$` | |
@@ -186,7 +198,7 @@ The following table showcases what *grex* can do:
 | `$ grex -r a aa aaa` | `^a{1,3}$` | |
 | `$ grex -r b ba baa baaa` | `^b(a{1,3})?$` | |
 | `$ grex -r b ba baa baaaa` | <code>^b(a{1,2}&#124;a{4})?$</code> | | 
-| `$ grex -r xy̆y̆z xy̆y̆y̆z` | `^x(y̆){2,3}z$` | The parentheses are needed because `y̆` consists of two unicode symbols. | 
+| `$ grex -r xy̆y̆z xy̆y̆y̆z` | `^x(y̆){2,3}z$` | The parentheses are needed because<br>`y̆` consists of two unicode symbols. | 
 | `$ grex -r xy̆y̆z xy̆y̆y̆y̆z` | <code>^x((y̆){2}&#124;(y̆){4})z$</code> | |
 | `$ grex -r zyxx yxx` | `^z?yx{2}$` | | 
 | `$ grex -r 4.5 44.5 44.55 4.55 ` | `^4{1,2}\.5{1,2}$` | | 
@@ -196,7 +208,7 @@ The following table showcases what *grex* can do:
 | `$ grex -e -r "I ♥♥ you."` | `^I \u{2665}{2} you\.$` | |
 | `$ grex -e "You smell like 💩💩."` | `^You smell like \u{1f4a9}\u{1f4a9}\.$` | |
 | `$ grex -e -r "You smell like 💩💩."` | `^You smell like \u{1f4a9}{2}\.$` | |
-| `$ grex -e -r --with-surrogates "You smell like 💩💩."` | `^You smel{2} like (\u{d83d}\u{dca9}){2}\.$` | For languages such as older JavaScript versions not supporting<br>astral codepoints (`U+010000` to `U+10FFFF`), conversion to surrogate pairs is possible. More info about this issue can be found [here](https://mathiasbynens.be/notes/javascript-unicode). | 
+| `$ grex -e -r --with-surrogates "You smell like 💩💩."` | `^You smel{2} like (\u{d83d}\u{dca9}){2}\.$` | For languages such as older<br>JavaScript versions not supporting<br>astral codepoints (`U+010000` to `U+10FFFF`),<br>conversion to surrogate pairs is possible.<br>More info about this issue can be found [here](https://mathiasbynens.be/notes/javascript-unicode). |  
 
 ## 5. <a name="how-does-it-work"></a> How does it work? <sup>[Top ▲](#table-of-contents)</sup>
 

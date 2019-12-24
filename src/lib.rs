@@ -14,6 +14,76 @@
  * limitations under the License.
  */
 
+//! ## 1. What does this tool do?
+//!
+//! *grex* is a library as well as a command-line utility that is meant to simplify the often complicated and tedious task of creating regular expressions. It does so by automatically generating regular expressions from user-provided test cases.
+//!
+//! This project has started as a Rust port of the JavaScript tool [*regexgen*](https://github.com/devongovett/regexgen) written by [Devon Govett](https://github.com/devongovett). Although a lot of further useful features could be added to it, its development was apparently ceased several years ago. The plan is now to add these new features to *grex* as Rust really shines when it comes to command-line tools. *grex* offers all features that *regexgen* provides, and more.
+//!
+//! The philosophy of this project is to generate the most specific regular expression possible by default which exactly matches the given input only and nothing else. With the use of command-line flags (in the CLI tool) or preprocessing methods (in the library), more generalized expressions can be created.
+//!
+//! ## 2. Current features
+//!
+//! - literals
+//! - character classes
+//! - detection of common prefixes and suffixes
+//! - detection of repeated substrings and conversion to `{min,max}` quantifier notation
+//! - alternation using `|` operator
+//! - optionality using `?` quantifier
+//! - escaping of non-ascii characters, with optional conversion of astral code points to surrogate pairs
+//! - concatenation of all of the former
+//! - reading input strings from the command-line or from a file
+//!
+//! ## 3. How to use?
+//!
+//! The code snippets below show how to use the public api.
+//!
+//! For [more detailed examples](https://github.com/pemistahl/grex/tree/master#examples), please take a look at the project's readme file on GitHub.
+//!
+//! ### 3.1 Default settings
+//!
+//! ```
+//! let regexp = grex::RegExpBuilder::from(&["a", "aa", "aaa"]).build();
+//! assert_eq!(regexp, "^a(aa?)?$");
+//! ```
+//!
+//! ### 3.2 Convert repeated substrings
+//!
+//! ```
+//! let regexp = grex::RegExpBuilder::from(&["a", "aa", "aaa"])
+//!     .with_converted_repetitions()
+//!     .build();
+//! assert_eq!(regexp, "^a{1,3}$");
+//! ```
+//!
+//! ### 3.3 Escape non-ascii characters
+//!
+//! ```
+//! let regexp = grex::RegExpBuilder::from(&["You smell like 💩."])
+//!     .with_escaped_non_ascii_chars(false)
+//!     .build();
+//! assert_eq!(regexp, "^You smell like \\u{1f4a9}\\.$");
+//! ```
+//!
+//! ### 3.4 Escape astral code points using surrogate pairs
+//!
+//! ```
+//! let regexp = grex::RegExpBuilder::from(&["You smell like 💩."])
+//!     .with_escaped_non_ascii_chars(true)
+//!     .build();
+//! assert_eq!(regexp, "^You smell like \\u{d83d}\\u{dca9}\\.$");
+//! ```
+//!
+//! ### 3.5 Combine multiple features
+//!
+//! ```
+//! let regexp = grex::RegExpBuilder::from(&["You smell like 💩💩💩."])
+//!     .with_converted_repetitions()
+//!     .with_escaped_non_ascii_chars(false)
+//!     .build();
+//! assert_eq!(regexp, "^You smel{2} like \\u{1f4a9}{3}\\.$");
+//! ```
+
 #[macro_use]
 mod macros;
 

@@ -21,6 +21,7 @@ grex generates regular expressions from user-provided test cases.
 """
 homepage = "https://github.com/pemistahl/grex"
 repository = "https://github.com/pemistahl/grex"
+documentation = "https://docs.rs/grex"
 license = "Apache-2.0"
 readme = "README.md"
 edition = "2018"
