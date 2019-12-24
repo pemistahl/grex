@@ -23,13 +23,13 @@ use structopt::StructOpt;
 use grex::RegExpBuilder;
 
 #[derive(StructOpt)]
-#[structopt(author, about)]
+#[structopt(author, about, version_short = "v")]
 struct CLI {
     #[structopt(
         value_name = "INPUT",
         required_unless = "file",
         conflicts_with = "file",
-        help = "One or more test cases separated by blank space"
+        long_help = "One or more test cases separated by blank space"
     )]
     input: Vec<String>,
 
@@ -40,7 +40,7 @@ struct CLI {
         long,
         parse(from_os_str),
         required_unless = "input",
-        help = "Reads test cases separated by newline characters from a file"
+        long_help = "Reads test cases separated by newline characters from a file"
     )]
     file_path: Option<PathBuf>,
 
@@ -48,7 +48,7 @@ struct CLI {
         name = "convert-repetitions",
         short = "r",
         long,
-        help = "Detects repeated non-overlapping substrings and converts them to {min,max} quantifier notation",
+        long_help = "Detects repeated non-overlapping substrings and\nconverts them to {min,max} quantifier notation",
         display_order = 1
     )]
     is_repetition_converted: bool,
@@ -57,7 +57,7 @@ struct CLI {
         name = "escape",
         short,
         long,
-        help = "Replaces all non-ASCII characters with unicode escape sequences",
+        long_help = "Replaces all non-ASCII characters with unicode escape sequences",
         display_order = 2
     )]
     is_non_ascii_char_escaped: bool,
@@ -66,7 +66,7 @@ struct CLI {
         name = "with-surrogates",
         long,
         requires = "escape",
-        help = "Converts astral code points to surrogate pairs if --escape is set",
+        long_help = "Converts astral code points to surrogate pairs if --escape is set",
         display_order = 3
     )]
     is_astral_code_point_converted_to_surrogate: bool,
