@@ -1,15 +1,12 @@
-# grex
+![grex](logo.png)
 
 [![Build Status](https://travis-ci.org/pemistahl/grex.svg?branch=master)](https://travis-ci.org/pemistahl/grex)
 [![codecov](https://codecov.io/gh/pemistahl/grex/branch/master/graph/badge.svg)](https://codecov.io/gh/pemistahl/grex)
 [![Crates.io](https://img.shields.io/crates/v/grex.svg)](https://crates.io/crates/grex)
+[![Docs.rs](https://docs.rs/grex/badge.svg)](https://docs.rs/grex)
 [![Downloads](https://img.shields.io/crates/d/grex.svg)](https://crates.io/crates/grex)
 [![license](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0)
-
-#### Download
-
-Pre-compiled 64-bit executables are provided here for Linux, macOS and Windows. Older releases can be found on the [release page](https://github.com/pemistahl/grex/releases).
-
+---
 [![Linux Download](https://img.shields.io/badge/Linux%20Download-v0.3.0-blue?logo=Linux)](https://github.com/pemistahl/grex/releases/download/v0.3.0/grex-v0.3.0-x86_64-unknown-linux-musl.tar.gz)
 [![MacOS Download](https://img.shields.io/badge/macOS%20Download-v0.3.0-blue?logo=Apple)](https://github.com/pemistahl/grex/releases/download/v0.3.0/grex-v0.3.0-x86_64-apple-darwin.tar.gz)
 [![Windows Download](https://img.shields.io/badge/Windows%20Download-v0.3.0-blue?logo=Windows)](https://github.com/pemistahl/grex/releases/download/v0.3.0/grex-v0.3.0-x86_64-pc-windows-msvc.zip)
@@ -52,7 +49,7 @@ The philosophy of this project is to generate the most specific regular expressi
 
 ### 3.1 <a name="how-to-install-cli"></a> The command-line tool <sup>[Top ▲](#table-of-contents)</sup>
 
-Pre-compiled binaries are available within the package managers [Scoop](https://scoop.sh) (for Windows) and [Homebrew](https://brew.sh) (for macOS and Linux).
+Pre-compiled 64-Bit binaries are available within the package managers [Scoop](https://scoop.sh) (for Windows) and [Homebrew](https://brew.sh) (for macOS and Linux).
 
 #### Scoop
 ```
