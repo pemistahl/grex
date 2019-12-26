@@ -38,3 +38,32 @@ fn matches_each_input_string(input_strings: HashSet<String>) -> TestResult {
         TestResult::discard()
     }
 }
+
+#[quickcheck]
+fn does_not_match_other_strings(
+        input_strings: HashSet<String>,
+        other_strings: HashSet<String>,
+    ) -> TestResult {
+    if input_strings.is_disjoint(&other_strings) {
+        let regexp = RegExpBuilder::from(
+            input_strings
+                .iter()
+                .cloned()
+                .collect::<Vec<String>>()
+                .as_slice(),
+        )
+        .build();
+        let compiled_regex = Regex::new(&regexp);
+        if let Ok(compiled_regex) = compiled_regex {
+            TestResult::from_bool(
+                other_strings
+                    .into_iter()
+                    .all(|input| !compiled_regex.is_match(&input)),
+            )
+        } else {
+            TestResult::discard()
+        }
+    } else {
+        TestResult::discard()
+    }
+}
