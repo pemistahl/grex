@@ -35,6 +35,10 @@ before_cache:
 
 before_script: rustup target add $TARGET
 
+env:
+  global:
+    - QUICKCHECK_GENERATOR_SIZE=25
+
 matrix:
   include:
     - name: Linux Binary 64-Bit
