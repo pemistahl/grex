@@ -69,7 +69,7 @@ impl DFA {
     }
 
     #[allow(dead_code)]
-    pub(crate) fn println(&self, comment: &str) {
+    fn println(&self, comment: &str) {
         println!(
             "{}: {}",
             comment,

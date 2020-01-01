@@ -109,20 +109,15 @@ impl RegExp {
             }
         }
 
-        /*
-        if is_non_ascii_char_escaped {
-            for cluster in clusters.iter_mut() {
-                cluster.escape_non_ascii_chars(is_astral_code_point_converted_to_surrogate);
-            }
-        }
-        */
-
         clusters
     }
 }
 
 impl Display for RegExp {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
-        write!(f, "^{}$", self.ast.to_string())
+        match self.ast {
+            Expression::Alternation(_) => write!(f, "^({})$", self.ast.to_string()),
+            _ => write!(f, "^{}$", self.ast.to_string()),
+        }
     }
 }

@@ -138,4 +138,59 @@ proptest! {
             }
         }
     }
+
+    #[test]
+    fn ensure_regexes_do_not_match_other_strings_with_converted_repetitions(
+        test_cases in prop::collection::hash_set(".{1,20}", 1..=10),
+        other_strings in prop::collection::hash_set(".{1,20}", 1..=10)
+    ) {
+        if test_cases.is_disjoint(&other_strings) {
+            let test_cases_vec = test_cases.iter().cloned().collect::<Vec<_>>();
+            let regexp = RegExpBuilder::from(&test_cases_vec)
+                .with_converted_repetitions()
+                .build();
+            let compiled_regex = Regex::new(&regexp);
+
+            if let Ok(compiled_regex) = compiled_regex {
+                prop_assert!(other_strings.iter().all(|other_string| !compiled_regex.is_match(&other_string)));
+            }
+        }
+    }
+
+    #[test]
+    fn ensure_regexes_do_not_match_other_strings_with_escaped_non_ascii_chars(
+        test_cases in prop::collection::hash_set(".{1,20}", 1..=10),
+        other_strings in prop::collection::hash_set(".{1,20}", 1..=10)
+    ) {
+        if test_cases.is_disjoint(&other_strings) {
+            let test_cases_vec = test_cases.iter().cloned().collect::<Vec<_>>();
+            let regexp = RegExpBuilder::from(&test_cases_vec)
+                .with_escaped_non_ascii_chars(false)
+                .build();
+            let compiled_regex = Regex::new(&regexp);
+
+            if let Ok(compiled_regex) = compiled_regex {
+                prop_assert!(other_strings.iter().all(|other_string| !compiled_regex.is_match(&other_string)));
+            }
+        }
+    }
+
+    #[test]
+    fn ensure_regexes_do_not_match_other_strings_with_converted_repetitions_and_escaped_non_ascii_chars(
+        test_cases in prop::collection::hash_set(".{1,20}", 1..=10),
+        other_strings in prop::collection::hash_set(".{1,20}", 1..=10)
+    ) {
+        if test_cases.is_disjoint(&other_strings) {
+            let test_cases_vec = test_cases.iter().cloned().collect::<Vec<_>>();
+            let regexp = RegExpBuilder::from(&test_cases_vec)
+                .with_converted_repetitions()
+                .with_escaped_non_ascii_chars(false)
+                .build();
+            let compiled_regex = Regex::new(&regexp);
+
+            if let Ok(compiled_regex) = compiled_regex {
+                prop_assert!(other_strings.iter().all(|other_string| !compiled_regex.is_match(&other_string)));
+            }
+        }
+    }
 }

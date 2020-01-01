@@ -100,7 +100,7 @@ fn assert_that_grex_suceeds_with_file_input() {
     grex.args(&["-f", file.path().to_str().unwrap()]);
     grex.assert()
         .success()
-        .stdout(predicate::eq("^b\\\\n|äöü|[ac♥]$\n"));
+        .stdout(predicate::eq("^(b\\\\n|äöü|[ac♥])$\n"));
 }
 
 #[test]
