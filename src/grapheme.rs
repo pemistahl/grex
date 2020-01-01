@@ -46,12 +46,6 @@ impl GraphemeCluster {
         }
     }
 
-    pub(crate) fn escape_non_ascii_chars(&mut self, use_surrogate_pairs: bool) {
-        for grapheme in self.graphemes_mut() {
-            grapheme.escape_non_ascii_chars(use_surrogate_pairs);
-        }
-    }
-
     pub(crate) fn convert_repetitions(&mut self) {
         let repetitions = self.collect_repeated_substrings();
         let mut sorted_repetitions = self.sort_repetitions(repetitions);
@@ -78,8 +72,11 @@ impl GraphemeCluster {
         self.graphemes.len()
     }
 
-    pub(crate) fn char_count(&self) -> usize {
-        self.graphemes.iter().map(|it| it.char_count()).sum()
+    pub(crate) fn char_count(&self, is_non_ascii_char_escaped: bool) -> usize {
+        self.graphemes
+            .iter()
+            .map(|it| it.char_count(is_non_ascii_char_escaped))
+            .sum()
     }
 
     pub(crate) fn is_empty(&self) -> bool {
@@ -259,29 +256,39 @@ impl Grapheme {
         self.max
     }
 
-    pub(crate) fn char_count(&self) -> usize {
-        self.value().chars().count()
+    pub(crate) fn char_count(&self, is_non_ascii_char_escaped: bool) -> usize {
+        if is_non_ascii_char_escaped {
+            self.chars
+                .iter()
+                .map(|it| it.chars().map(|c| self.escape(c, false)).join(""))
+                .join("")
+                .chars()
+                .count()
+        } else {
+            self.value().chars().count()
+        }
     }
 
-    fn escape_non_ascii_chars(&mut self, use_surrogate_pairs: bool) {
-        let surrogate_range = '\u{10000}'..'\u{10ffff}';
+    pub(crate) fn escape_non_ascii_chars(&mut self, use_surrogate_pairs: bool) {
         self.chars = self
             .chars
             .iter()
             .map(|it| {
                 it.chars()
-                    .map(|c| {
-                        if c.is_ascii() {
-                            it.to_string()
-                        } else if use_surrogate_pairs && surrogate_range.contains(&c) {
-                            self.convert_to_surrogate_pair(c)
-                        } else {
-                            c.escape_unicode().to_string()
-                        }
-                    })
+                    .map(|c| self.escape(c, use_surrogate_pairs))
                     .join("")
             })
             .collect_vec();
+    }
+
+    fn escape(&self, c: char, use_surrogate_pairs: bool) -> String {
+        if c.is_ascii() {
+            c.to_string()
+        } else if use_surrogate_pairs && ('\u{10000}'..'\u{10ffff}').contains(&c) {
+            self.convert_to_surrogate_pair(c)
+        } else {
+            c.escape_unicode().to_string()
+        }
     }
 
     fn convert_to_surrogate_pair(&self, c: char) -> String {
@@ -294,7 +301,7 @@ impl Grapheme {
 
 impl Display for Grapheme {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
-        let is_single_char = self.char_count() == 1
+        let is_single_char = self.char_count(false) == 1
             || (self.chars.len() == 1 && self.chars[0].matches('\\').count() == 1);
         let is_range = self.min < self.max;
         let is_repetition = self.min > 1;

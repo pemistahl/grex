@@ -23,6 +23,11 @@ use rstest::rstest;
     case(vec![""], "^$"),
     case(vec![" "], "^ $"),
     case(vec!["   "], "^   $"),
+    case(vec!["["], "^\\[$"),
+    case(vec!["a", "("], "^[(a]$"),
+    case(vec!["a", "\n"], "^[\\na]$"),
+    case(vec!["a", "["], "^[\\[a]$"),
+    case(vec!["a", "-", "c", "!"], "^[!\\-ac]$"),
     case(vec!["a", "b"], "^[ab]$"),
     case(vec!["a", "b", "c"], "^[a-c]$"),
     case(vec!["a", "c", "d", "e", "f"], "^[ac-f]$"),
@@ -68,7 +73,8 @@ use rstest::rstest;
     case(vec!["I \u{2665} cake"], "^I ♥ cake$"),
     case(vec!["I \\u{2665} cake"], "^I \\\\u\\{2665\\} cake$"),
     case(vec!["I \\u2665 cake"], "^I \\\\u2665 cake$"),
-    case(vec!["My ♥ is yours.", "My 💩 is yours."], "^My [♥💩] is yours\\.$")
+    case(vec!["My ♥ is yours.", "My 💩 is yours."], "^My [♥💩] is yours\\.$"),
+    case(vec!["[\u{c3e}"], "^\\[\u{c3e}$")
 )]
 fn regexp_builder_with_default_settings(test_cases: Vec<&str>, expected_output: &str) {
     let regexp = RegExpBuilder::from(&test_cases).build();

@@ -74,12 +74,14 @@ impl RegExp {
     ) -> Self {
         Self::sort(test_cases);
         Self {
-            ast: Expression::from(DFA::from(Self::grapheme_clusters(
-                &test_cases,
+            ast: Expression::from(
+                DFA::from(Self::grapheme_clusters(
+                    &test_cases,
+                    is_repetition_converted,
+                )),
                 is_non_ascii_char_escaped,
                 is_astral_code_point_converted_to_surrogate,
-                is_repetition_converted,
-            ))),
+            ),
         }
     }
 
@@ -94,8 +96,6 @@ impl RegExp {
 
     fn grapheme_clusters(
         test_cases: &[String],
-        is_non_ascii_char_escaped: bool,
-        is_astral_code_point_converted_to_surrogate: bool,
         is_repetition_converted: bool,
     ) -> Vec<GraphemeCluster> {
         let mut clusters = test_cases
@@ -109,11 +109,13 @@ impl RegExp {
             }
         }
 
+        /*
         if is_non_ascii_char_escaped {
             for cluster in clusters.iter_mut() {
                 cluster.escape_non_ascii_chars(is_astral_code_point_converted_to_surrogate);
             }
         }
+        */
 
         clusters
     }

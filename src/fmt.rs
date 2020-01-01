@@ -29,7 +29,16 @@ impl Display for Expression {
             Expression::Alternation(options) => format_alternation(f, &self, options),
             Expression::CharacterClass(char_set) => format_character_class(f, char_set),
             Expression::Concatenation(expr1, expr2) => format_concatenation(f, &self, expr1, expr2),
-            Expression::Literal(cluster) => format_literal(f, cluster),
+            Expression::Literal(
+                cluster,
+                is_non_ascii_char_escaped,
+                is_astral_code_point_converted_to_surrogate,
+            ) => format_literal(
+                f,
+                cluster,
+                *is_non_ascii_char_escaped,
+                *is_astral_code_point_converted_to_surrogate,
+            ),
             Expression::Repetition(expr, quantifier) => {
                 format_repetition(f, &self, expr, quantifier)
             }
@@ -70,6 +79,23 @@ fn format_alternation(f: &mut Formatter<'_>, expr: &Expression, options: &[Expre
 }
 
 fn format_character_class(f: &mut Formatter<'_>, char_set: &BTreeSet<char>) -> Result {
+    let chars_to_escape = ['[', ']', '\\', '-', '^'];
+    let escaped_char_set = char_set
+        .iter()
+        .map(|c| {
+            if chars_to_escape.contains(&c) {
+                format!("{}{}", "\\", c)
+            } else if c == &'\n' {
+                "\\n".to_string()
+            } else if c == &'\r' {
+                "\\r".to_string()
+            } else if c == &'\t' {
+                "\\t".to_string()
+            } else {
+                c.to_string()
+            }
+        })
+        .collect_vec();
     let char_positions = char_set
         .iter()
         .map(|&it| get_codepoint_position(it))
@@ -79,7 +105,7 @@ fn format_character_class(f: &mut Formatter<'_>, char_set: &BTreeSet<char>) -> R
     let mut subset = vec![];
 
     for ((first_c, first_pos), (second_c, second_pos)) in
-        char_set.iter().zip(char_positions).tuple_windows()
+        escaped_char_set.iter().zip(char_positions).tuple_windows()
     {
         if subset.is_empty() {
             subset.push(first_c);
@@ -139,32 +165,44 @@ fn format_concatenation(
     )
 }
 
-fn format_literal(f: &mut Formatter<'_>, cluster: &GraphemeCluster) -> Result {
+fn format_literal(
+    f: &mut Formatter<'_>,
+    cluster: &GraphemeCluster,
+    is_non_ascii_char_escaped: bool,
+    is_astral_code_point_converted_to_surrogate: bool,
+) -> Result {
     let chars_to_escape = [
-        "(", ")", "[", "]", "{", "}", "\\", "+", "*", "-", ".", "?", "|", "^", "$",
+        "\\", "(", ")", "[", "]", "{", "}", "+", "*", "-", ".", "?", "|", "^", "$",
     ];
     let literal_str = cluster
         .graphemes()
         .iter()
         .cloned()
-        .map(|mut it| {
-            let characters = it.chars_mut();
+        .map(|mut grapheme| {
+            let characters = grapheme.chars_mut();
 
             #[allow(clippy::needless_range_loop)]
             for i in 0..characters.len() {
-                let c = &characters[i];
-                if chars_to_escape.contains(&&c[..]) {
-                    characters[i] = format!("{}{}", "\\", c);
-                } else if c == "\n" {
-                    characters[i] = "\\n".to_string();
-                } else if c == "\r" {
-                    characters[i] = "\\r".to_string();
-                } else if c == "\t" {
-                    characters[i] = "\\t".to_string();
+                let mut character = characters[i].clone();
+
+                for char_to_escape in chars_to_escape.iter() {
+                    character =
+                        character.replace(char_to_escape, &format!("{}{}", "\\", char_to_escape));
                 }
+
+                character = character
+                    .replace("\n", "\\n")
+                    .replace("\r", "\\r")
+                    .replace("\t", "\\t");
+
+                characters[i] = character;
             }
 
-            it.to_string()
+            if is_non_ascii_char_escaped {
+                grapheme.escape_non_ascii_chars(is_astral_code_point_converted_to_surrogate);
+            }
+
+            grapheme.to_string()
         })
         .join("");
 
