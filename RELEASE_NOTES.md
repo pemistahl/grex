@@ -1,3 +1,17 @@
+## grex 0.3.1 (released on 06 Jan 2020)
+
+### Test Coverage
+- property tests have been added using the [proptest](https://crates.io/crates/proptest) crate 
+- big thanks go to [Christophe Biocca](https://github.com/christophebiocca) for pointing me to the concept of property tests in the first place and for writing an initial implementation of these tests
+
+### Bug Fixes
+- some regular expression specific characters were not escaped correctly in the generated expression
+- expressions consisting of a single alternation such as `^(abc|xyz)$` were missing the outer parentheses. This caused an erroneous match of strings such as `abc123` or `456xyz` because of precedence rules.
+- the created DFA was wrong for repetition conversion in some corner cases. The input `a, aa, aaa, aaaa, aaab` previously returned the expression `^a{1,4}b?$` which erroneously matches `aaaab`. Now the correct expression `^(a{3}b|a{1,4})$` is returned.
+
+### Documentation
+- some minor documentation updates
+
 ## grex 0.3.0 (released on 24 Dec 2019)
 
 ### Features
