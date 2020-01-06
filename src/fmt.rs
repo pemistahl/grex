@@ -126,7 +126,7 @@ fn format_character_class(f: &mut Formatter<'_>, char_set: &BTreeSet<char>) -> R
     for subset in subsets.iter() {
         if subset.len() <= 2 {
             for c in subset.iter() {
-                char_class_strs.push(format!("{}", c));
+                char_class_strs.push((*c).to_string());
             }
         } else {
             char_class_strs.push(format!(

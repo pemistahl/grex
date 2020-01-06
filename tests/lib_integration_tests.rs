@@ -93,7 +93,7 @@ fn regexp_builder_with_default_settings(test_cases: Vec<&str>, expected_output: 
     case(vec!["a", "aa"], "^a{1,2}$"),
     case(vec!["aaa", "a", "aa"], "^a{1,3}$"),
     case(vec!["aaaa", "a", "aa"], "^(a{1,2}|a{4})$"),
-    //case(vec!["a", "aa", "aaa", "aaaa", "aaab"], "^(a{3}b|a{1,4})$"),
+    case(vec!["a", "aa", "aaa", "aaaa", "aaab"], "^(a{3}b|a{1,4})$"),
     case(vec!["ababab"], "^(ab){3}$"),
     case(vec!["abababa"], "^(ab){3}a$"),
     case(vec!["aababab"], "^a(ab){3}$"),

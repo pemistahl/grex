@@ -110,22 +110,20 @@ impl DFA {
         for next_state in self.graph.neighbors(current_state) {
             let edge_idx = self.graph.find_edge(current_state, next_state).unwrap();
             let current_grapheme = self.graph.edge_weight(edge_idx).unwrap();
-            let is_same_value = current_grapheme.value() == grapheme.value();
-            let has_same_bounds = current_grapheme.range().contains(&grapheme.minimum());
-            let is_bound_in_range = current_grapheme.maximum() == grapheme.maximum() - 1;
 
-            if is_same_value {
-                if is_bound_in_range {
-                    let min = min(current_grapheme.minimum(), grapheme.minimum());
-                    let max = max(current_grapheme.maximum(), grapheme.maximum());
-                    let new_grapheme = Grapheme::new(grapheme.chars().clone(), min, max);
-                    self.graph
-                        .update_edge(current_state, next_state, new_grapheme);
-                    return Some(next_state);
-                }
-                if has_same_bounds {
-                    return Some(next_state);
-                }
+            if current_grapheme.value() != grapheme.value() {
+                continue;
+            }
+
+            if current_grapheme.maximum() == grapheme.maximum() - 1 {
+                let min = min(current_grapheme.minimum(), grapheme.minimum());
+                let max = max(current_grapheme.maximum(), grapheme.maximum());
+                let new_grapheme = Grapheme::new(grapheme.chars().clone(), min, max);
+                self.graph
+                    .update_edge(current_state, next_state, new_grapheme);
+                return Some(next_state);
+            } else if current_grapheme.maximum() == grapheme.maximum() {
+                return Some(next_state);
             }
         }
         None

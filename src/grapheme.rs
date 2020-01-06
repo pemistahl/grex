@@ -17,7 +17,7 @@
 use itertools::Itertools;
 use std::collections::HashMap;
 use std::fmt::{Display, Formatter, Result};
-use std::ops::{Range, RangeInclusive};
+use std::ops::Range;
 use unicode_segmentation::UnicodeSegmentation;
 
 type Repetition = (Vec<String>, Range<usize>, u32);
@@ -236,10 +236,6 @@ impl Grapheme {
         self.chars.join("")
     }
 
-    pub(crate) fn range(&self) -> RangeInclusive<u32> {
-        self.min..=self.max
-    }
-
     pub(crate) fn chars(&self) -> &Vec<String> {
         &self.chars
     }
@@ -256,7 +252,7 @@ impl Grapheme {
         self.max
     }
 
-    pub(crate) fn char_count(&self, is_non_ascii_char_escaped: bool) -> usize {
+    fn char_count(&self, is_non_ascii_char_escaped: bool) -> usize {
         if is_non_ascii_char_escaped {
             self.chars
                 .iter()
@@ -265,7 +261,7 @@ impl Grapheme {
                 .chars()
                 .count()
         } else {
-            self.value().chars().count()
+            self.chars.iter().map(|it| it.chars().count()).sum()
         }
     }
 
