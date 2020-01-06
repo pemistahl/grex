@@ -33,8 +33,8 @@ itertools = "0.8.2"
 linked-list = "0.0.3"
 maplit = "1.0.2"
 ndarray = "0.13.0"
-petgraph = "0.4.13"
-structopt = "0.3.5"
+petgraph = "0.5.0"
+structopt = "0.3.7"
 unic-char-range = "0.9.0"
 unicode-segmentation = "1.6.0"
 
@@ -43,9 +43,10 @@ assert_cmd = "0.12.0"
 predicates = "1.0.2"
 proptest = "0.9.4"
 regex = "1.3.1"
-rstest = "0.5.1"
+rstest = "0.5.2"
 tempfile = "3.1.0"
 
 [badges]
 travis-ci = {repository = "pemistahl/grex", branch = "master"}
 codecov = {repository = "pemistahl/grex", branch = "master", service = "github"}
+maintenance = {status = "actively-developed"}
