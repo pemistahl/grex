@@ -67,6 +67,8 @@
 //!
 //! ### 3.4 Escape astral code points using surrogate pairs
 //!
+//! Old versions of JavaScript do not support unicode escape sequences for the astral code planes (range `U+010000` to `U+10FFFF`). In order to support these symbols in JavaScript regular expressions, the conversion to surrogate pairs is necessary. More information on that matter can be found [here](https://mathiasbynens.be/notes/javascript-unicode).
+//!
 //! ```
 //! let regexp = grex::RegExpBuilder::from(&["You smell like 💩."])
 //!     .with_escaped_non_ascii_chars(true)

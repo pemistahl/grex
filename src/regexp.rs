@@ -22,6 +22,7 @@ use std::clone::Clone;
 use std::cmp::Ordering;
 use std::fmt::{Display, Formatter, Result};
 
+/// This struct builds regular expressions from user-provided test cases.
 pub struct RegExpBuilder {
     test_cases: Vec<String>,
     is_non_ascii_char_escaped: bool,
@@ -30,6 +31,12 @@ pub struct RegExpBuilder {
 }
 
 impl RegExpBuilder {
+    /// Specifies the test cases to build the regular expression from.
+    /// The test cases may be passed as a shared slice `&[T]` where `T` may represent
+    /// anything that can be converted to a `String`.
+    ///
+    /// **Note:** The test cases do not have to be sorted because `RegExpBuilder` will
+    /// sort them for you.
     pub fn from<T: Clone + Into<String>>(test_cases: &[T]) -> Self {
         Self {
             test_cases: test_cases.iter().cloned().map(|it| it.into()).collect_vec(),
@@ -39,17 +46,25 @@ impl RegExpBuilder {
         }
     }
 
+    /// Tells `RegExpBuilder` to convert non-ASCII characters to unicode escape sequences.
+    /// The parameter `use_surrogate_pairs` specifies whether to convert astral code planes
+    /// (range `U+010000` to `U+10FFFF`) to surrogate pairs.
     pub fn with_escaped_non_ascii_chars(&mut self, use_surrogate_pairs: bool) -> &mut Self {
         self.is_non_ascii_char_escaped = true;
         self.is_astral_code_point_converted_to_surrogate = use_surrogate_pairs;
         self
     }
 
+    /// Tells `RegExpBuilder` to detect repeated non-overlapping substrings and to convert
+    /// them to `{min,max}` quantifier notation.
     pub fn with_converted_repetitions(&mut self) -> &mut Self {
         self.is_repetition_converted = true;
         self
     }
 
+    /// Builds the actual regular expression using the previously given settings.
+    /// Every generated regular expression is surrounded by the anchors `^` and `$`
+    /// so that substrings not being part of the test cases are not matched accidentally.
     pub fn build(&mut self) -> String {
         RegExp::from(
             &mut self.test_cases,

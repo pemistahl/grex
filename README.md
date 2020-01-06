@@ -1,5 +1,7 @@
 ![grex](logo.png)
 
+<br>
+
 [![Build Status](https://travis-ci.org/pemistahl/grex.svg?branch=master)](https://travis-ci.org/pemistahl/grex)
 [![codecov](https://codecov.io/gh/pemistahl/grex/branch/master/graph/badge.svg)](https://codecov.io/gh/pemistahl/grex)
 [![Crates.io](https://img.shields.io/crates/v/grex.svg)](https://crates.io/crates/grex)
@@ -7,9 +9,9 @@
 [![Downloads](https://img.shields.io/crates/d/grex.svg)](https://crates.io/crates/grex)
 [![license](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0)
 
-[![Linux Download](https://img.shields.io/badge/Linux%20Download-v0.3.0-blue?logo=Linux)](https://github.com/pemistahl/grex/releases/download/v0.3.0/grex-v0.3.0-x86_64-unknown-linux-musl.tar.gz)
-[![MacOS Download](https://img.shields.io/badge/macOS%20Download-v0.3.0-blue?logo=Apple)](https://github.com/pemistahl/grex/releases/download/v0.3.0/grex-v0.3.0-x86_64-apple-darwin.tar.gz)
-[![Windows Download](https://img.shields.io/badge/Windows%20Download-v0.3.0-blue?logo=Windows)](https://github.com/pemistahl/grex/releases/download/v0.3.0/grex-v0.3.0-x86_64-pc-windows-msvc.zip)
+[![Linux Download](https://img.shields.io/badge/Linux%20Download-v0.3.1-blue?logo=Linux)](https://github.com/pemistahl/grex/releases/download/v0.3.1/grex-v0.3.1-x86_64-unknown-linux-musl.tar.gz)
+[![MacOS Download](https://img.shields.io/badge/macOS%20Download-v0.3.1-blue?logo=Apple)](https://github.com/pemistahl/grex/releases/download/v0.3.1/grex-v0.3.1-x86_64-apple-darwin.tar.gz)
+[![Windows Download](https://img.shields.io/badge/Windows%20Download-v0.3.1-blue?logo=Windows)](https://github.com/pemistahl/grex/releases/download/v0.3.1/grex-v0.3.1-x86_64-pc-windows-msvc.zip)
 
 ## <a name="table-of-contents"></a> Table of Contents
 1. [What does this tool do?](#what-does-tool-do)
@@ -48,7 +50,7 @@ The philosophy of this project is to generate the most specific regular expressi
 
 ### 3.1 <a name="how-to-install-cli"></a> The command-line tool <sup>[Top ▲](#table-of-contents)</sup>
 
-Pre-compiled 64-Bit binaries are available within the package managers [Scoop](https://scoop.sh) (for Windows) and [Homebrew](https://brew.sh) (for macOS and Linux).
+Pre-compiled 64-Bit binaries are available within the package managers [Scoop](https://scoop.sh) (for Windows) and [Homebrew](https://brew.sh) (for macOS).
 
 #### Scoop
 ```
@@ -73,7 +75,7 @@ In order to use *grex* as a library, simply add it as a dependency to your `Carg
 
 ```toml
 [dependencies]
-grex = "0.3.0"
+grex = "0.3.1"
 ```
 
 ## 4. <a name="how-to-use"></a> How to use? <sup>[Top ▲](#table-of-contents)</sup>
@@ -84,7 +86,7 @@ Every generated regular expression is surrounded by the anchors `^` and `$` so t
 
 ```
 $ grex --help
-grex 0.3.0
+grex 0.3.1
 Peter M. Stahl <pemistahl@gmail.com>
 grex generates regular expressions from user-provided test cases.
 
@@ -152,6 +154,8 @@ assert_eq!(regexp, "^You smell like \\u{1f4a9}\\.$");
 
 #### Escape astral code points using surrogate pairs
 
+Old versions of JavaScript do not support unicode escape sequences for the astral code planes (range `U+010000` to `U+10FFFF`). In order to support these symbols in JavaScript regular expressions, the conversion to surrogate pairs is necessary. More information on that matter can be found [here](https://mathiasbynens.be/notes/javascript-unicode).
+
 ```rust
 let regexp = grex::RegExpBuilder::from(&["You smell like 💩."])
     .with_escaped_non_ascii_chars(true)
@@ -178,13 +182,13 @@ The following table showcases what *grex* can do:
 | `$ grex a b c` | `^[a-c]$` | |
 | `$ grex a c d e f` | `^[ac-f]$` | |
 | `$ grex 1 3 4 5 6` | `^[13-6]$` | |
-| `$ grex a b x de` | <code>^de&#124;[abx]$</code> | |
-| `$ grex a b bc` | <code>^bc?&#124;a$</code> | |
+| `$ grex a b x de` | <code>^(de&#124;[abx])$</code> | |
+| `$ grex a b bc` | <code>^(bc?&#124;a)$</code> | |
 | `$ grex a aa aaa` | `^a(aa?)?$` | |
 | `$ grex a ab abc` | `^a(bc?)?$` | |
-| `$ grex 3.5 4.5 4,5` | <code>^3\\.5&#124;4[,.]5$</code> | |
+| `$ grex 3.5 4.5 4,5` | <code>^(3\\.5&#124;4[,.]5)$</code> | |
 | `$ grex [a-z]` | `^\[a\-z\]$` | Regex syntax characters are escaped. | 
-| `$ grex y̆ a z` | <code>^[az]&#124;y̆$</code> | Grapheme `y̆` consists of two unicode symbols:<br>`U+0079` (Latin Small Letter Y)<br>`U+0306` (Combining Breve).<br>This is why it is not part of<br>the character class. |
+| `$ grex y̆ a z` | <code>^([az]&#124;y̆)$</code> | Grapheme `y̆` consists of two unicode symbols:<br>`U+0079` (Latin Small Letter Y)<br>`U+0306` (Combining Breve).<br>This is why it is not part of<br>the character class. |
 | `$ grex "I ♥ cake" "I ♥ cookies"` | <code>^I ♥ c(ookies&#124;ake)$</code> | Input containing blank space must be<br>surrounded by quotation marks. |
 | `$ grex "I \u{2665} cake"` | `^I ♥ cake$` | Unicode escape sequences are converted<br>back to the original unicode symbol. | 
 | `$ grex -r aaa` | `^a{3}$` | |
@@ -203,7 +207,7 @@ The following table showcases what *grex* can do:
 | `$ grex -e "I ♥♥ you."` | `^I \u{2665}\u{2665} you\.$` | |
 | `$ grex -e -r "I ♥♥ you."` | `^I \u{2665}{2} you\.$` | |
 | `$ grex -e "You smell like 💩💩."` | `^You smell like \u{1f4a9}\u{1f4a9}\.$` | |
-| `$ grex -e -r "You smell like 💩💩."` | `^You smell like \u{1f4a9}{2}\.$` | |
+| `$ grex -e -r "You smell like 💩💩."` | `^You smel{2} like \u{1f4a9}{2}\.$` | |
 | `$ grex -e -r --with-surrogates "You smell like 💩💩."` | `^You smel{2} like (\u{d83d}\u{dca9}){2}\.$` | For languages such as older<br>JavaScript versions not supporting<br>astral codepoints (`U+010000` to `U+10FFFF`),<br>conversion to surrogate pairs is possible.<br>More info about this issue can be found [here](https://mathiasbynens.be/notes/javascript-unicode). |  
 
 ## 5. <a name="how-does-it-work"></a> How does it work? <sup>[Top ▲](#table-of-contents)</sup>
