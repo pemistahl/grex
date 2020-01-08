@@ -15,6 +15,7 @@
  */
 
 use itertools::Itertools;
+use std::cmp::Ordering;
 use std::collections::HashMap;
 use std::fmt::{Display, Formatter, Result};
 use std::ops::Range;
@@ -147,9 +148,17 @@ impl GraphemeCluster {
                 sorted_repetitions.push(Some((substr.clone(), range.clone(), *count)));
             }
         }
-        sorted_repetitions.sort_by_key(|it| match it {
-            Some((_, range, _)) => range.start,
-            None => 0,
+        sorted_repetitions.sort_by(|first, second| {
+            let (first_substr, first_range, first_count) = first.as_ref().unwrap();
+            let (second_substr, second_range, second_count) = second.as_ref().unwrap();
+
+            match first_range.start.cmp(&second_range.start) {
+                Ordering::Equal => match second_range.end.cmp(&first_range.end) {
+                    Ordering::Equal => second_count.cmp(&first_count),
+                    other => other,
+                },
+                other => other,
+            }
         });
 
         sorted_repetitions

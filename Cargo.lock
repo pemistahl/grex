@@ -161,7 +161,7 @@ dependencies = [
 
 [[package]]
 name = "grex"
-version = "0.3.1"
+version = "0.3.2"
 dependencies = [
  "assert_cmd 0.12.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "itertools 0.8.2 (registry+https://github.com/rust-lang/crates.io-index)",

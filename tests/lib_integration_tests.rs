@@ -98,6 +98,7 @@ fn regexp_builder_with_default_settings(test_cases: Vec<&str>, expected_output: 
     case(vec!["abababa"], "^(ab){3}a$"),
     case(vec!["aababab"], "^a(ab){3}$"),
     case(vec!["abababaa"], "^(ab){3}a{2}$"),
+    case(vec!["aaaaaabbbbb"], "^a{6}b{5}$"),
     case(vec!["b", "ba"], "^ba?$"),
     case(vec!["b", "ba", "baa"], "^b(a{1,2})?$"),
     case(vec!["b", "ba", "baaa", "baa"], "^b(a{1,3})?$"),
