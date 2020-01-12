@@ -22,6 +22,7 @@ proptest! {
     #![proptest_config(ProptestConfig::with_cases(300))]
 
     #[test]
+    #[ignore]
     fn valid_regexes_with_default_settings(
         test_cases in prop::collection::hash_set(".{1,20}", 1..=10)
     ) {
@@ -31,6 +32,7 @@ proptest! {
     }
 
     #[test]
+    #[ignore]
     fn valid_regexes_with_converted_repetitions_and_single_test_case(
         test_case in "[ab]{1,20}"
     ) {
@@ -39,6 +41,7 @@ proptest! {
     }
 
     #[test]
+    #[ignore]
     fn valid_regexes_with_converted_repetitions_and_multiple_test_cases(
         test_cases in prop::collection::hash_set(".{1,20}", 1..=10)
     ) {
@@ -50,6 +53,7 @@ proptest! {
     }
 
     #[test]
+    #[ignore]
     fn valid_regexes_with_escaped_non_ascii_chars_and_multiple_test_cases(
         test_cases in prop::collection::hash_set("[^[:ascii:]]{1,20}", 1..=10)
     ) {
@@ -61,6 +65,7 @@ proptest! {
     }
 
     #[test]
+    #[ignore]
     fn valid_regexes_with_converted_repetitions_and_escaped_non_ascii_chars_and_single_test_case(
         test_case in "[♥💩]{1,20}"
     ) {
@@ -72,6 +77,7 @@ proptest! {
     }
 
     #[test]
+    #[ignore]
     fn valid_regexes_with_converted_repetitions_and_escaped_non_ascii_chars_and_multiple_test_cases(
         test_cases in prop::collection::hash_set("[^[:ascii:]]{1,20}", 1..=10)
     ) {
@@ -84,6 +90,7 @@ proptest! {
     }
 
     #[test]
+    #[ignore]
     fn matching_regexes_with_default_settings(
         test_cases in prop::collection::hash_set(".{1,20}", 1..=10)
     ) {
@@ -97,6 +104,7 @@ proptest! {
     }
 
     #[test]
+    #[ignore]
     fn matching_regexes_with_converted_repetitions_and_single_test_case(
         test_case in "[ab]{1,20}"
     ) {
@@ -107,6 +115,7 @@ proptest! {
     }
 
     #[test]
+    #[ignore]
     fn matching_regexes_with_converted_repetitions_and_multiple_test_cases(
         test_cases in prop::collection::hash_set(".{1,20}", 1..=10)
     ) {
@@ -121,6 +130,7 @@ proptest! {
     }
 
     #[test]
+    #[ignore]
     fn matching_regexes_with_escaped_non_ascii_chars_and_single_test_case(
         test_case in "[♥💩]{1,20}"
     ) {
@@ -134,6 +144,7 @@ proptest! {
     }
 
     #[test]
+    #[ignore]
     fn matching_regexes_with_escaped_non_ascii_chars_and_multiple_test_cases(
         test_cases in prop::collection::hash_set("[^[:ascii:]]{1,20}", 1..=10)
     ) {
@@ -148,6 +159,7 @@ proptest! {
     }
 
     #[test]
+    #[ignore]
     fn matching_regexes_with_converted_repetitions_and_escaped_non_ascii_chars_and_single_test_case(
         test_case in "[♥💩]{1,20}"
     ) {
@@ -162,6 +174,7 @@ proptest! {
     }
 
     #[test]
+    #[ignore]
     fn matching_regexes_with_converted_repetitions_and_escaped_non_ascii_chars_and_multiple_test_cases(
         test_cases in prop::collection::hash_set("[^[:ascii:]]{1,20}", 1..=10)
     ) {
@@ -177,6 +190,7 @@ proptest! {
     }
 
     #[test]
+    #[ignore]
     fn regexes_do_not_match_other_strings_with_default_settings(
         test_cases in prop::collection::hash_set(".{1,20}", 1..=10),
         other_strings in prop::collection::hash_set(".{1,20}", 1..=10)
@@ -192,6 +206,7 @@ proptest! {
     }
 
     #[test]
+    #[ignore]
     fn regexes_do_not_match_other_strings_with_converted_repetitions(
         test_cases in prop::collection::hash_set(".{1,20}", 1..=10),
         other_strings in prop::collection::hash_set(".{1,20}", 1..=10)
@@ -209,6 +224,7 @@ proptest! {
     }
 
     #[test]
+    #[ignore]
     fn regexes_do_not_match_other_strings_with_escaped_non_ascii_chars(
         test_cases in prop::collection::hash_set(".{1,20}", 1..=10),
         other_strings in prop::collection::hash_set(".{1,20}", 1..=10)
@@ -226,6 +242,7 @@ proptest! {
     }
 
     #[test]
+    #[ignore]
     fn regexes_do_not_match_other_strings_with_converted_repetitions_and_escaped_non_ascii_chars(
         test_cases in prop::collection::hash_set(".{1,20}", 1..=10),
         other_strings in prop::collection::hash_set(".{1,20}", 1..=10)
