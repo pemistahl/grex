@@ -21,14 +21,14 @@ use std::process::Command;
 use tempfile::NamedTempFile;
 
 #[test]
-fn assert_that_grex_succeeds_with_direct_input() {
+fn succeeds_with_direct_input() {
     let mut grex = call_grex();
     grex.args(&["a", "b", "c"]);
     grex.assert().success().stdout(predicate::eq("^[a-c]$\n"));
 }
 
 #[test]
-fn assert_that_grex_succeeds_with_repetition_conversion_option() {
+fn succeeds_with_repetition_conversion_option() {
     let mut grex = call_grex();
     grex.args(&["--convert-repetitions", "xy̆y̆z", "xy̆y̆y̆z"]);
     grex.assert()
@@ -37,7 +37,7 @@ fn assert_that_grex_succeeds_with_repetition_conversion_option() {
 }
 
 #[test]
-fn assert_that_grex_succeeds_with_repetition_conversion_and_escape_option() {
+fn succeeds_with_repetition_conversion_and_escape_option() {
     let mut grex = call_grex();
     grex.args(&[
         "--convert-repetitions",
@@ -50,7 +50,7 @@ fn assert_that_grex_succeeds_with_repetition_conversion_and_escape_option() {
 }
 
 #[test]
-fn assert_that_grex_succeeds_with_repetition_conversion_and_escape_and_surrogate_option() {
+fn succeeds_with_repetition_conversion_and_escape_and_surrogate_option() {
     let mut grex = call_grex();
     grex.args(&[
         "--convert-repetitions",
@@ -64,7 +64,7 @@ fn assert_that_grex_succeeds_with_repetition_conversion_and_escape_and_surrogate
 }
 
 #[test]
-fn assert_that_grex_succeeds_with_escape_option() {
+fn succeeds_with_escape_option() {
     let mut grex = call_grex();
     grex.args(&["--escape", "My ♥♥ and 💩 is yours."]);
     grex.assert().success().stdout(predicate::eq(
@@ -73,7 +73,7 @@ fn assert_that_grex_succeeds_with_escape_option() {
 }
 
 #[test]
-fn assert_that_grex_succeeds_with_escape_and_surrogate_option() {
+fn succeeds_with_escape_and_surrogate_option() {
     let mut grex = call_grex();
     grex.args(&["--escape", "--with-surrogates", "My ♥♥ and 💩 is yours."]);
     grex.assert().success().stdout(predicate::eq(
@@ -82,7 +82,7 @@ fn assert_that_grex_succeeds_with_escape_and_surrogate_option() {
 }
 
 #[test]
-fn assert_that_grex_fails_with_surrogate_but_without_escape_option() {
+fn fails_with_surrogate_but_without_escape_option() {
     let mut grex = call_grex();
     grex.args(&["--with-surrogates", "My ♥ and 💩 is yours."]);
     grex.assert().failure().stderr(predicate::str::contains(
@@ -92,7 +92,7 @@ fn assert_that_grex_fails_with_surrogate_but_without_escape_option() {
 
 #[test]
 #[allow(unused_must_use)]
-fn assert_that_grex_suceeds_with_file_input() {
+fn suceeds_with_file_input() {
     let mut file = NamedTempFile::new().unwrap();
     writeln!(file, "a\nb\\n\n\nc\näöü\n♥");
 
@@ -104,7 +104,7 @@ fn assert_that_grex_suceeds_with_file_input() {
 }
 
 #[test]
-fn assert_that_grex_fails_without_arguments() {
+fn fails_without_arguments() {
     let mut grex = call_grex();
     grex.assert().failure().stderr(predicate::str::contains(
         "required arguments were not provided",
@@ -112,7 +112,7 @@ fn assert_that_grex_fails_without_arguments() {
 }
 
 #[test]
-fn assert_that_grex_fails_when_file_name_is_not_provided() {
+fn fails_when_file_name_is_not_provided() {
     let mut grex = call_grex();
     grex.arg("-f");
     grex.assert().failure().stderr(predicate::str::contains(
@@ -121,7 +121,7 @@ fn assert_that_grex_fails_when_file_name_is_not_provided() {
 }
 
 #[test]
-fn assert_that_grex_fails_when_file_does_not_exist() {
+fn fails_when_file_does_not_exist() {
     let mut grex = call_grex();
     grex.args(&["-f", "/path/to/non-existing/file"]);
     grex.assert()
@@ -133,7 +133,7 @@ fn assert_that_grex_fails_when_file_does_not_exist() {
 }
 
 #[test]
-fn assert_that_grex_fails_with_both_direct_and_file_input() {
+fn fails_with_both_direct_and_file_input() {
     let mut grex = call_grex();
     grex.args(&["a", "b", "c"]);
     grex.args(&["-f", "/path/to/some/file"]);

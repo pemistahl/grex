@@ -1,3 +1,12 @@
+## grex 0.3.2 (released on 12 Jan 2020)
+
+### Test Coverage
+- new property tests have been added that revealed new bugs
+
+### Bug Fixes
+- entire rewrite of the repetition detection algorithm
+- the former algorithm produced wrong regular expressions or even panicked for certain test cases
+
 ## grex 0.3.1 (released on 06 Jan 2020)
 
 ### Test Coverage

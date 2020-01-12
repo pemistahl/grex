@@ -9,9 +9,9 @@
 [![Downloads](https://img.shields.io/crates/d/grex.svg)](https://crates.io/crates/grex)
 [![license](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0)
 
-[![Linux Download](https://img.shields.io/badge/Linux%20Download-v0.3.1-blue?logo=Linux)](https://github.com/pemistahl/grex/releases/download/v0.3.1/grex-v0.3.1-x86_64-unknown-linux-musl.tar.gz)
-[![MacOS Download](https://img.shields.io/badge/macOS%20Download-v0.3.1-blue?logo=Apple)](https://github.com/pemistahl/grex/releases/download/v0.3.1/grex-v0.3.1-x86_64-apple-darwin.tar.gz)
-[![Windows Download](https://img.shields.io/badge/Windows%20Download-v0.3.1-blue?logo=Windows)](https://github.com/pemistahl/grex/releases/download/v0.3.1/grex-v0.3.1-x86_64-pc-windows-msvc.zip)
+[![Linux Download](https://img.shields.io/badge/Linux%20Download-v0.3.2-blue?logo=Linux)](https://github.com/pemistahl/grex/releases/download/v0.3.2/grex-v0.3.2-x86_64-unknown-linux-musl.tar.gz)
+[![MacOS Download](https://img.shields.io/badge/macOS%20Download-v0.3.2-blue?logo=Apple)](https://github.com/pemistahl/grex/releases/download/v0.3.2/grex-v0.3.2-x86_64-apple-darwin.tar.gz)
+[![Windows Download](https://img.shields.io/badge/Windows%20Download-v0.3.2-blue?logo=Windows)](https://github.com/pemistahl/grex/releases/download/v0.3.2/grex-v0.3.2-x86_64-pc-windows-msvc.zip)
 
 ## <a name="table-of-contents"></a> Table of Contents
 1. [What does this tool do?](#what-does-tool-do)
@@ -75,18 +75,18 @@ In order to use *grex* as a library, simply add it as a dependency to your `Carg
 
 ```toml
 [dependencies]
-grex = "0.3.1"
+grex = "0.3"
 ```
 
 ## 4. <a name="how-to-use"></a> How to use? <sup>[Top ▲](#table-of-contents)</sup>
 
-Every generated regular expression is surrounded by the anchors `^` and `$` so that it does not accidently match substrings.
+Every generated regular expression is surrounded by the anchors `^` and `$` so that it does not accidentally match substrings.
 
 ### 4.1 <a name="how-to-use-cli"></a> The command-line tool <sup>[Top ▲](#table-of-contents)</sup>
 
 ```
 $ grex --help
-grex 0.3.1
+grex 0.3.2
 Peter M. Stahl <pemistahl@gmail.com>
 grex generates regular expressions from user-provided test cases.
 
@@ -175,40 +175,40 @@ assert_eq!(regexp, "^You smel{2} like \\u{1f4a9}{3}\\.$");
 
 ### 4.3 <a name="examples"></a> Examples <sup>[Top ▲](#table-of-contents)</sup>
 
-The following table showcases what *grex* can do:                                                                                                                           
+The following table showcases what *grex* can do (using the command-line flags here):                                                                                                                           
 
 | Input | Output | Note |
 | ----- | ------ | ---- |
-| `$ grex a b c` | `^[a-c]$` | |
-| `$ grex a c d e f` | `^[ac-f]$` | |
-| `$ grex 1 3 4 5 6` | `^[13-6]$` | |
-| `$ grex a b x de` | <code>^(de&#124;[abx])$</code> | |
-| `$ grex a b bc` | <code>^(bc?&#124;a)$</code> | |
-| `$ grex a aa aaa` | `^a(aa?)?$` | |
-| `$ grex a ab abc` | `^a(bc?)?$` | |
-| `$ grex 3.5 4.5 4,5` | <code>^(3\\.5&#124;4[,.]5)$</code> | |
-| `$ grex [a-z]` | `^\[a\-z\]$` | Regex syntax characters are escaped. | 
-| `$ grex y̆ a z` | <code>^([az]&#124;y̆)$</code> | Grapheme `y̆` consists of two unicode symbols:<br>`U+0079` (Latin Small Letter Y)<br>`U+0306` (Combining Breve).<br>This is why it is not part of<br>the character class. |
-| `$ grex "I ♥ cake" "I ♥ cookies"` | <code>^I ♥ c(ookies&#124;ake)$</code> | Input containing blank space must be<br>surrounded by quotation marks. |
-| `$ grex "I \u{2665} cake"` | `^I ♥ cake$` | Unicode escape sequences are converted<br>back to the original unicode symbol. | 
-| `$ grex -r aaa` | `^a{3}$` | |
-| `$ grex -r abababa` | `^(ab){3}a$` | |
-| `$ grex -r aababab` | `^a(ab){3}$` | |
-| `$ grex -r abababaa` | `^(ab){3}a{2}$` | |
-| `$ grex -r a aa aaa` | `^a{1,3}$` | |
-| `$ grex -r b ba baa baaa` | `^b(a{1,3})?$` | |
-| `$ grex -r b ba baa baaaa` | <code>^b(a{1,2}&#124;a{4})?$</code> | | 
-| `$ grex -r xy̆y̆z xy̆y̆y̆z` | `^x(y̆){2,3}z$` | The parentheses are needed because<br>`y̆` consists of two unicode symbols. | 
-| `$ grex -r xy̆y̆z xy̆y̆y̆y̆z` | <code>^x((y̆){2}&#124;(y̆){4})z$</code> | |
-| `$ grex -r zyxx yxx` | `^z?yx{2}$` | | 
-| `$ grex -r 4.5 44.5 44.55 4.55 ` | `^4{1,2}\.5{1,2}$` | | 
-| `$ grex -r "I ♥♥ cake"` | `^I ♥{2} cake$` | |
-| `$ grex -r "I \u{2665}\u{2665} cake"` | `^I ♥{2} cake$` | | 
-| `$ grex -e "I ♥♥ you."` | `^I \u{2665}\u{2665} you\.$` | |
-| `$ grex -e -r "I ♥♥ you."` | `^I \u{2665}{2} you\.$` | |
-| `$ grex -e "You smell like 💩💩."` | `^You smell like \u{1f4a9}\u{1f4a9}\.$` | |
-| `$ grex -e -r "You smell like 💩💩."` | `^You smel{2} like \u{1f4a9}{2}\.$` | |
-| `$ grex -e -r --with-surrogates "You smell like 💩💩."` | `^You smel{2} like (\u{d83d}\u{dca9}){2}\.$` | For languages such as older<br>JavaScript versions not supporting<br>astral codepoints (`U+010000` to `U+10FFFF`),<br>conversion to surrogate pairs is possible.<br>More info about this issue can be found [here](https://mathiasbynens.be/notes/javascript-unicode). |  
+| `a b c` | `^[a-c]$` | |
+| `a c d e f` | `^[ac-f]$` | |
+| `1 3 4 5 6` | `^[13-6]$` | |
+| `a b x de` | <code>^(de&#124;[abx])$</code> | |
+| `a b bc` | <code>^(bc?&#124;a)$</code> | |
+| `a aa aaa` | `^a(aa?)?$` | |
+| `a ab abc` | `^a(bc?)?$` | |
+| `3.5 4.5 4,5` | <code>^(3\\.5&#124;4[,.]5)$</code> | |
+| `[a-z]` | `^\[a\-z\]$` | Regex syntax characters are escaped. | 
+| `y̆ a z` | <code>^([az]&#124;y̆)$</code> | Grapheme `y̆` consists of two unicode symbols:<br>`U+0079` (Latin Small Letter Y)<br>`U+0306` (Combining Breve).<br>This is why it is not part of<br>the character class. |
+| `"I ♥ cake" "I ♥ cookies"` | <code>^I ♥ c(ookies&#124;ake)$</code> | Input containing blank space must be<br>surrounded by quotation marks. |
+| `"I \u{2665} cake"` | `^I ♥ cake$` | Unicode escape sequences are converted<br>back to the original unicode symbol. | 
+| `-r aaa` | `^a{3}$` | |
+| `-r abababa` | `^(ab){3}a$` | |
+| `-r aababab` | `^a(ab){3}$` | |
+| `-r abababaa` | `^(ab){3}a{2}$` | |
+| `-r a aa aaa` | `^a{1,3}$` | |
+| `-r b ba baa baaa` | `^b(a{1,3})?$` | |
+| `-r b ba baa baaaa` | <code>^b(a{1,2}&#124;a{4})?$</code> | | 
+| `-r xy̆y̆z xy̆y̆y̆z` | `^x(y̆){2,3}z$` | The parentheses are needed because<br>`y̆` consists of two unicode symbols. | 
+| `-r xy̆y̆z xy̆y̆y̆y̆z` | <code>^x((y̆){2}&#124;(y̆){4})z$</code> | |
+| `-r zyxx yxx` | `^z?yx{2}$` | | 
+| `-r 4.5 44.5 44.55 4.55 ` | `^4{1,2}\.5{1,2}$` | | 
+| `-r "I ♥♥ cake"` | `^I ♥{2} cake$` | |
+| `-r "I \u{2665}\u{2665} cake"` | `^I ♥{2} cake$` | | 
+| `-e "I ♥♥ you."` | `^I \u{2665}\u{2665} you\.$` | |
+| `-e -r "I ♥♥ you."` | `^I \u{2665}{2} you\.$` | |
+| `-e "You smell like 💩💩."` | `^You smell like \u{1f4a9}\u{1f4a9}\.$` | |
+| `-e -r "You smell like 💩💩."` | `^You smel{2} like \u{1f4a9}{2}\.$` | |
+| `-e -r --with-surrogates "You smell like 💩💩."` | `^You smel{2} like (\u{d83d}\u{dca9}){2}\.$` | For languages such as older<br>JavaScript versions not supporting<br>astral codepoints (`U+010000` to `U+10FFFF`),<br>conversion to surrogate pairs is possible.<br>More info about this issue can be found [here](https://mathiasbynens.be/notes/javascript-unicode). |  
 
 ## 5. <a name="how-does-it-work"></a> How does it work? <sup>[Top ▲](#table-of-contents)</sup>
 
