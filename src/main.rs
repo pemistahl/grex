@@ -45,11 +45,20 @@ struct CLI {
     file_path: Option<PathBuf>,
 
     #[structopt(
-        name = "convert-repetitions",
-        short = "r",
+        name = "digits",
+        short,
+        long,
+        long_help = "Converts any Unicode decimal digit to \\d",
+        display_order = 1
+    )]
+    is_digit_converted: bool,
+
+    #[structopt(
+        name = "repetitions",
+        short,
         long,
         long_help = "Detects repeated non-overlapping substrings and\nconverts them to {min,max} quantifier notation",
-        display_order = 1
+        display_order = 2
     )]
     is_repetition_converted: bool,
 
@@ -58,7 +67,7 @@ struct CLI {
         short,
         long,
         long_help = "Replaces all non-ASCII characters with unicode escape sequences",
-        display_order = 2
+        display_order = 3
     )]
     is_non_ascii_char_escaped: bool,
 
@@ -67,7 +76,7 @@ struct CLI {
         long,
         requires = "escape",
         long_help = "Converts astral code points to surrogate pairs if --escape is set",
-        display_order = 3
+        display_order = 4
     )]
     is_astral_code_point_converted_to_surrogate: bool,
 }
@@ -97,6 +106,10 @@ fn handle_input(cli: &CLI, input: Result<Vec<String>, Error>) {
     match input {
         Ok(test_cases) => {
             let mut builder = RegExpBuilder::from(&test_cases);
+
+            if cli.is_digit_converted {
+                builder.with_converted_digits();
+            }
 
             if cli.is_repetition_converted {
                 builder.with_converted_repetitions();

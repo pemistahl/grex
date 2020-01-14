@@ -27,6 +27,7 @@ pub struct RegExpBuilder {
     test_cases: Vec<String>,
     is_non_ascii_char_escaped: bool,
     is_astral_code_point_converted_to_surrogate: bool,
+    is_digit_converted: bool,
     is_repetition_converted: bool,
 }
 
@@ -42,6 +43,7 @@ impl RegExpBuilder {
             test_cases: test_cases.iter().cloned().map(|it| it.into()).collect_vec(),
             is_non_ascii_char_escaped: false,
             is_astral_code_point_converted_to_surrogate: false,
+            is_digit_converted: false,
             is_repetition_converted: false,
         }
     }
@@ -52,6 +54,11 @@ impl RegExpBuilder {
     pub fn with_escaped_non_ascii_chars(&mut self, use_surrogate_pairs: bool) -> &mut Self {
         self.is_non_ascii_char_escaped = true;
         self.is_astral_code_point_converted_to_surrogate = use_surrogate_pairs;
+        self
+    }
+
+    pub fn with_converted_digits(&mut self) -> &mut Self {
+        self.is_digit_converted = true;
         self
     }
 
@@ -70,6 +77,7 @@ impl RegExpBuilder {
             &mut self.test_cases,
             self.is_non_ascii_char_escaped,
             self.is_astral_code_point_converted_to_surrogate,
+            self.is_digit_converted,
             self.is_repetition_converted,
         )
         .to_string()
@@ -85,6 +93,7 @@ impl RegExp {
         test_cases: &mut Vec<String>,
         is_non_ascii_char_escaped: bool,
         is_astral_code_point_converted_to_surrogate: bool,
+        is_digit_converted: bool,
         is_repetition_converted: bool,
     ) -> Self {
         Self::sort(test_cases);
@@ -92,6 +101,7 @@ impl RegExp {
             ast: Expression::from(
                 DFA::from(Self::grapheme_clusters(
                     &test_cases,
+                    is_digit_converted,
                     is_repetition_converted,
                 )),
                 is_non_ascii_char_escaped,
@@ -111,12 +121,19 @@ impl RegExp {
 
     fn grapheme_clusters(
         test_cases: &[String],
+        is_digit_converted: bool,
         is_repetition_converted: bool,
     ) -> Vec<GraphemeCluster> {
         let mut clusters = test_cases
             .iter()
             .map(|it| GraphemeCluster::from(it))
             .collect_vec();
+
+        if is_digit_converted {
+            for cluster in clusters.iter_mut() {
+                cluster.convert_digits();
+            }
+        }
 
         if is_repetition_converted {
             for cluster in clusters.iter_mut() {

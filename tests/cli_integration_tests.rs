@@ -30,7 +30,7 @@ fn succeeds_with_direct_input() {
 #[test]
 fn succeeds_with_repetition_conversion_option() {
     let mut grex = call_grex();
-    grex.args(&["--convert-repetitions", "xy̆y̆z", "xy̆y̆y̆z"]);
+    grex.args(&["--repetitions", "xy̆y̆z", "xy̆y̆y̆z"]);
     grex.assert()
         .success()
         .stdout(predicate::eq("^x(y̆){2,3}z$\n"));
@@ -39,11 +39,7 @@ fn succeeds_with_repetition_conversion_option() {
 #[test]
 fn succeeds_with_repetition_conversion_and_escape_option() {
     let mut grex = call_grex();
-    grex.args(&[
-        "--convert-repetitions",
-        "--escape",
-        "My ♥♥♥ and 💩💩 is yours.",
-    ]);
+    grex.args(&["--repetitions", "--escape", "My ♥♥♥ and 💩💩 is yours."]);
     grex.assert().success().stdout(predicate::eq(
         "^My \\u{2665}{3} and \\u{1f4a9}{2} is yours\\.$\n",
     ));
@@ -53,7 +49,7 @@ fn succeeds_with_repetition_conversion_and_escape_option() {
 fn succeeds_with_repetition_conversion_and_escape_and_surrogate_option() {
     let mut grex = call_grex();
     grex.args(&[
-        "--convert-repetitions",
+        "--repetitions",
         "--escape",
         "--with-surrogates",
         "My ♥♥♥ and 💩💩 is yours.",

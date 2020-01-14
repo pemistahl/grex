@@ -45,6 +45,26 @@ impl GraphemeCluster {
         }
     }
 
+    pub(crate) fn convert_digits(&mut self) {
+        for grapheme in self.graphemes.iter_mut() {
+            grapheme.chars = grapheme
+                .chars
+                .iter()
+                .map(|it| {
+                    it.chars()
+                        .map(|c| {
+                            if c.is_numeric() {
+                                "\\d".to_string()
+                            } else {
+                                c.to_string()
+                            }
+                        })
+                        .join("")
+                })
+                .collect_vec();
+        }
+    }
+
     pub(crate) fn convert_repetitions(&mut self) {
         let repeated_substrings = self.collect_repeated_substrings();
         let repetitions = self.create_ranges_of_repetitions(repeated_substrings);
