@@ -45,7 +45,12 @@ impl GraphemeCluster {
         }
     }
 
-    pub(crate) fn convert_digits(&mut self) {
+    pub(crate) fn convert_to_char_classes(
+        &mut self,
+        is_digit_converted: bool,
+        is_word_converted: bool,
+        is_space_converted: bool,
+    ) {
         for grapheme in self.graphemes.iter_mut() {
             grapheme.chars = grapheme
                 .chars
@@ -53,8 +58,12 @@ impl GraphemeCluster {
                 .map(|it| {
                     it.chars()
                         .map(|c| {
-                            if c.is_numeric() {
+                            if is_word_converted && c.is_alphanumeric() {
+                                "\\w".to_string()
+                            } else if is_digit_converted && c.is_numeric() {
                                 "\\d".to_string()
+                            } else if is_space_converted && c.is_whitespace() {
+                                "\\s".to_string()
                             } else {
                                 c.to_string()
                             }

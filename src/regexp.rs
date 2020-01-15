@@ -25,10 +25,12 @@ use std::fmt::{Display, Formatter, Result};
 /// This struct builds regular expressions from user-provided test cases.
 pub struct RegExpBuilder {
     test_cases: Vec<String>,
+    is_digit_converted: bool,
+    is_word_converted: bool,
+    is_space_converted: bool,
+    is_repetition_converted: bool,
     is_non_ascii_char_escaped: bool,
     is_astral_code_point_converted_to_surrogate: bool,
-    is_digit_converted: bool,
-    is_repetition_converted: bool,
 }
 
 impl RegExpBuilder {
@@ -41,11 +43,35 @@ impl RegExpBuilder {
     pub fn from<T: Clone + Into<String>>(test_cases: &[T]) -> Self {
         Self {
             test_cases: test_cases.iter().cloned().map(|it| it.into()).collect_vec(),
+            is_digit_converted: false,
+            is_word_converted: false,
+            is_space_converted: false,
+            is_repetition_converted: false,
             is_non_ascii_char_escaped: false,
             is_astral_code_point_converted_to_surrogate: false,
-            is_digit_converted: false,
-            is_repetition_converted: false,
         }
+    }
+
+    pub fn with_converted_digit_chars(&mut self) -> &mut Self {
+        self.is_digit_converted = true;
+        self
+    }
+
+    pub fn with_converted_word_chars(&mut self) -> &mut Self {
+        self.is_word_converted = true;
+        self
+    }
+
+    pub fn with_converted_space_chars(&mut self) -> &mut Self {
+        self.is_space_converted = true;
+        self
+    }
+
+    /// Tells `RegExpBuilder` to detect repeated non-overlapping substrings and to convert
+    /// them to `{min,max}` quantifier notation.
+    pub fn with_converted_repetitions(&mut self) -> &mut Self {
+        self.is_repetition_converted = true;
+        self
     }
 
     /// Tells `RegExpBuilder` to convert non-ASCII characters to unicode escape sequences.
@@ -57,28 +83,18 @@ impl RegExpBuilder {
         self
     }
 
-    pub fn with_converted_digits(&mut self) -> &mut Self {
-        self.is_digit_converted = true;
-        self
-    }
-
-    /// Tells `RegExpBuilder` to detect repeated non-overlapping substrings and to convert
-    /// them to `{min,max}` quantifier notation.
-    pub fn with_converted_repetitions(&mut self) -> &mut Self {
-        self.is_repetition_converted = true;
-        self
-    }
-
     /// Builds the actual regular expression using the previously given settings.
     /// Every generated regular expression is surrounded by the anchors `^` and `$`
     /// so that substrings not being part of the test cases are not matched accidentally.
     pub fn build(&mut self) -> String {
         RegExp::from(
             &mut self.test_cases,
+            self.is_digit_converted,
+            self.is_word_converted,
+            self.is_space_converted,
+            self.is_repetition_converted,
             self.is_non_ascii_char_escaped,
             self.is_astral_code_point_converted_to_surrogate,
-            self.is_digit_converted,
-            self.is_repetition_converted,
         )
         .to_string()
     }
@@ -91,10 +107,12 @@ pub(crate) struct RegExp {
 impl RegExp {
     fn from(
         test_cases: &mut Vec<String>,
+        is_digit_converted: bool,
+        is_word_converted: bool,
+        is_space_converted: bool,
+        is_repetition_converted: bool,
         is_non_ascii_char_escaped: bool,
         is_astral_code_point_converted_to_surrogate: bool,
-        is_digit_converted: bool,
-        is_repetition_converted: bool,
     ) -> Self {
         Self::sort(test_cases);
         Self {
@@ -102,6 +120,8 @@ impl RegExp {
                 DFA::from(Self::grapheme_clusters(
                     &test_cases,
                     is_digit_converted,
+                    is_word_converted,
+                    is_space_converted,
                     is_repetition_converted,
                 )),
                 is_non_ascii_char_escaped,
@@ -122,6 +142,8 @@ impl RegExp {
     fn grapheme_clusters(
         test_cases: &[String],
         is_digit_converted: bool,
+        is_word_converted: bool,
+        is_space_converted: bool,
         is_repetition_converted: bool,
     ) -> Vec<GraphemeCluster> {
         let mut clusters = test_cases
@@ -129,9 +151,13 @@ impl RegExp {
             .map(|it| GraphemeCluster::from(it))
             .collect_vec();
 
-        if is_digit_converted {
+        if is_digit_converted || is_word_converted || is_space_converted {
             for cluster in clusters.iter_mut() {
-                cluster.convert_digits();
+                cluster.convert_to_char_classes(
+                    is_digit_converted,
+                    is_word_converted,
+                    is_space_converted,
+                );
             }
         }
 

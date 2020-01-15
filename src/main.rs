@@ -54,11 +54,29 @@ struct CLI {
     is_digit_converted: bool,
 
     #[structopt(
+        name = "words",
+        short,
+        long,
+        long_help = "Converts any Unicode word character to \\w",
+        display_order = 2
+    )]
+    is_word_converted: bool,
+
+    #[structopt(
+        name = "spaces",
+        short,
+        long,
+        long_help = "Converts any Unicode whitespace character to \\s",
+        display_order = 3
+    )]
+    is_space_converted: bool,
+
+    #[structopt(
         name = "repetitions",
         short,
         long,
         long_help = "Detects repeated non-overlapping substrings and\nconverts them to {min,max} quantifier notation",
-        display_order = 2
+        display_order = 4
     )]
     is_repetition_converted: bool,
 
@@ -67,7 +85,7 @@ struct CLI {
         short,
         long,
         long_help = "Replaces all non-ASCII characters with unicode escape sequences",
-        display_order = 3
+        display_order = 5
     )]
     is_non_ascii_char_escaped: bool,
 
@@ -76,7 +94,7 @@ struct CLI {
         long,
         requires = "escape",
         long_help = "Converts astral code points to surrogate pairs if --escape is set",
-        display_order = 4
+        display_order = 6
     )]
     is_astral_code_point_converted_to_surrogate: bool,
 }
@@ -108,7 +126,15 @@ fn handle_input(cli: &CLI, input: Result<Vec<String>, Error>) {
             let mut builder = RegExpBuilder::from(&test_cases);
 
             if cli.is_digit_converted {
-                builder.with_converted_digits();
+                builder.with_converted_digit_chars();
+            }
+
+            if cli.is_word_converted {
+                builder.with_converted_word_chars();
+            }
+
+            if cli.is_space_converted {
+                builder.with_converted_space_chars();
             }
 
             if cli.is_repetition_converted {
