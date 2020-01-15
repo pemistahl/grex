@@ -172,7 +172,7 @@ fn format_literal(
     is_astral_code_point_converted_to_surrogate: bool,
 ) -> Result {
     let chars_to_escape = [
-        "\\", "(", ")", "[", "]", "{", "}", "+", "*", "-", ".", "?", "|", "^", "$",
+        "(", ")", "[", "]", "{", "}", "+", "*", "-", ".", "?", "|", "^", "$",
     ];
     let literal_str = cluster
         .graphemes()
@@ -194,6 +194,10 @@ fn format_literal(
                     .replace("\n", "\\n")
                     .replace("\r", "\\r")
                     .replace("\t", "\\t");
+
+                if character == "\\" {
+                    character = "\\\\".to_string();
+                }
 
                 characters[i] = character;
             }
