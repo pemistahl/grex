@@ -165,6 +165,7 @@ fn format_concatenation(
     )
 }
 
+// TODO: escaping of repetitions
 fn format_literal(
     f: &mut Formatter<'_>,
     cluster: &GraphemeCluster,

@@ -75,10 +75,11 @@ impl GraphemeCluster {
     }
 
     pub(crate) fn convert_repetitions(&mut self) {
-        let repeated_substrings = self.collect_repeated_substrings();
-        let repetitions = self.create_ranges_of_repetitions(repeated_substrings);
-        let coalesced_repetitions = self.coalesce_repetitions(repetitions);
-        self.replace_graphemes_with_repetitions(coalesced_repetitions);
+        let mut repetitions = vec![];
+        convert_repetitions(self.graphemes(), repetitions.as_mut());
+        if !repetitions.is_empty() {
+            self.graphemes = repetitions;
+        }
     }
 
     pub(crate) fn merge(first: &GraphemeCluster, second: &GraphemeCluster) -> Self {
@@ -110,130 +111,12 @@ impl GraphemeCluster {
     pub(crate) fn is_empty(&self) -> bool {
         self.graphemes.is_empty()
     }
-
-    fn collect_repeated_substrings(&self) -> HashMap<Vec<String>, Vec<usize>> {
-        let mut map = HashMap::new();
-
-        for i in 0..self.graphemes.len() {
-            let suffix = &self.graphemes[i..];
-            for j in 1..=self.graphemes.len() / 2 {
-                if suffix.len() >= j {
-                    let prefix = suffix[..j].iter().map(|it| it.value()).collect_vec();
-                    let indices = map.entry(prefix).or_insert_with(Vec::new);
-                    indices.push(i);
-                }
-            }
-        }
-        map
-    }
-
-    fn create_ranges_of_repetitions(
-        &self,
-        repeated_substrings: HashMap<Vec<String>, Vec<usize>>,
-    ) -> Vec<(Range<usize>, Vec<String>)> {
-        let mut repetitions = Vec::<(Range<usize>, Vec<String>)>::new();
-
-        for (prefix_length, group) in &repeated_substrings
-            .iter()
-            .filter(|&(_, indices)| indices.len() > 1)
-            .sorted_by_key(|&(prefix, _)| prefix.len())
-            .rev()
-            .group_by(|&(prefix, _)| prefix.len())
-        {
-            for (prefix, indices) in group.sorted_by_key(|&(_, indices)| indices[0]) {
-                let all_even = indices
-                    .iter()
-                    .all(|it| it % prefix_length == 0 || it % 2 == 0);
-                let all_odd = indices
-                    .iter()
-                    .all(|it| it % prefix_length == 1 || it % 2 == 1);
-
-                if all_even || all_odd {
-                    let ranges = indices
-                        .iter()
-                        .cloned()
-                        .map(|it| it..it + prefix_length)
-                        .coalesce(|x, y| {
-                            if x.end == y.start {
-                                Ok(x.start..y.end)
-                            } else {
-                                Err((x, y))
-                            }
-                        })
-                        .filter(|it| (it.end - it.start) > prefix_length)
-                        .collect_vec();
-
-                    for range in ranges {
-                        repetitions.push((range, prefix.clone()));
-                    }
-                }
-            }
-        }
-        repetitions
-    }
-
-    fn coalesce_repetitions(
-        &self,
-        repetitions: Vec<(Range<usize>, Vec<String>)>,
-    ) -> Vec<(Range<usize>, Vec<String>)> {
-        repetitions
-            .iter()
-            .sorted_by(|&(first_range, _), &(second_range, _)| {
-                match second_range.end.cmp(&first_range.end) {
-                    Ordering::Equal => first_range.start.cmp(&second_range.start),
-                    other => other,
-                }
-            })
-            .coalesce(|first_tup, second_tup| {
-                let first_range = &first_tup.0;
-                let second_range = &second_tup.0;
-
-                if (first_range.contains(&second_range.start)
-                    || first_range.contains(&second_range.end))
-                    && second_range.end != first_range.start
-                {
-                    Ok(first_tup)
-                } else {
-                    Err((first_tup, second_tup))
-                }
-            })
-            .map(|(range, substr)| (range.clone(), substr.clone()))
-            .collect_vec()
-    }
-
-    fn replace_graphemes_with_repetitions(
-        &mut self,
-        repetitions: Vec<(Range<usize>, Vec<String>)>,
-    ) {
-        for (range, substr) in repetitions.iter() {
-            if range.end > self.graphemes.len() {
-                break;
-            }
-
-            let count = ((range.end - range.start) / substr.len()) as u32;
-            let joined_substr = substr.iter().join("").repeat(count as usize);
-            let graphemes_slice = self.graphemes[range.clone()]
-                .iter()
-                .map(|it| it.value())
-                .join("");
-
-            if graphemes_slice != joined_substr {
-                break;
-            }
-
-            self.graphemes_mut().splice(
-                range.clone(),
-                [Grapheme::new(substr.clone(), count, count)]
-                    .iter()
-                    .cloned(),
-            );
-        }
-    }
 }
 
 #[derive(Clone, Debug, Hash, Ord, PartialOrd, Eq, PartialEq)]
 pub(crate) struct Grapheme {
     chars: Vec<String>,
+    repetitions: Vec<Grapheme>,
     min: u32,
     max: u32,
 }
@@ -242,13 +125,19 @@ impl Grapheme {
     pub(crate) fn from(s: &str) -> Self {
         Self {
             chars: vec![s.to_string()],
+            repetitions: vec![],
             min: 1,
             max: 1,
         }
     }
 
     pub(crate) fn new(chars: Vec<String>, min: u32, max: u32) -> Self {
-        Self { chars, min, max }
+        Self {
+            chars,
+            repetitions: vec![],
+            min,
+            max,
+        }
     }
 
     pub(crate) fn value(&self) -> String {
@@ -320,7 +209,11 @@ impl Display for Grapheme {
             || (self.chars.len() == 1 && self.chars[0].matches('\\').count() == 1);
         let is_range = self.min < self.max;
         let is_repetition = self.min > 1;
-        let value = self.value();
+        let value = if self.repetitions.is_empty() {
+            self.value()
+        } else {
+            self.repetitions.iter().map(|it| it.to_string()).join("")
+        };
 
         let result = if !is_range && is_repetition && is_single_char {
             format!("{}{{{}}}", value, self.min)
@@ -334,5 +227,148 @@ impl Display for Grapheme {
             value
         };
         write!(f, "{}", result)
+    }
+}
+fn convert_repetitions(graphemes: &[Grapheme], repetitions: &mut Vec<Grapheme>) {
+    let repeated_substrings = collect_repeated_substrings(graphemes);
+    let ranges_of_repetitions = create_ranges_of_repetitions(repeated_substrings);
+    let coalesced_repetitions = coalesce_repetitions(ranges_of_repetitions);
+    replace_graphemes_with_repetitions(coalesced_repetitions, graphemes, repetitions)
+}
+
+fn collect_repeated_substrings(graphemes: &[Grapheme]) -> HashMap<Vec<String>, Vec<usize>> {
+    let mut map = HashMap::new();
+
+    for i in 0..graphemes.len() {
+        let suffix = &graphemes[i..];
+        for j in 1..=graphemes.len() / 2 {
+            if suffix.len() >= j {
+                let prefix = suffix[..j].iter().map(|it| it.value()).collect_vec();
+                let indices = map.entry(prefix).or_insert_with(Vec::new);
+                indices.push(i);
+            }
+        }
+    }
+    map
+}
+
+fn create_ranges_of_repetitions(
+    repeated_substrings: HashMap<Vec<String>, Vec<usize>>,
+) -> Vec<(Range<usize>, Vec<String>)> {
+    let mut repetitions = Vec::<(Range<usize>, Vec<String>)>::new();
+
+    for (prefix_length, group) in &repeated_substrings
+        .iter()
+        .filter(|&(_, indices)| indices.len() > 1)
+        .sorted_by_key(|&(prefix, _)| prefix.len())
+        .rev()
+        .group_by(|&(prefix, _)| prefix.len())
+    {
+        for (prefix, indices) in group.sorted_by_key(|&(_, indices)| indices[0]) {
+            let all_even = indices
+                .iter()
+                .all(|it| it % prefix_length == 0 || it % 2 == 0);
+            let all_odd = indices
+                .iter()
+                .all(|it| it % prefix_length == 1 || it % 2 == 1);
+
+            if all_even || all_odd {
+                let ranges = indices
+                    .iter()
+                    .cloned()
+                    .map(|it| it..it + prefix_length)
+                    .coalesce(|x, y| {
+                        if x.end == y.start {
+                            Ok(x.start..y.end)
+                        } else {
+                            Err((x, y))
+                        }
+                    })
+                    .filter(|it| (it.end - it.start) > prefix_length)
+                    .collect_vec();
+
+                for range in ranges {
+                    repetitions.push((range, prefix.clone()));
+                }
+            }
+        }
+    }
+    repetitions
+}
+
+fn coalesce_repetitions(
+    ranges_of_repetitions: Vec<(Range<usize>, Vec<String>)>,
+) -> Vec<(Range<usize>, Vec<String>)> {
+    ranges_of_repetitions
+        .iter()
+        .sorted_by(|&(first_range, _), &(second_range, _)| {
+            match second_range.end.cmp(&first_range.end) {
+                Ordering::Equal => first_range.start.cmp(&second_range.start),
+                other => other,
+            }
+        })
+        .coalesce(|first_tup, second_tup| {
+            let first_range = &first_tup.0;
+            let second_range = &second_tup.0;
+
+            if (first_range.contains(&second_range.start)
+                || first_range.contains(&second_range.end))
+                && second_range.end != first_range.start
+            {
+                Ok(first_tup)
+            } else {
+                Err((first_tup, second_tup))
+            }
+        })
+        .map(|(range, substr)| (range.clone(), substr.clone()))
+        .collect_vec()
+}
+
+fn replace_graphemes_with_repetitions(
+    coalesced_repetitions: Vec<(Range<usize>, Vec<String>)>,
+    graphemes: &[Grapheme],
+    repetitions: &mut Vec<Grapheme>,
+) {
+    if coalesced_repetitions.is_empty() {
+        return;
+    }
+
+    for grapheme in graphemes {
+        repetitions.push(grapheme.clone());
+    }
+
+    for (range, substr) in coalesced_repetitions.iter() {
+        if range.end > repetitions.len() {
+            break;
+        }
+
+        let count = ((range.end - range.start) / substr.len()) as u32;
+        let joined_substr = substr.iter().join("").repeat(count as usize);
+        let graphemes_slice = repetitions[range.clone()]
+            .iter()
+            .map(|it| it.value())
+            .join("");
+
+        if graphemes_slice != joined_substr {
+            break;
+        }
+
+        repetitions.splice(
+            range.clone(),
+            [Grapheme::new(substr.clone(), count, count)]
+                .iter()
+                .cloned(),
+        );
+    }
+
+    for new_grapheme in repetitions.iter_mut() {
+        convert_repetitions(
+            &new_grapheme
+                .chars
+                .iter()
+                .map(|it| Grapheme::from(it))
+                .collect_vec(),
+            new_grapheme.repetitions.as_mut(),
+        );
     }
 }
