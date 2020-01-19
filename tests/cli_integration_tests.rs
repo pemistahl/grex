@@ -28,6 +28,15 @@ fn succeeds_with_direct_input() {
 }
 
 #[test]
+fn succeeds_with_digit_conversion_option() {
+    let mut grex = call_grex();
+    grex.args(&["--digits", "I ♥ 3 and ٣"]);
+    grex.assert()
+        .success()
+        .stdout(predicate::eq("^I ♥ \\d and \\d$\n"));
+}
+
+#[test]
 fn succeeds_with_repetition_conversion_option() {
     let mut grex = call_grex();
     grex.args(&["--repetitions", "xy̆y̆z", "xy̆y̆y̆z"]);

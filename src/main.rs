@@ -57,7 +57,7 @@ struct CLI {
         name = "words",
         short,
         long,
-        long_help = "Converts any Unicode word character to \\w (overrides --digits if set)",
+        long_help = "Converts any Unicode word character to \\w\n(overrides --digits if set)",
         display_order = 2
     )]
     is_word_converted: bool,

@@ -85,6 +85,34 @@ fn regexp_builder_with_default_settings(test_cases: Vec<&str>, expected_output: 
 #[rstest(test_cases, expected_output,
     case(vec![], "^$"),
     case(vec![""], "^$"),
+    case(vec!["a"], "^a$"),
+    case(vec!["1"], "^\\d$"),
+    case(vec!["-1"], "^\\-\\d$"),
+    case(vec!["12"], "^\\d\\d$"),
+    case(vec!["1", "2"], "^\\d$"),
+    case(vec!["1", "23"], "^\\d(\\d)?$"),
+    case(vec!["1", "234"], "^\\d(\\d\\d)?$"),
+    case(vec!["8", "234"], "^\\d(\\d\\d)?$"),
+    case(vec!["890", "34"], "^\\d\\d(\\d)?$"),
+    case(vec!["abc123"], "^abc\\d\\d\\d$"),
+    case(vec!["a1b2c3"], "^a\\db\\dc\\d$"),
+    case(vec!["abc", "123"], "^(\\d\\d\\d|abc)$"),
+    case(vec!["١", "٣", "٥"], "^\\d$"), // Arabic digits: ١ = 1, ٣ = 3, ٥ = 5
+    case(vec!["١٣٥"], "^\\d\\d\\d$"),
+    case(vec!["a٣3", "b5٥"], "^[ab]\\d\\d$"),
+    case(vec!["I ♥ 123"], "^I ♥ \\d\\d\\d$")
+)]
+fn regexp_builder_with_converted_digits(test_cases: Vec<&str>, expected_output: &str) {
+    let regexp = RegExpBuilder::from(&test_cases)
+        .with_conversion_of(&[Feature::Digit])
+        .build();
+    test_if_regexp_is_correct(regexp, expected_output);
+    test_if_regexp_matches_test_cases(expected_output, test_cases);
+}
+
+#[rstest(test_cases, expected_output,
+    case(vec![], "^$"),
+    case(vec![""], "^$"),
     case(vec![" "], "^ $"),
     case(vec!["   "], "^ {3}$"),
     case(vec!["a"], "^a$"),
@@ -144,6 +172,8 @@ fn regexp_builder_with_converted_repetitions(test_cases: Vec<&str>, expected_out
 }
 
 #[rstest(test_cases, expected_output,
+    case(vec![], "^$"),
+    case(vec![""], "^$"),
     case(vec!["My ♥ and 💩 is yours."], "^My \\u{2665} and \\u{1f4a9} is yours\\.$"),
     case(vec!["My ♥ is yours.", "My 💩 is yours."], "^My (\\u{2665}|\\u{1f4a9}) is yours\\.$")
 )]
@@ -156,6 +186,8 @@ fn regexp_builder_with_escaped_non_ascii_chars(test_cases: Vec<&str>, expected_o
 }
 
 #[rstest(test_cases, expected_output,
+    case(vec![], "^$"),
+    case(vec![""], "^$"),
     case(vec!["My ♥ and 💩 is yours."], "^My \\u{2665} and \\u{d83d}\\u{dca9} is yours\\.$"),
     case(vec!["My ♥ is yours.", "My 💩 is yours."], "^My (\\u{2665}|\\u{d83d}\\u{dca9}) is yours\\.$")
 )]
@@ -170,6 +202,8 @@ fn regexp_builder_with_escaped_non_ascii_chars_and_surrogates(
 }
 
 #[rstest(test_cases, expected_output,
+    case(vec![], "^$"),
+    case(vec![""], "^$"),
     case(vec!["My ♥♥♥ and 💩💩 is yours."], "^My \\u{2665}{3} and \\u{1f4a9}{2} is yours\\.$"),
     case(vec!["My ♥♥♥ is yours.", "My 💩💩 is yours."], "^My (\\u{1f4a9}{2}|\\u{2665}{3}) is yours\\.$")
 )]
@@ -186,6 +220,8 @@ fn regexp_builder_with_converted_repetitions_and_escaped_chars(
 }
 
 #[rstest(test_cases, expected_output,
+    case(vec![], "^$"),
+    case(vec![""], "^$"),
     case(vec!["My ♥♥♥ and 💩💩 is yours."], "^My \\u{2665}{3} and (\\u{d83d}\\u{dca9}){2} is yours\\.$"),
     case(vec!["My ♥♥♥ is yours.", "My 💩💩 is yours."], "^My ((\\u{d83d}\\u{dca9}){2}|\\u{2665}{3}) is yours\\.$")
 )]
