@@ -21,6 +21,10 @@ use std::fmt::{Display, Formatter, Result};
 use std::ops::Range;
 use unicode_segmentation::UnicodeSegmentation;
 
+const CHARS_TO_ESCAPE: [&str; 14] = [
+    "(", ")", "[", "]", "{", "}", "+", "*", "-", ".", "?", "|", "^", "$",
+];
+
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub(crate) struct GraphemeCluster {
     graphemes: Vec<Grapheme>,
@@ -152,6 +156,14 @@ impl Grapheme {
         &mut self.chars
     }
 
+    pub(crate) fn has_repetitions(&self) -> bool {
+        !self.repetitions.is_empty()
+    }
+
+    pub(crate) fn repetitions_mut(&mut self) -> &mut Vec<Grapheme> {
+        &mut self.repetitions
+    }
+
     pub(crate) fn minimum(&self) -> u32 {
         self.min
     }
@@ -183,6 +195,39 @@ impl Grapheme {
                     .join("")
             })
             .collect_vec();
+    }
+
+    pub(crate) fn escape_regexp_symbols(
+        &mut self,
+        is_non_ascii_char_escaped: bool,
+        is_astral_code_point_converted_to_surrogate: bool,
+    ) {
+        let characters = self.chars_mut();
+
+        #[allow(clippy::needless_range_loop)]
+        for i in 0..characters.len() {
+            let mut character = characters[i].clone();
+
+            for char_to_escape in CHARS_TO_ESCAPE.iter() {
+                character =
+                    character.replace(char_to_escape, &format!("{}{}", "\\", char_to_escape));
+            }
+
+            character = character
+                .replace("\n", "\\n")
+                .replace("\r", "\\r")
+                .replace("\t", "\\t");
+
+            if character == "\\" {
+                character = "\\\\".to_string();
+            }
+
+            characters[i] = character;
+        }
+
+        if is_non_ascii_char_escaped {
+            self.escape_non_ascii_chars(is_astral_code_point_converted_to_surrogate);
+        }
     }
 
     fn escape(&self, c: char, use_surrogate_pairs: bool) -> String {

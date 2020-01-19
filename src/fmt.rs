@@ -165,48 +165,33 @@ fn format_concatenation(
     )
 }
 
-// TODO: escaping of repetitions
 fn format_literal(
     f: &mut Formatter<'_>,
     cluster: &GraphemeCluster,
     is_non_ascii_char_escaped: bool,
     is_astral_code_point_converted_to_surrogate: bool,
 ) -> Result {
-    let chars_to_escape = [
-        "(", ")", "[", "]", "{", "}", "+", "*", "-", ".", "?", "|", "^", "$",
-    ];
     let literal_str = cluster
         .graphemes()
         .iter()
         .cloned()
         .map(|mut grapheme| {
-            let characters = grapheme.chars_mut();
-
-            #[allow(clippy::needless_range_loop)]
-            for i in 0..characters.len() {
-                let mut character = characters[i].clone();
-
-                for char_to_escape in chars_to_escape.iter() {
-                    character =
-                        character.replace(char_to_escape, &format!("{}{}", "\\", char_to_escape));
-                }
-
-                character = character
-                    .replace("\n", "\\n")
-                    .replace("\r", "\\r")
-                    .replace("\t", "\\t");
-
-                if character == "\\" {
-                    character = "\\\\".to_string();
-                }
-
-                characters[i] = character;
+            if grapheme.has_repetitions() {
+                grapheme
+                    .repetitions_mut()
+                    .iter_mut()
+                    .for_each(|repeated_grapheme| {
+                        repeated_grapheme.escape_regexp_symbols(
+                            is_non_ascii_char_escaped,
+                            is_astral_code_point_converted_to_surrogate,
+                        );
+                    });
+            } else {
+                grapheme.escape_regexp_symbols(
+                    is_non_ascii_char_escaped,
+                    is_astral_code_point_converted_to_surrogate,
+                );
             }
-
-            if is_non_ascii_char_escaped {
-                grapheme.escape_non_ascii_chars(is_astral_code_point_converted_to_surrogate);
-            }
-
             grapheme.to_string()
         })
         .join("");

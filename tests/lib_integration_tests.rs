@@ -131,8 +131,8 @@ fn regexp_builder_with_default_settings(test_cases: Vec<&str>, expected_output: 
     case(vec!["I ♥ cake", "I ♥♥ cake"], "^I ♥{1,2} cake$"),
     case(vec!["I \u{2665}\u{2665} cake"], "^I ♥{2} cake$"),
     case(vec!["I \\u{2665} cake"], "^I \\\\u\\{26{2}5\\} cake$"),
-    case(vec!["I \\u{2665}\\u{2665} cake"], "^I (\\\\u\\{2665\\}){2} cake$"),
-    case(vec!["I \\u2665\\u2665 cake"], "^I (\\\\u2665){2} cake$"),
+    case(vec!["I \\u{2665}\\u{2665} cake"], "^I (\\\\u\\{26{2}5\\}){2} cake$"),
+    case(vec!["I \\u2665\\u2665 cake"], "^I (\\\\u26{2}5){2} cake$"),
     case(vec!["My ♥♥♥ is yours.", "My 💩💩 is yours."], "^My (💩{2}|♥{3}) is yours\\.$")
 )]
 fn regexp_builder_with_converted_repetitions(test_cases: Vec<&str>, expected_output: &str) {
