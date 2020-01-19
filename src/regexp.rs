@@ -25,59 +25,39 @@ use std::fmt::{Display, Formatter, Result};
 /// This struct builds regular expressions from user-provided test cases.
 pub struct RegExpBuilder {
     test_cases: Vec<String>,
-    is_digit_converted: bool,
-    is_word_converted: bool,
-    is_space_converted: bool,
-    is_repetition_converted: bool,
+    conversion_features: Vec<Feature>,
     is_non_ascii_char_escaped: bool,
     is_astral_code_point_converted_to_surrogate: bool,
 }
 
 impl RegExpBuilder {
     /// Specifies the test cases to build the regular expression from.
-    /// The test cases may be passed as a shared slice `&[T]` where `T` may represent
-    /// anything that can be converted to a `String`.
+    /// The test cases may be passed as a shared slice `&[T]` where `T` represents
+    /// any type that can be converted to a `String`.
     ///
     /// **Note:** The test cases do not have to be sorted because `RegExpBuilder` will
     /// sort them for you.
     pub fn from<T: Clone + Into<String>>(test_cases: &[T]) -> Self {
         Self {
             test_cases: test_cases.iter().cloned().map(|it| it.into()).collect_vec(),
-            is_digit_converted: false,
-            is_word_converted: false,
-            is_space_converted: false,
-            is_repetition_converted: false,
+            conversion_features: vec![],
             is_non_ascii_char_escaped: false,
             is_astral_code_point_converted_to_surrogate: false,
         }
     }
 
-    pub fn with_converted_digit_chars(&mut self) -> &mut Self {
-        self.is_digit_converted = true;
-        self
-    }
-
-    pub fn with_converted_word_chars(&mut self) -> &mut Self {
-        self.is_word_converted = true;
-        self
-    }
-
-    pub fn with_converted_space_chars(&mut self) -> &mut Self {
-        self.is_space_converted = true;
-        self
-    }
-
-    /// Tells `RegExpBuilder` to detect repeated non-overlapping substrings and to convert
-    /// them to `{min,max}` quantifier notation.
-    pub fn with_converted_repetitions(&mut self) -> &mut Self {
-        self.is_repetition_converted = true;
+    /// Tells `RegExpBuilder` which conversions should be performed during
+    /// the regular expression generation. The available conversion features
+    /// are listed in the [`Feature`](./enum.Feature.html#variants) enum.
+    pub fn with_conversion_of(&mut self, features: &[Feature]) -> &mut Self {
+        self.conversion_features = features.to_vec();
         self
     }
 
     /// Tells `RegExpBuilder` to convert non-ASCII characters to unicode escape sequences.
     /// The parameter `use_surrogate_pairs` specifies whether to convert astral code planes
     /// (range `U+010000` to `U+10FFFF`) to surrogate pairs.
-    pub fn with_escaped_non_ascii_chars(&mut self, use_surrogate_pairs: bool) -> &mut Self {
+    pub fn with_escaping_of_non_ascii_chars(&mut self, use_surrogate_pairs: bool) -> &mut Self {
         self.is_non_ascii_char_escaped = true;
         self.is_astral_code_point_converted_to_surrogate = use_surrogate_pairs;
         self
@@ -89,10 +69,7 @@ impl RegExpBuilder {
     pub fn build(&mut self) -> String {
         RegExp::from(
             &mut self.test_cases,
-            self.is_digit_converted,
-            self.is_word_converted,
-            self.is_space_converted,
-            self.is_repetition_converted,
+            &self.conversion_features,
             self.is_non_ascii_char_escaped,
             self.is_astral_code_point_converted_to_surrogate,
         )
@@ -107,23 +84,14 @@ pub(crate) struct RegExp {
 impl RegExp {
     fn from(
         test_cases: &mut Vec<String>,
-        is_digit_converted: bool,
-        is_word_converted: bool,
-        is_space_converted: bool,
-        is_repetition_converted: bool,
+        conversion_features: &[Feature],
         is_non_ascii_char_escaped: bool,
         is_astral_code_point_converted_to_surrogate: bool,
     ) -> Self {
         Self::sort(test_cases);
         Self {
             ast: Expression::from(
-                DFA::from(Self::grapheme_clusters(
-                    &test_cases,
-                    is_digit_converted,
-                    is_word_converted,
-                    is_space_converted,
-                    is_repetition_converted,
-                )),
+                DFA::from(Self::grapheme_clusters(&test_cases, conversion_features)),
                 is_non_ascii_char_escaped,
                 is_astral_code_point_converted_to_surrogate,
             ),
@@ -141,27 +109,20 @@ impl RegExp {
 
     fn grapheme_clusters(
         test_cases: &[String],
-        is_digit_converted: bool,
-        is_word_converted: bool,
-        is_space_converted: bool,
-        is_repetition_converted: bool,
+        conversion_features: &[Feature],
     ) -> Vec<GraphemeCluster> {
         let mut clusters = test_cases
             .iter()
             .map(|it| GraphemeCluster::from(it))
             .collect_vec();
 
-        if is_digit_converted || is_word_converted || is_space_converted {
+        if conversion_features.iter().any(|it| it.is_char_class()) {
             for cluster in clusters.iter_mut() {
-                cluster.convert_to_char_classes(
-                    is_digit_converted,
-                    is_word_converted,
-                    is_space_converted,
-                );
+                cluster.convert_to_char_classes(conversion_features);
             }
         }
 
-        if is_repetition_converted {
+        if conversion_features.contains(&Feature::Repetition) {
             for cluster in clusters.iter_mut() {
                 cluster.convert_repetitions();
             }
@@ -177,5 +138,32 @@ impl Display for RegExp {
             Expression::Alternation(_) => write!(f, "^({})$", self.ast.to_string()),
             _ => write!(f, "^{}$", self.ast.to_string()),
         }
+    }
+}
+
+/// This enum specifies the supported conversion features which can be passed to method
+/// [`RegExpBuilder.with_conversion_of`](./struct.RegExpBuilder.html#method.with_conversion_of).
+#[derive(Clone, Eq, PartialEq)]
+pub enum Feature {
+    /// This feature converts any Unicode decimal digit to character class `\d`.
+    Digit,
+
+    /// This feature detects repeated non-overlapping substrings and
+    /// converts them to `{min,max}` quantifier notation.
+    Repetition,
+
+    /// This feature converts any Unicode whitespace character to character class `\s`.
+    Space,
+
+    /// This feature converts any Unicode word character to character class `\w`.
+    ///
+    /// **Note:** This feature takes precedence over the
+    /// [`Digit`](./enum.Feature.html#variant.Digit) feature because `\w` is a superset of `\d`.
+    Word,
+}
+
+impl Feature {
+    fn is_char_class(&self) -> bool {
+        self == &Feature::Digit || self == &Feature::Space || self == &Feature::Word
     }
 }

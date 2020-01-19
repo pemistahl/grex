@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-use grex::RegExpBuilder;
+use grex::{Feature, RegExpBuilder};
 use regex::Regex;
 use rstest::rstest;
 
@@ -137,7 +137,7 @@ fn regexp_builder_with_default_settings(test_cases: Vec<&str>, expected_output: 
 )]
 fn regexp_builder_with_converted_repetitions(test_cases: Vec<&str>, expected_output: &str) {
     let regexp = RegExpBuilder::from(&test_cases)
-        .with_converted_repetitions()
+        .with_conversion_of(&[Feature::Repetition])
         .build();
     test_if_regexp_is_correct(regexp, expected_output);
     test_if_regexp_matches_test_cases(expected_output, test_cases);
@@ -149,7 +149,7 @@ fn regexp_builder_with_converted_repetitions(test_cases: Vec<&str>, expected_out
 )]
 fn regexp_builder_with_escaped_non_ascii_chars(test_cases: Vec<&str>, expected_output: &str) {
     let regexp = RegExpBuilder::from(&test_cases)
-        .with_escaped_non_ascii_chars(false)
+        .with_escaping_of_non_ascii_chars(false)
         .build();
     test_if_regexp_is_correct(regexp, expected_output);
     test_if_regexp_matches_test_cases(expected_output, test_cases);
@@ -164,7 +164,7 @@ fn regexp_builder_with_escaped_non_ascii_chars_and_surrogates(
     expected_output: &str,
 ) {
     let regexp = RegExpBuilder::from(&test_cases)
-        .with_escaped_non_ascii_chars(true)
+        .with_escaping_of_non_ascii_chars(true)
         .build();
     test_if_regexp_is_correct(regexp, expected_output);
 }
@@ -178,8 +178,8 @@ fn regexp_builder_with_converted_repetitions_and_escaped_chars(
     expected_output: &str,
 ) {
     let regexp = RegExpBuilder::from(&test_cases)
-        .with_converted_repetitions()
-        .with_escaped_non_ascii_chars(false)
+        .with_conversion_of(&[Feature::Repetition])
+        .with_escaping_of_non_ascii_chars(false)
         .build();
     test_if_regexp_is_correct(regexp, expected_output);
     test_if_regexp_matches_test_cases(expected_output, test_cases);
@@ -194,8 +194,8 @@ fn regexp_builder_with_converted_repetitions_and_escaped_chars_and_surrogates(
     expected_output: &str,
 ) {
     let regexp = RegExpBuilder::from(&test_cases)
-        .with_converted_repetitions()
-        .with_escaped_non_ascii_chars(true)
+        .with_conversion_of(&[Feature::Repetition])
+        .with_escaping_of_non_ascii_chars(true)
         .build();
     test_if_regexp_is_correct(regexp, expected_output);
 }

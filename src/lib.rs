@@ -51,7 +51,7 @@
 //!
 //! ```
 //! let regexp = grex::RegExpBuilder::from(&["a", "aa", "aaa"])
-//!     .with_converted_repetitions()
+//!     .with_conversion_of(&[grex::Feature::Repetition])
 //!     .build();
 //! assert_eq!(regexp, "^a{1,3}$");
 //! ```
@@ -60,7 +60,7 @@
 //!
 //! ```
 //! let regexp = grex::RegExpBuilder::from(&["You smell like 💩."])
-//!     .with_escaped_non_ascii_chars(false)
+//!     .with_escaping_of_non_ascii_chars(false)
 //!     .build();
 //! assert_eq!(regexp, "^You smell like \\u{1f4a9}\\.$");
 //! ```
@@ -71,7 +71,7 @@
 //!
 //! ```
 //! let regexp = grex::RegExpBuilder::from(&["You smell like 💩."])
-//!     .with_escaped_non_ascii_chars(true)
+//!     .with_escaping_of_non_ascii_chars(true)
 //!     .build();
 //! assert_eq!(regexp, "^You smell like \\u{d83d}\\u{dca9}\\.$");
 //! ```
@@ -80,8 +80,8 @@
 //!
 //! ```
 //! let regexp = grex::RegExpBuilder::from(&["You smell like 💩💩💩."])
-//!     .with_converted_repetitions()
-//!     .with_escaped_non_ascii_chars(false)
+//!     .with_conversion_of(&[grex::Feature::Repetition])
+//!     .with_escaping_of_non_ascii_chars(false)
 //!     .build();
 //! assert_eq!(regexp, "^You smel{2} like \\u{1f4a9}{3}\\.$");
 //! ```
@@ -95,4 +95,5 @@ mod fmt;
 mod grapheme;
 mod regexp;
 
+pub use regexp::Feature;
 pub use regexp::RegExpBuilder;

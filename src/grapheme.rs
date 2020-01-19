@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+use crate::regexp::Feature;
 use itertools::Itertools;
 use std::cmp::Ordering;
 use std::collections::HashMap;
@@ -49,12 +50,11 @@ impl GraphemeCluster {
         }
     }
 
-    pub(crate) fn convert_to_char_classes(
-        &mut self,
-        is_digit_converted: bool,
-        is_word_converted: bool,
-        is_space_converted: bool,
-    ) {
+    pub(crate) fn convert_to_char_classes(&mut self, conversion_features: &[Feature]) {
+        let is_digit_converted = conversion_features.contains(&Feature::Digit);
+        let is_space_converted = conversion_features.contains(&Feature::Space);
+        let is_word_converted = conversion_features.contains(&Feature::Word);
+
         for grapheme in self.graphemes.iter_mut() {
             grapheme.chars = grapheme
                 .chars

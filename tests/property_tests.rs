@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-use grex::RegExpBuilder;
+use grex::{Feature, RegExpBuilder};
 use proptest::prelude::*;
 use regex::Regex;
 
@@ -36,7 +36,9 @@ proptest! {
     fn valid_regexes_with_converted_repetitions_and_single_test_case(
         test_case in "[ab]{1,20}"
     ) {
-        let regexp = RegExpBuilder::from(&[test_case]).with_converted_repetitions().build();
+        let regexp = RegExpBuilder::from(&[test_case])
+            .with_conversion_of(&[Feature::Repetition])
+            .build();
         prop_assert!(Regex::new(&regexp).is_ok());
     }
 
@@ -47,7 +49,7 @@ proptest! {
     ) {
         let test_cases_vec = test_cases.iter().cloned().collect::<Vec<_>>();
         let regexp = RegExpBuilder::from(&test_cases_vec)
-            .with_converted_repetitions()
+            .with_conversion_of(&[Feature::Repetition])
             .build();
         prop_assert!(Regex::new(&regexp).is_ok());
     }
@@ -59,7 +61,7 @@ proptest! {
     ) {
         let test_cases_vec = test_cases.iter().cloned().collect::<Vec<_>>();
         let regexp = RegExpBuilder::from(&test_cases_vec)
-            .with_escaped_non_ascii_chars(false)
+            .with_escaping_of_non_ascii_chars(false)
             .build();
         prop_assert!(Regex::new(&regexp).is_ok());
     }
@@ -70,8 +72,8 @@ proptest! {
         test_case in "[♥💩]{1,20}"
     ) {
         let regexp = RegExpBuilder::from(&[test_case])
-            .with_converted_repetitions()
-            .with_escaped_non_ascii_chars(false)
+            .with_conversion_of(&[Feature::Repetition])
+            .with_escaping_of_non_ascii_chars(false)
             .build();
         prop_assert!(Regex::new(&regexp).is_ok());
     }
@@ -83,8 +85,8 @@ proptest! {
     ) {
         let test_cases_vec = test_cases.iter().cloned().collect::<Vec<_>>();
         let regexp = RegExpBuilder::from(&test_cases_vec)
-            .with_converted_repetitions()
-            .with_escaped_non_ascii_chars(false)
+            .with_conversion_of(&[Feature::Repetition])
+            .with_escaping_of_non_ascii_chars(false)
             .build();
         prop_assert!(Regex::new(&regexp).is_ok());
     }
@@ -108,7 +110,9 @@ proptest! {
     fn matching_regexes_with_converted_repetitions_and_single_test_case(
         test_case in "[ab]{1,20}"
     ) {
-        let regexp = RegExpBuilder::from(&[&test_case]).with_converted_repetitions().build();
+        let regexp = RegExpBuilder::from(&[&test_case])
+            .with_conversion_of(&[Feature::Repetition])
+            .build();
         if let Ok(compiled_regex) = Regex::new(&regexp) {
             prop_assert!(compiled_regex.is_match(&test_case));
         }
@@ -121,7 +125,7 @@ proptest! {
     ) {
         let test_cases_vec = test_cases.iter().cloned().collect::<Vec<_>>();
         let regexp = RegExpBuilder::from(&test_cases_vec)
-            .with_converted_repetitions()
+            .with_conversion_of(&[Feature::Repetition])
             .build();
 
         if let Ok(compiled_regex) = Regex::new(&regexp) {
@@ -135,7 +139,7 @@ proptest! {
         test_case in "[♥💩]{1,20}"
     ) {
         let regexp = RegExpBuilder::from(&[&test_case])
-            .with_escaped_non_ascii_chars(false)
+            .with_escaping_of_non_ascii_chars(false)
             .build();
 
         if let Ok(compiled_regex) = Regex::new(&regexp) {
@@ -150,7 +154,7 @@ proptest! {
     ) {
         let test_cases_vec = test_cases.iter().cloned().collect::<Vec<_>>();
         let regexp = RegExpBuilder::from(&test_cases_vec)
-            .with_escaped_non_ascii_chars(false)
+            .with_escaping_of_non_ascii_chars(false)
             .build();
 
         if let Ok(compiled_regex) = Regex::new(&regexp) {
@@ -164,8 +168,8 @@ proptest! {
         test_case in "[♥💩]{1,20}"
     ) {
         let regexp = RegExpBuilder::from(&[&test_case])
-            .with_converted_repetitions()
-            .with_escaped_non_ascii_chars(false)
+            .with_conversion_of(&[Feature::Repetition])
+            .with_escaping_of_non_ascii_chars(false)
             .build();
 
         if let Ok(compiled_regex) = Regex::new(&regexp) {
@@ -180,8 +184,8 @@ proptest! {
     ) {
         let test_cases_vec = test_cases.iter().cloned().collect::<Vec<_>>();
         let regexp = RegExpBuilder::from(&test_cases_vec)
-            .with_converted_repetitions()
-            .with_escaped_non_ascii_chars(false)
+            .with_conversion_of(&[Feature::Repetition])
+            .with_escaping_of_non_ascii_chars(false)
             .build();
 
         if let Ok(compiled_regex) = Regex::new(&regexp) {
@@ -214,7 +218,7 @@ proptest! {
         if test_cases.is_disjoint(&other_strings) {
             let test_cases_vec = test_cases.iter().cloned().collect::<Vec<_>>();
             let regexp = RegExpBuilder::from(&test_cases_vec)
-                .with_converted_repetitions()
+                .with_conversion_of(&[Feature::Repetition])
                 .build();
 
             if let Ok(compiled_regex) = Regex::new(&regexp) {
@@ -232,7 +236,7 @@ proptest! {
         if test_cases.is_disjoint(&other_strings) {
             let test_cases_vec = test_cases.iter().cloned().collect::<Vec<_>>();
             let regexp = RegExpBuilder::from(&test_cases_vec)
-                .with_escaped_non_ascii_chars(false)
+                .with_escaping_of_non_ascii_chars(false)
                 .build();
 
             if let Ok(compiled_regex) = Regex::new(&regexp) {
@@ -250,8 +254,8 @@ proptest! {
         if test_cases.is_disjoint(&other_strings) {
             let test_cases_vec = test_cases.iter().cloned().collect::<Vec<_>>();
             let regexp = RegExpBuilder::from(&test_cases_vec)
-                .with_converted_repetitions()
-                .with_escaped_non_ascii_chars(false)
+                .with_conversion_of(&[Feature::Repetition])
+                .with_escaping_of_non_ascii_chars(false)
                 .build();
 
             if let Ok(compiled_regex) = Regex::new(&regexp) {

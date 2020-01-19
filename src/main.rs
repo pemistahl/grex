@@ -20,7 +20,7 @@ use std::path::PathBuf;
 use itertools::Itertools;
 use structopt::StructOpt;
 
-use grex::RegExpBuilder;
+use grex::{Feature, RegExpBuilder};
 
 #[derive(StructOpt)]
 #[structopt(author, about, version_short = "v")]
@@ -57,7 +57,7 @@ struct CLI {
         name = "words",
         short,
         long,
-        long_help = "Converts any Unicode word character to \\w",
+        long_help = "Converts any Unicode word character to \\w (overrides --digits if set)",
         display_order = 2
     )]
     is_word_converted: bool,
@@ -124,25 +124,32 @@ fn handle_input(cli: &CLI, input: Result<Vec<String>, Error>) {
     match input {
         Ok(test_cases) => {
             let mut builder = RegExpBuilder::from(&test_cases);
+            let mut conversion_features = vec![];
 
             if cli.is_digit_converted {
-                builder.with_converted_digit_chars();
+                conversion_features.push(Feature::Digit);
             }
 
             if cli.is_word_converted {
-                builder.with_converted_word_chars();
+                conversion_features.push(Feature::Word);
             }
 
             if cli.is_space_converted {
-                builder.with_converted_space_chars();
+                conversion_features.push(Feature::Space);
             }
 
             if cli.is_repetition_converted {
-                builder.with_converted_repetitions();
+                conversion_features.push(Feature::Repetition);
             }
+
+            if !conversion_features.is_empty() {
+                builder.with_conversion_of(&conversion_features);
+            }
+
             if cli.is_non_ascii_char_escaped {
-                builder
-                    .with_escaped_non_ascii_chars(cli.is_astral_code_point_converted_to_surrogate);
+                builder.with_escaping_of_non_ascii_chars(
+                    cli.is_astral_code_point_converted_to_surrogate,
+                );
             }
 
             let regexp = builder.build();
