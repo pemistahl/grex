@@ -35,7 +35,15 @@ impl GraphemeCluster {
     pub(crate) fn from(s: &str) -> Self {
         Self {
             graphemes: UnicodeSegmentation::graphemes(s, true)
-                .map(|it| Grapheme::from(it))
+                .flat_map(|it| {
+                    if it.chars().count() == 2 && it.starts_with('\\') {
+                        it.chars()
+                            .map(|c| Grapheme::from(&c.to_string()))
+                            .collect_vec()
+                    } else {
+                        vec![Grapheme::from(it)]
+                    }
+                })
                 .collect_vec(),
         }
     }

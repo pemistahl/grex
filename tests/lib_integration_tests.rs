@@ -74,7 +74,8 @@ use rstest::rstest;
     case(vec!["I \\u{2665} cake"], "^I \\\\u\\{2665\\} cake$"),
     case(vec!["I \\u2665 cake"], "^I \\\\u2665 cake$"),
     case(vec!["My ♥ is yours.", "My 💩 is yours."], "^My [♥💩] is yours\\.$"),
-    case(vec!["[\u{c3e}"], "^\\[\u{c3e}$")
+    case(vec!["[\u{c3e}"], "^\\[\u{c3e}$"),
+    case(vec!["\\\u{10376}"], "^\\\\\u{10376}$")
 )]
 fn regexp_builder_with_default_settings(test_cases: Vec<&str>, expected_output: &str) {
     let regexp = RegExpBuilder::from(&test_cases).build();
