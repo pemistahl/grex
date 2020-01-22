@@ -56,6 +56,29 @@ proptest! {
 
     #[test]
     #[ignore]
+    fn valid_regexes_with_converted_words_and_single_test_case(
+        test_case in "\\w{1,20}"
+    ) {
+        let regexp = RegExpBuilder::from(&[test_case])
+            .with_conversion_of(&[Feature::Word])
+            .build();
+        prop_assert!(Regex::new(&regexp).is_ok());
+    }
+
+    #[test]
+    #[ignore]
+    fn valid_regexes_with_converted_words_and_multiple_test_cases(
+        test_cases in prop::collection::hash_set("\\w{1,20}", 1..=10)
+    ) {
+        let test_cases_vec = test_cases.iter().cloned().collect::<Vec<_>>();
+        let regexp = RegExpBuilder::from(&test_cases_vec)
+            .with_conversion_of(&[Feature::Word])
+            .build();
+        prop_assert!(Regex::new(&regexp).is_ok());
+    }
+
+    #[test]
+    #[ignore]
     fn valid_regexes_with_converted_repetitions_and_single_test_case(
         test_case in "[ab]{1,20}"
     ) {
@@ -149,6 +172,34 @@ proptest! {
         let test_cases_vec = test_cases.iter().cloned().collect::<Vec<_>>();
         let regexp = RegExpBuilder::from(&test_cases_vec)
             .with_conversion_of(&[Feature::Digit])
+            .build();
+
+        if let Ok(compiled_regex) = Regex::new(&regexp) {
+            prop_assert!(test_cases.iter().all(|test_case| compiled_regex.is_match(&test_case)));
+        }
+    }
+
+    #[test]
+    #[ignore]
+    fn matching_regexes_with_converted_words_and_single_test_case(
+        test_case in "\\w{1,20}"
+    ) {
+        let regexp = RegExpBuilder::from(&[&test_case])
+            .with_conversion_of(&[Feature::Word])
+            .build();
+        if let Ok(compiled_regex) = Regex::new(&regexp) {
+            prop_assert!(compiled_regex.is_match(&test_case));
+        }
+    }
+
+    #[test]
+    #[ignore]
+    fn matching_regexes_with_converted_words_and_multiple_test_cases(
+        test_cases in prop::collection::hash_set("\\w{1,20}", 1..=10)
+    ) {
+        let test_cases_vec = test_cases.iter().cloned().collect::<Vec<_>>();
+        let regexp = RegExpBuilder::from(&test_cases_vec)
+            .with_conversion_of(&[Feature::Word])
             .build();
 
         if let Ok(compiled_regex) = Regex::new(&regexp) {

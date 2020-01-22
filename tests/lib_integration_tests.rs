@@ -115,6 +115,29 @@ fn regexp_builder_with_converted_digits(test_cases: Vec<&str>, expected_output: 
     case(vec![], "^$"),
     case(vec![""], "^$"),
     case(vec![" "], "^ $"),
+    case(vec!["a"], "^\\w$"),
+    case(vec!["1"], "^\\w$"),
+    case(vec!["-1"], "^\\-\\w$"),
+    case(vec!["1", "2"], "^\\w$"),
+    case(vec!["ä", "ß"], "^\\w$"),
+    case(vec!["abc", "1234"], "^\\w\\w\\w(\\w)?$"),
+    case(vec!["١", "٣", "٥"], "^\\w$"), // Arabic digits: ١ = 1, ٣ = 3, ٥ = 5
+    case(vec!["١٣٥"], "^\\w\\w\\w$"),
+    case(vec!["a٣3", "b5٥"], "^\\w\\w\\w$"),
+    case(vec!["I ♥ 123"], "^\\w ♥ \\w\\w\\w$")
+)]
+fn regexp_builder_with_converted_words(test_cases: Vec<&str>, expected_output: &str) {
+    let regexp = RegExpBuilder::from(&test_cases)
+        .with_conversion_of(&[Feature::Word])
+        .build();
+    test_if_regexp_is_correct(regexp, expected_output);
+    test_if_regexp_matches_test_cases(expected_output, test_cases);
+}
+
+#[rstest(test_cases, expected_output,
+    case(vec![], "^$"),
+    case(vec![""], "^$"),
+    case(vec![" "], "^ $"),
     case(vec!["   "], "^ {3}$"),
     case(vec!["a"], "^a$"),
     case(vec!["aa"], "^a{2}$"),
