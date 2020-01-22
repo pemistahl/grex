@@ -35,9 +35,13 @@ impl RegExpBuilder {
     /// The test cases may be passed as a shared slice `&[T]` where `T` represents
     /// any type that can be converted to a `String`.
     ///
-    /// **Note:** The test cases do not have to be sorted because `RegExpBuilder` will
-    /// sort them for you.
+    /// **Note:** The test cases need not be sorted because `RegExpBuilder` will sort them for you.
+    ///
+    /// ⚠ Panics if `test_cases` is empty.
     pub fn from<T: Clone + Into<String>>(test_cases: &[T]) -> Self {
+        if test_cases.is_empty() {
+            panic!("No test cases have been provided for regular expression generation");
+        }
         Self {
             test_cases: test_cases.iter().cloned().map(|it| it.into()).collect_vec(),
             conversion_features: vec![],
@@ -47,9 +51,14 @@ impl RegExpBuilder {
     }
 
     /// Tells `RegExpBuilder` which conversions should be performed during
-    /// the regular expression generation. The available conversion features
+    /// regular expression generation. The available conversion features
     /// are listed in the [`Feature`](./enum.Feature.html#variants) enum.
+    ///
+    /// ⚠ Panics if `features` is empty.
     pub fn with_conversion_of(&mut self, features: &[Feature]) -> &mut Self {
+        if features.is_empty() {
+            panic!("No conversion features have been provided for regular expression generation");
+        }
         self.conversion_features = features.to_vec();
         self
     }
@@ -164,6 +173,26 @@ pub enum Feature {
 
 impl Feature {
     fn is_char_class(&self) -> bool {
-        self == &Feature::Digit || self == &Feature::Space || self == &Feature::Word
+        match self {
+            Feature::Digit | Feature::Space | Feature::Word => true,
+            _ => false,
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{Feature, RegExpBuilder};
+
+    #[test]
+    #[should_panic]
+    fn regexp_builder_panics_without_test_cases() {
+        RegExpBuilder::from(&Vec::<String>::new());
+    }
+
+    #[test]
+    #[should_panic]
+    fn regexp_builder_panics_without_conversion_features() {
+        RegExpBuilder::from(&["abc"]).with_conversion_of(&Vec::<Feature>::new());
     }
 }

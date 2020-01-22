@@ -29,11 +29,21 @@
 
 ## 1. <a name="what-does-tool-do"></a> What does this tool do? <sup>[Top ▲](#table-of-contents)</sup>
 
-*grex* is a library as well as a command-line utility that is meant to simplify the often complicated and tedious task of creating regular expressions. It does so by automatically generating regular expressions from user-provided test cases.
+*grex* is a library as well as a command-line utility that is meant to simplify the often 
+complicated and tedious task of creating regular expressions. It does so by automatically 
+generating regular expressions from user-provided test cases.
 
-This project has started as a Rust port of the JavaScript tool [*regexgen*](https://github.com/devongovett/regexgen) written by [Devon Govett](https://github.com/devongovett). Although a lot of further useful features could be added to it, its development was apparently ceased several years ago. The plan is now to add these new features to *grex* as Rust really shines when it comes to command-line tools. *grex* offers all features that *regexgen* provides, and more.
+This project has started as a Rust port of the JavaScript tool 
+[*regexgen*](https://github.com/devongovett/regexgen) written by 
+[Devon Govett](https://github.com/devongovett). Although a lot of further useful features 
+could be added to it, its development was apparently ceased several years ago. The plan 
+is now to add these new features to *grex* as Rust really shines when it comes to 
+command-line tools. *grex* offers all features that *regexgen* provides, and more.
 
-The philosophy of this project is to generate the most specific regular expression possible by default which exactly matches the given input only and nothing else. With the use of command-line flags (in the CLI tool) or preprocessing methods (in the library), more generalized expressions can be created.
+The philosophy of this project is to generate the most specific regular expression 
+possible by default which exactly matches the given input only and nothing else. 
+With the use of command-line flags (in the CLI tool) or preprocessing methods 
+(in the library), more generalized expressions can be created.
 
 ## 2. <a name="current-features"></a> Current Features <sup>[Top ▲](#table-of-contents)</sup>
 - literals
@@ -50,7 +60,8 @@ The philosophy of this project is to generate the most specific regular expressi
 
 ### 3.1 <a name="how-to-install-cli"></a> The command-line tool <sup>[Top ▲](#table-of-contents)</sup>
 
-Pre-compiled 64-Bit binaries are available within the package managers [Scoop](https://scoop.sh) (for Windows) and [Homebrew](https://brew.sh) (for macOS).
+Pre-compiled 64-Bit binaries are available within the package managers [Scoop](https://scoop.sh) 
+(for Windows) and [Homebrew](https://brew.sh) (for macOS).
 
 #### Scoop
 ```
@@ -63,7 +74,11 @@ brew tap pemistahl/formulas
 brew install grex
 ```
 
-Alternatively, you can download the self-contained executable for your platform above and put it in a place of your choice. *grex* is also hosted on [crates.io](https://crates.io/crates/grex), the official Rust package registry. If you are a Rust developer and already have the Rust toolchain installed, you can install by compiling from source using [*cargo*](https://doc.rust-lang.org/cargo/), the Rust package manager:
+Alternatively, you can download the self-contained executable for your platform above and put it 
+in a place of your choice. *grex* is also hosted on [crates.io](https://crates.io/crates/grex), 
+the official Rust package registry. If you are a Rust developer and already have the Rust 
+toolchain installed, you can install by compiling from source using 
+[*cargo*](https://doc.rust-lang.org/cargo/), the Rust package manager:
 
 ```
 cargo install grex
@@ -80,7 +95,8 @@ grex = "0.3"
 
 ## 4. <a name="how-to-use"></a> How to use? <sup>[Top ▲](#table-of-contents)</sup>
 
-Every generated regular expression is surrounded by the anchors `^` and `$` so that it does not accidentally match substrings.
+Every generated regular expression is surrounded by the anchors `^` and `$` so that it does not 
+accidentally match substrings.
 
 ### 4.1 <a name="how-to-use-cli"></a> The command-line tool <sup>[Top ▲](#table-of-contents)</sup>
 
@@ -119,7 +135,8 @@ ARGS:
             One or more test cases separated by blank space 
 ```
 
-Input strings can be read from the command line or from a file. Every file must be encoded as UTF-8 and every input string must be on a separate line:
+Input strings can be read from the command line or from a file. Every file must be encoded as UTF-8 
+and every input string must be on a separate line:
                                                                                                                              
 ```
 $ grex -f my-input-file.txt
@@ -130,15 +147,19 @@ $ grex -f my-input-file.txt
 #### Default settings
 
 ```rust
-let regexp = grex::RegExpBuilder::from(&["a", "aa", "aaa"]).build();
+use grex::RegExpBuilder;
+
+let regexp = RegExpBuilder::from(&["a", "aa", "aaa"]).build();
 assert_eq!(regexp, "^a(aa?)?$");
 ```
 
 #### Convert repeated substrings
 
 ```rust
-let regexp = grex::RegExpBuilder::from(&["a", "aa", "aaa"])
-    .with_converted_repetitions()
+use grex::{Feature, RegExpBuilder};
+
+let regexp = RegExpBuilder::from(&["a", "aa", "aaa"])
+    .with_conversion_of(&[Feature::Repetition])
     .build();
 assert_eq!(regexp, "^a{1,3}$");
 ```
@@ -146,7 +167,9 @@ assert_eq!(regexp, "^a{1,3}$");
 #### Escape non-ascii characters
 
 ```rust
-let regexp = grex::RegExpBuilder::from(&["You smell like 💩."])
+use grex::RegExpBuilder;
+
+let regexp = RegExpBuilder::from(&["You smell like 💩."])
     .with_escaped_non_ascii_chars(false)
     .build();
 assert_eq!(regexp, "^You smell like \\u{1f4a9}\\.$");
@@ -157,7 +180,9 @@ assert_eq!(regexp, "^You smell like \\u{1f4a9}\\.$");
 Old versions of JavaScript do not support unicode escape sequences for the astral code planes (range `U+010000` to `U+10FFFF`). In order to support these symbols in JavaScript regular expressions, the conversion to surrogate pairs is necessary. More information on that matter can be found [here](https://mathiasbynens.be/notes/javascript-unicode).
 
 ```rust
-let regexp = grex::RegExpBuilder::from(&["You smell like 💩."])
+use grex::RegExpBuilder;
+
+let regexp = RegExpBuilder::from(&["You smell like 💩."])
     .with_escaped_non_ascii_chars(true)
     .build();
 assert_eq!(regexp, "^You smell like \\u{d83d}\\u{dca9}\\.$");
@@ -166,8 +191,10 @@ assert_eq!(regexp, "^You smell like \\u{d83d}\\u{dca9}\\.$");
 #### Combine multiple features
 
 ```rust
-let regexp = grex::RegExpBuilder::from(&["You smell like 💩💩💩."])
-    .with_converted_repetitions()
+use grex::{Feature, RegExpBuilder};
+
+let regexp = RegExpBuilder::from(&["You smell like 💩💩💩."])
+    .with_conversion_of(&[Feature::Repetition])
     .with_escaped_non_ascii_chars(false)
     .build();
 assert_eq!(regexp, "^You smel{2} like \\u{1f4a9}{3}\\.$");
