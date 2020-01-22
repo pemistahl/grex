@@ -16,7 +16,7 @@
 
 use grex::{Feature, RegExpBuilder};
 use proptest::prelude::*;
-use regex::Regex;
+use regex::{Error, Regex, RegexBuilder};
 
 proptest! {
     #![proptest_config(ProptestConfig::with_cases(300))]
@@ -28,7 +28,7 @@ proptest! {
     ) {
         let test_cases_vec = test_cases.iter().cloned().collect::<Vec<_>>();
         let regexp = RegExpBuilder::from(&test_cases_vec).build();
-        prop_assert!(Regex::new(&regexp).is_ok());
+        prop_assert!(compile_regexp(&regexp).is_ok());
     }
 
     #[test]
@@ -39,7 +39,7 @@ proptest! {
         let regexp = RegExpBuilder::from(&[test_case])
             .with_conversion_of(&[Feature::Digit])
             .build();
-        prop_assert!(Regex::new(&regexp).is_ok());
+        prop_assert!(compile_regexp(&regexp).is_ok());
     }
 
     #[test]
@@ -51,7 +51,7 @@ proptest! {
         let regexp = RegExpBuilder::from(&test_cases_vec)
             .with_conversion_of(&[Feature::Digit])
             .build();
-        prop_assert!(Regex::new(&regexp).is_ok());
+        prop_assert!(compile_regexp(&regexp).is_ok());
     }
 
     #[test]
@@ -62,7 +62,7 @@ proptest! {
         let regexp = RegExpBuilder::from(&[test_case])
             .with_conversion_of(&[Feature::Word])
             .build();
-        prop_assert!(Regex::new(&regexp).is_ok());
+        prop_assert!(compile_regexp(&regexp).is_ok());
     }
 
     #[test]
@@ -74,7 +74,7 @@ proptest! {
         let regexp = RegExpBuilder::from(&test_cases_vec)
             .with_conversion_of(&[Feature::Word])
             .build();
-        prop_assert!(Regex::new(&regexp).is_ok());
+        prop_assert!(compile_regexp(&regexp).is_ok());
     }
 
     #[test]
@@ -85,7 +85,7 @@ proptest! {
         let regexp = RegExpBuilder::from(&[test_case])
             .with_conversion_of(&[Feature::Repetition])
             .build();
-        prop_assert!(Regex::new(&regexp).is_ok());
+        prop_assert!(compile_regexp(&regexp).is_ok());
     }
 
     #[test]
@@ -97,7 +97,7 @@ proptest! {
         let regexp = RegExpBuilder::from(&test_cases_vec)
             .with_conversion_of(&[Feature::Repetition])
             .build();
-        prop_assert!(Regex::new(&regexp).is_ok());
+        prop_assert!(compile_regexp(&regexp).is_ok());
     }
 
     #[test]
@@ -109,7 +109,7 @@ proptest! {
         let regexp = RegExpBuilder::from(&test_cases_vec)
             .with_escaping_of_non_ascii_chars(false)
             .build();
-        prop_assert!(Regex::new(&regexp).is_ok());
+        prop_assert!(compile_regexp(&regexp).is_ok());
     }
 
     #[test]
@@ -121,7 +121,7 @@ proptest! {
             .with_conversion_of(&[Feature::Repetition])
             .with_escaping_of_non_ascii_chars(false)
             .build();
-        prop_assert!(Regex::new(&regexp).is_ok());
+        prop_assert!(compile_regexp(&regexp).is_ok());
     }
 
     #[test]
@@ -134,7 +134,7 @@ proptest! {
             .with_conversion_of(&[Feature::Repetition])
             .with_escaping_of_non_ascii_chars(false)
             .build();
-        prop_assert!(Regex::new(&regexp).is_ok());
+        prop_assert!(compile_regexp(&regexp).is_ok());
     }
 
     #[test]
@@ -144,10 +144,8 @@ proptest! {
     ) {
         let test_cases_vec = test_cases.iter().cloned().collect::<Vec<_>>();
         let regexp = RegExpBuilder::from(&test_cases_vec).build();
-        let compiled_regex = Regex::new(&regexp);
-
-        if let Ok(compiled_regex) = compiled_regex {
-            prop_assert!(test_cases.iter().all(|test_case| compiled_regex.is_match(&test_case)));
+        if let Ok(compiled_regexp) = compile_regexp(&regexp) {
+            prop_assert!(test_cases.iter().all(|test_case| compiled_regexp.is_match(&test_case)));
         }
     }
 
@@ -159,8 +157,8 @@ proptest! {
         let regexp = RegExpBuilder::from(&[&test_case])
             .with_conversion_of(&[Feature::Digit])
             .build();
-        if let Ok(compiled_regex) = Regex::new(&regexp) {
-            prop_assert!(compiled_regex.is_match(&test_case));
+        if let Ok(compiled_regexp) = compile_regexp(&regexp) {
+            prop_assert!(compiled_regexp.is_match(&test_case));
         }
     }
 
@@ -173,9 +171,8 @@ proptest! {
         let regexp = RegExpBuilder::from(&test_cases_vec)
             .with_conversion_of(&[Feature::Digit])
             .build();
-
-        if let Ok(compiled_regex) = Regex::new(&regexp) {
-            prop_assert!(test_cases.iter().all(|test_case| compiled_regex.is_match(&test_case)));
+        if let Ok(compiled_regexp) = compile_regexp(&regexp) {
+            prop_assert!(test_cases.iter().all(|test_case| compiled_regexp.is_match(&test_case)));
         }
     }
 
@@ -187,8 +184,8 @@ proptest! {
         let regexp = RegExpBuilder::from(&[&test_case])
             .with_conversion_of(&[Feature::Word])
             .build();
-        if let Ok(compiled_regex) = Regex::new(&regexp) {
-            prop_assert!(compiled_regex.is_match(&test_case));
+        if let Ok(compiled_regexp) = compile_regexp(&regexp) {
+            prop_assert!(compiled_regexp.is_match(&test_case));
         }
     }
 
@@ -201,9 +198,8 @@ proptest! {
         let regexp = RegExpBuilder::from(&test_cases_vec)
             .with_conversion_of(&[Feature::Word])
             .build();
-
-        if let Ok(compiled_regex) = Regex::new(&regexp) {
-            prop_assert!(test_cases.iter().all(|test_case| compiled_regex.is_match(&test_case)));
+        if let Ok(compiled_regexp) = compile_regexp(&regexp) {
+            prop_assert!(test_cases.iter().all(|test_case| compiled_regexp.is_match(&test_case)));
         }
     }
 
@@ -215,8 +211,8 @@ proptest! {
         let regexp = RegExpBuilder::from(&[&test_case])
             .with_conversion_of(&[Feature::Repetition])
             .build();
-        if let Ok(compiled_regex) = Regex::new(&regexp) {
-            prop_assert!(compiled_regex.is_match(&test_case));
+        if let Ok(compiled_regexp) = compile_regexp(&regexp) {
+            prop_assert!(compiled_regexp.is_match(&test_case));
         }
     }
 
@@ -229,9 +225,8 @@ proptest! {
         let regexp = RegExpBuilder::from(&test_cases_vec)
             .with_conversion_of(&[Feature::Repetition])
             .build();
-
-        if let Ok(compiled_regex) = Regex::new(&regexp) {
-            prop_assert!(test_cases.iter().all(|test_case| compiled_regex.is_match(&test_case)));
+        if let Ok(compiled_regexp) = compile_regexp(&regexp) {
+            prop_assert!(test_cases.iter().all(|test_case| compiled_regexp.is_match(&test_case)));
         }
     }
 
@@ -243,9 +238,8 @@ proptest! {
         let regexp = RegExpBuilder::from(&[&test_case])
             .with_escaping_of_non_ascii_chars(false)
             .build();
-
-        if let Ok(compiled_regex) = Regex::new(&regexp) {
-            prop_assert!(compiled_regex.is_match(&test_case));
+        if let Ok(compiled_regexp) = compile_regexp(&regexp) {
+            prop_assert!(compiled_regexp.is_match(&test_case));
         }
     }
 
@@ -258,9 +252,8 @@ proptest! {
         let regexp = RegExpBuilder::from(&test_cases_vec)
             .with_escaping_of_non_ascii_chars(false)
             .build();
-
-        if let Ok(compiled_regex) = Regex::new(&regexp) {
-            prop_assert!(test_cases.iter().all(|test_case| compiled_regex.is_match(&test_case)));
+        if let Ok(compiled_regexp) = compile_regexp(&regexp) {
+            prop_assert!(test_cases.iter().all(|test_case| compiled_regexp.is_match(&test_case)));
         }
     }
 
@@ -273,9 +266,8 @@ proptest! {
             .with_conversion_of(&[Feature::Repetition])
             .with_escaping_of_non_ascii_chars(false)
             .build();
-
-        if let Ok(compiled_regex) = Regex::new(&regexp) {
-            prop_assert!(compiled_regex.is_match(&test_case));
+        if let Ok(compiled_regexp) = compile_regexp(&regexp) {
+            prop_assert!(compiled_regexp.is_match(&test_case));
         }
     }
 
@@ -289,9 +281,8 @@ proptest! {
             .with_conversion_of(&[Feature::Repetition])
             .with_escaping_of_non_ascii_chars(false)
             .build();
-
-        if let Ok(compiled_regex) = Regex::new(&regexp) {
-            prop_assert!(test_cases.iter().all(|test_case| compiled_regex.is_match(&test_case)));
+        if let Ok(compiled_regexp) = compile_regexp(&regexp) {
+            prop_assert!(test_cases.iter().all(|test_case| compiled_regexp.is_match(&test_case)));
         }
     }
 
@@ -304,9 +295,8 @@ proptest! {
         if test_cases.is_disjoint(&other_strings) {
             let test_cases_vec = test_cases.iter().cloned().collect::<Vec<_>>();
             let regexp = RegExpBuilder::from(&test_cases_vec).build();
-
-            if let Ok(compiled_regex) = Regex::new(&regexp) {
-                prop_assert!(other_strings.iter().all(|other_string| !compiled_regex.is_match(&other_string)));
+            if let Ok(compiled_regexp) = compile_regexp(&regexp) {
+                prop_assert!(other_strings.iter().all(|other_string| !compiled_regexp.is_match(&other_string)));
             }
         }
     }
@@ -322,9 +312,8 @@ proptest! {
             let regexp = RegExpBuilder::from(&test_cases_vec)
                 .with_conversion_of(&[Feature::Repetition])
                 .build();
-
-            if let Ok(compiled_regex) = Regex::new(&regexp) {
-                prop_assert!(other_strings.iter().all(|other_string| !compiled_regex.is_match(&other_string)));
+            if let Ok(compiled_regexp) = compile_regexp(&regexp) {
+                prop_assert!(other_strings.iter().all(|other_string| !compiled_regexp.is_match(&other_string)));
             }
         }
     }
@@ -340,9 +329,8 @@ proptest! {
             let regexp = RegExpBuilder::from(&test_cases_vec)
                 .with_escaping_of_non_ascii_chars(false)
                 .build();
-
-            if let Ok(compiled_regex) = Regex::new(&regexp) {
-                prop_assert!(other_strings.iter().all(|other_string| !compiled_regex.is_match(&other_string)));
+            if let Ok(compiled_regexp) = compile_regexp(&regexp) {
+                prop_assert!(other_strings.iter().all(|other_string| !compiled_regexp.is_match(&other_string)));
             }
         }
     }
@@ -359,10 +347,13 @@ proptest! {
                 .with_conversion_of(&[Feature::Repetition])
                 .with_escaping_of_non_ascii_chars(false)
                 .build();
-
-            if let Ok(compiled_regex) = Regex::new(&regexp) {
-                prop_assert!(other_strings.iter().all(|other_string| !compiled_regex.is_match(&other_string)));
+            if let Ok(compiled_regexp) = compile_regexp(&regexp) {
+                prop_assert!(other_strings.iter().all(|other_string| !compiled_regexp.is_match(&other_string)));
             }
         }
     }
+}
+
+fn compile_regexp(regexp: &str) -> Result<Regex, Error> {
+    RegexBuilder::new(regexp).size_limit(20000000).build()
 }
