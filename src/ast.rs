@@ -18,7 +18,6 @@ use std::collections::BTreeSet;
 
 use itertools::EitherOrBoth::Both;
 use itertools::Itertools;
-use maplit::btreeset;
 use ndarray::{Array1, Array2};
 use petgraph::prelude::EdgeRef;
 

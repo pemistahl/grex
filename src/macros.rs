@@ -21,3 +21,11 @@ macro_rules! linked_list {
         lst
     }};
 }
+
+macro_rules! btreeset {
+    ( $( $value: expr ),* ) => {{
+        let mut set = std::collections::BTreeSet::new();
+        $( set.insert($value); )*
+        set
+    }};
+}
