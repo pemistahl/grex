@@ -133,6 +133,27 @@ fn regexp_builder_with_converted_words(test_cases: Vec<&str>, expected_output: &
 
 #[rstest(test_cases, expected_output,
     case(vec![""], "^$"),
+    case(vec![" "], "^\\s$"),
+    case(vec!["   "], "^\\s\\s\\s$"),
+    case(vec!["\n"], "^\\s$"),
+    case(vec!["\u{c}"], "^\\s$"), // form feed \f
+    case(vec!["\u{b}"], "^\\s$"), // vertical tab \v
+    case(vec!["\n", "\r"], "^\\s$"),
+    case(vec!["\n\t", "\r"], "^\\s(\\s)?$"),
+    case(vec!["a"], "^a$"),
+    case(vec!["1"], "^1$"),
+    case(vec!["I ♥ 123"], "^I\\s♥\\s123$")
+)]
+fn regexp_builder_with_converted_space(test_cases: Vec<&str>, expected_output: &str) {
+    let regexp = RegExpBuilder::from(&test_cases)
+        .with_conversion_of(&[Feature::Space])
+        .build();
+    test_if_regexp_is_correct(regexp, expected_output, &test_cases);
+    test_if_regexp_matches_test_cases(expected_output, test_cases);
+}
+
+#[rstest(test_cases, expected_output,
+    case(vec![""], "^$"),
     case(vec![" "], "^ $"),
     case(vec!["   "], "^ {3}$"),
     case(vec!["a"], "^a$"),

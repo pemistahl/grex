@@ -32,10 +32,7 @@ pub struct RegExpBuilder {
 
 impl RegExpBuilder {
     /// Specifies the test cases to build the regular expression from.
-    /// The test cases may be passed as a shared slice `&[T]` where `T` represents
-    /// any type that can be converted to a `String`.
-    ///
-    /// **Note:** The test cases need not be sorted because `RegExpBuilder` will sort them for you.
+    /// The test cases need not be sorted because `RegExpBuilder` sorts them internally.
     ///
     /// ⚠ Panics if `test_cases` is empty.
     pub fn from<T: Clone + Into<String>>(test_cases: &[T]) -> Self {
