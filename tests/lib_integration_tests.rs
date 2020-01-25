@@ -63,7 +63,7 @@ use rstest::rstest;
     case(vec!["abxy", "efgh", "cxy"], "^((ab|c)xy|efgh)$"),
     case(vec!["efgh", "abxy", "cxy"], "^((ab|c)xy|efgh)$"),
     case(vec!["a", "ä", "o", "ö", "u", "ü"], "^[aouäöü]$"),
-    case(vec!["y̆", "a", "z"], "^([az]|y̆)$"), // goal: "^[az]|y\\u{306}$"
+    case(vec!["y̆", "a", "z"], "^(y̆|[az])$"), // goal: "^[az]|y\\u{306}$"
     case(vec!["a", "b\n", "c"], "^(b\\n|[ac])$"),
     case(vec!["a", "b\\n", "c"], "^(b\\\\n|[ac])$"),
     case(vec!["[a-z]", "(d,e,f)"], "^(\\(d,e,f\\)|\\[a\\-z\\])$"),
@@ -144,7 +144,7 @@ fn regexp_builder_with_converted_words(test_cases: Vec<&str>, expected_output: &
     case(vec!["1"], "^1$"),
     case(vec!["I ♥ 123"], "^I\\s♥\\s123$")
 )]
-fn regexp_builder_with_converted_space(test_cases: Vec<&str>, expected_output: &str) {
+fn regexp_builder_with_converted_spaces(test_cases: Vec<&str>, expected_output: &str) {
     let regexp = RegExpBuilder::from(&test_cases)
         .with_conversion_of(&[Feature::Space])
         .build();
