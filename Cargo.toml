@@ -35,6 +35,7 @@ ndarray = "0.13.0"
 petgraph = {version = "0.5.0", default-features = false, features = ["stable_graph"]}
 structopt = "0.3.8"
 unic-char-range = "0.9.0"
+unic-ucd-category = "0.9.0"
 unicode-segmentation = "1.6.0"
 
 [dev-dependencies]

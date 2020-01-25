@@ -20,6 +20,7 @@ use std::cmp::Ordering;
 use std::collections::HashMap;
 use std::fmt::{Display, Formatter, Result};
 use std::ops::Range;
+use unic_ucd_category::GeneralCategory;
 use unicode_segmentation::UnicodeSegmentation;
 
 const CHARS_TO_ESCAPE: [&str; 14] = [
@@ -36,7 +37,11 @@ impl GraphemeCluster {
         Self {
             graphemes: UnicodeSegmentation::graphemes(s, true)
                 .flat_map(|it| {
-                    if it.chars().count() == 2 && it.starts_with('\\') {
+                    let starts_with_backslash = it.chars().count() == 2 && it.starts_with('\\');
+                    let contains_combining_mark =
+                        it.chars().any(|c| GeneralCategory::of(c).is_mark());
+
+                    if starts_with_backslash || contains_combining_mark {
                         it.chars()
                             .map(|c| Grapheme::from(&c.to_string()))
                             .collect_vec()
@@ -72,7 +77,10 @@ impl GraphemeCluster {
                         .map(|c| {
                             if is_word_converted && c.is_alphanumeric() {
                                 "\\w".to_string()
-                            } else if is_digit_converted && c.is_numeric() {
+                            } else if is_digit_converted
+                                && c.is_numeric()
+                                && GeneralCategory::of(c) != GeneralCategory::LetterNumber
+                            {
                                 "\\d".to_string()
                             } else if is_space_converted && c.is_whitespace() {
                                 "\\s".to_string()
