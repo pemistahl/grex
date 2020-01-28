@@ -14,13 +14,11 @@
  * limitations under the License.
  */
 
+use grex::{Feature, RegExpBuilder};
+use itertools::Itertools;
 use std::io::{Error, ErrorKind};
 use std::path::PathBuf;
-
-use itertools::Itertools;
 use structopt::StructOpt;
-
-use grex::{Feature, RegExpBuilder};
 
 #[derive(StructOpt)]
 #[structopt(author, about, version_short = "v")]
@@ -29,7 +27,7 @@ struct CLI {
         value_name = "INPUT",
         required_unless = "file",
         conflicts_with = "file",
-        long_help = "One or more test cases separated by blank space"
+        help = "One or more test cases separated by blank space"
     )]
     input: Vec<String>,
 
@@ -40,7 +38,7 @@ struct CLI {
         long,
         parse(from_os_str),
         required_unless = "input",
-        long_help = "Reads test cases separated by newline characters from a file"
+        help = "Reads test cases separated by newline characters from a file"
     )]
     file_path: Option<PathBuf>,
 
@@ -48,35 +46,86 @@ struct CLI {
         name = "digits",
         short,
         long,
-        long_help = "Converts any Unicode decimal digit to \\d",
+        help = "Converts any Unicode decimal digit to \\d",
+        long_help = "Converts any Unicode decimal digit to \\d.\n\n\
+                     Takes precedence over --words if both are set.\n\
+                     Decimal digits are converted to \\d, remaining word characters to \\w.\n\n\
+                     Takes precedence over --non-spaces if both are set.\n\
+                     Decimal digits are converted to \\d, remaining non-space characters to \\S.",
         display_order = 1
     )]
     is_digit_converted: bool,
 
     #[structopt(
-        name = "words",
-        short,
+        name = "non-digits",
+        short = "D",
         long,
-        long_help = "Converts any Unicode word character to \\w\n(overrides --digits if set)",
+        help = "Converts any character which is not a Unicode decimal digit to \\D",
+        long_help = "Converts any character which is not a Unicode decimal digit to \\D.\n\n\
+                     Takes precedence over --non-words if both are set.\n\
+                     Non-digits which are also non-word characters are converted to \\D.\n\n\
+                     Takes precedence over --non-spaces if both are set.\n\
+                     Non-digits which are also non-space characters are converted to \\D.",
         display_order = 2
     )]
-    is_word_converted: bool,
+    is_non_digit_converted: bool,
 
     #[structopt(
         name = "spaces",
         short,
         long,
-        long_help = "Converts any Unicode whitespace character to \\s",
+        help = "Converts any Unicode whitespace character to \\s",
+        long_help = "Converts any Unicode whitespace character to \\s.\n\n\
+                     Takes precedence over --non-digits if both are set.\n\
+                     Whitespace is converted to \\s, remaining non-digits to \\D.\n\n\
+                     Takes precedence over --non-words if both are set.\n\
+                     Whitespace is converted to \\s, remaining non-word characters to \\W.",
         display_order = 3
     )]
     is_space_converted: bool,
 
     #[structopt(
+        name = "non-spaces",
+        short = "S",
+        long,
+        help = "Converts any character which is not a Unicode whitespace character to \\S",
+        display_order = 4
+    )]
+    is_non_space_converted: bool,
+
+    #[structopt(
+        name = "words",
+        short,
+        long,
+        help = "Converts any Unicode word character to \\w",
+        long_help = "Converts any Unicode word character to \\w.\n\n\
+                     Takes precedence over --non-digits if both are set.\n\
+                     Word characters are converted to \\w, remaining non-digits to \\D.\n\n\
+                     Takes precedence over --non-spaces if both are set.\n\
+                     Word characters are converted to \\w, remaining non-whitespace to \\S.",
+        display_order = 5
+    )]
+    is_word_converted: bool,
+
+    #[structopt(
+        name = "non-words",
+        short = "W",
+        long,
+        help = "Converts any character which is not a Unicode word character to \\W",
+        long_help = "Converts any character which is not a Unicode word character to \\W.\n\n\
+                     Takes precedence over --non-spaces if both are set.\n\
+                     Non-word characters which are also non-whitespace are converted to \\W.",
+        display_order = 6
+    )]
+    is_non_word_converted: bool,
+
+    #[structopt(
         name = "repetitions",
         short,
         long,
-        long_help = "Detects repeated non-overlapping substrings and\nconverts them to {min,max} quantifier notation",
-        display_order = 4
+        help = "Detects repeated non-overlapping substrings and\n\
+                converts them to {min,max} quantifier notation",
+        display_order = 7
     )]
     is_repetition_converted: bool,
 
@@ -84,8 +133,8 @@ struct CLI {
         name = "escape",
         short,
         long,
-        long_help = "Replaces all non-ASCII characters with unicode escape sequences",
-        display_order = 5
+        help = "Replaces all non-ASCII characters with unicode escape sequences",
+        display_order = 8
     )]
     is_non_ascii_char_escaped: bool,
 
@@ -93,8 +142,8 @@ struct CLI {
         name = "with-surrogates",
         long,
         requires = "escape",
-        long_help = "Converts astral code points to surrogate pairs if --escape is set",
-        display_order = 6
+        help = "Converts astral code points to surrogate pairs if --escape is set",
+        display_order = 9
     )]
     is_astral_code_point_converted_to_surrogate: bool,
 }
@@ -130,12 +179,24 @@ fn handle_input(cli: &CLI, input: Result<Vec<String>, Error>) {
                 conversion_features.push(Feature::Digit);
             }
 
-            if cli.is_word_converted {
-                conversion_features.push(Feature::Word);
+            if cli.is_non_digit_converted {
+                conversion_features.push(Feature::NonDigit);
             }
 
             if cli.is_space_converted {
                 conversion_features.push(Feature::Space);
+            }
+
+            if cli.is_non_space_converted {
+                conversion_features.push(Feature::NonSpace);
+            }
+
+            if cli.is_word_converted {
+                conversion_features.push(Feature::Word);
+            }
+
+            if cli.is_non_word_converted {
+                conversion_features.push(Feature::NonWord);
             }
 
             if cli.is_repetition_converted {

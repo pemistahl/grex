@@ -75,13 +75,13 @@ impl GraphemeCluster {
                 .map(|it| {
                     it.chars()
                         .map(|c| {
-                            if is_word_converted && c.is_alphanumeric() {
-                                "\\w".to_string()
-                            } else if is_digit_converted
+                            if is_digit_converted
                                 && c.is_numeric()
                                 && GeneralCategory::of(c) != GeneralCategory::LetterNumber
                             {
                                 "\\d".to_string()
+                            } else if is_word_converted && c.is_alphanumeric() {
+                                "\\w".to_string()
                             } else if is_space_converted && c.is_whitespace() {
                                 "\\s".to_string()
                             } else {
