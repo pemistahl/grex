@@ -149,7 +149,7 @@ impl Display for RegExp {
 
 /// This enum specifies the supported conversion features which can be passed to method
 /// [`RegExpBuilder.with_conversion_of`](./struct.RegExpBuilder.html#method.with_conversion_of).
-#[derive(Clone, Eq, PartialEq)]
+#[derive(Clone, Debug, Hash, Eq, PartialEq)]
 pub enum Feature {
     /// This feature converts any Unicode decimal digit to character class `\d`.
     ///

@@ -27,6 +27,21 @@ const CHARS_TO_ESCAPE: [&str; 14] = [
     "(", ")", "[", "]", "{", "}", "+", "*", "-", ".", "?", "|", "^", "$",
 ];
 
+const VALID_NUMERIC_CATEGORIES: [GeneralCategory; 1] = [GeneralCategory::DecimalNumber];
+
+const VALID_ALPHANUMERIC_CATEGORIES: [GeneralCategory; 10] = [
+    GeneralCategory::UppercaseLetter,
+    GeneralCategory::LowercaseLetter,
+    GeneralCategory::TitlecaseLetter,
+    GeneralCategory::ModifierLetter,
+    GeneralCategory::OtherLetter,
+    GeneralCategory::DecimalNumber,
+    GeneralCategory::EnclosingMark,
+    GeneralCategory::NonspacingMark,
+    GeneralCategory::SpacingMark,
+    GeneralCategory::ConnectorPunctuation,
+];
+
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub(crate) struct GraphemeCluster {
     graphemes: Vec<Grapheme>,
@@ -65,8 +80,11 @@ impl GraphemeCluster {
 
     pub(crate) fn convert_to_char_classes(&mut self, conversion_features: &[Feature]) {
         let is_digit_converted = conversion_features.contains(&Feature::Digit);
+        let is_non_digit_converted = conversion_features.contains(&Feature::NonDigit);
         let is_space_converted = conversion_features.contains(&Feature::Space);
+        let is_non_space_converted = conversion_features.contains(&Feature::NonSpace);
         let is_word_converted = conversion_features.contains(&Feature::Word);
+        let is_non_word_converted = conversion_features.contains(&Feature::NonWord);
 
         for grapheme in self.graphemes.iter_mut() {
             grapheme.chars = grapheme
@@ -75,15 +93,33 @@ impl GraphemeCluster {
                 .map(|it| {
                     it.chars()
                         .map(|c| {
-                            if is_digit_converted
-                                && c.is_numeric()
-                                && GeneralCategory::of(c) != GeneralCategory::LetterNumber
-                            {
+                            let category = GeneralCategory::of(c);
+                            let is_valid_alphanumeric_category =
+                                VALID_ALPHANUMERIC_CATEGORIES.contains(&category);
+                            let is_digit = VALID_NUMERIC_CATEGORIES.contains(&category);
+                            let is_word = is_valid_alphanumeric_category
+                                || c == '_'
+                                || c == '\u{200c}'
+                                || c == '\u{200d}'
+                                || ('\u{24b6}'..='\u{24e9}').contains(&c)
+                                || ('\u{10d00}'..='\u{10d39}').contains(&c)
+                                || ('\u{11d60}'..='\u{11da9}').contains(&c)
+                                || ('\u{1c90}'..='\u{1cbf}').contains(&c)
+                                || ('\u{16f00}'..='\u{16f9f}').contains(&c)
+                                || ('\u{119a0}'..='\u{119e4}').contains(&c);
+
+                            if is_digit_converted && is_digit {
                                 "\\d".to_string()
-                            } else if is_word_converted && c.is_alphanumeric() {
+                            } else if is_word_converted && is_word {
                                 "\\w".to_string()
                             } else if is_space_converted && c.is_whitespace() {
                                 "\\s".to_string()
+                            } else if is_non_digit_converted && !is_digit {
+                                "\\D".to_string()
+                            } else if is_non_word_converted && !is_word {
+                                "\\W".to_string()
+                            } else if is_non_space_converted && !c.is_whitespace() {
+                                "\\S".to_string()
                             } else {
                                 c.to_string()
                             }

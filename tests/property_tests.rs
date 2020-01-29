@@ -19,7 +19,7 @@ use proptest::prelude::*;
 use regex::{Error, Regex, RegexBuilder};
 
 proptest! {
-    #![proptest_config(ProptestConfig::with_cases(300))]
+    #![proptest_config(ProptestConfig::with_cases(500))]
 
     #[test]
     #[ignore]
@@ -33,19 +33,8 @@ proptest! {
 
     #[test]
     #[ignore]
-    fn valid_regexes_with_escaped_non_ascii_chars_and_single_test_case(
-        test_case in "[^[:ascii:]]{1,20}"
-    ) {
-        let regexp = RegExpBuilder::from(&[test_case])
-            .with_escaping_of_non_ascii_chars(false)
-            .build();
-        prop_assert!(compile_regexp(&regexp).is_ok());
-    }
-
-    #[test]
-    #[ignore]
-    fn valid_regexes_with_escaped_non_ascii_chars_and_multiple_test_cases(
-        test_cases in prop::collection::hash_set("[^[:ascii:]]{1,20}", 2..=10)
+    fn valid_regexes_with_escape_sequences(
+        test_cases in prop::collection::hash_set(".{1,20}", 1..=10)
     ) {
         let test_cases_vec = test_cases.iter().cloned().collect::<Vec<_>>();
         let regexp = RegExpBuilder::from(&test_cases_vec)
@@ -56,358 +45,26 @@ proptest! {
 
     #[test]
     #[ignore]
-    fn valid_regexes_with_converted_digits_and_single_test_case(
-        test_case in "\\d{1,20}"
-    ) {
-        let regexp = RegExpBuilder::from(&[test_case])
-            .with_conversion_of(&[Feature::Digit])
-            .build();
-        prop_assert!(compile_regexp(&regexp).is_ok());
-    }
-
-    #[test]
-    #[ignore]
-    fn valid_regexes_with_converted_digits_and_multiple_test_cases(
-        test_cases in prop::collection::hash_set("\\d{1,20}", 2..=10)
+    fn valid_regexes_with_conversion_features(
+        test_cases in prop::collection::hash_set(".{1,20}", 1..=10),
+        conversion_features in prop::collection::hash_set(conversion_feature_strategy(), 1..=7)
     ) {
         let test_cases_vec = test_cases.iter().cloned().collect::<Vec<_>>();
         let regexp = RegExpBuilder::from(&test_cases_vec)
-            .with_conversion_of(&[Feature::Digit])
+            .with_conversion_of(&conversion_features.into_iter().collect::<Vec<_>>())
             .build();
         prop_assert!(compile_regexp(&regexp).is_ok());
     }
 
     #[test]
     #[ignore]
-    fn valid_regexes_with_converted_words_and_single_test_case(
-        test_case in "\\w{1,20}"
-    ) {
-        let regexp = RegExpBuilder::from(&[test_case])
-            .with_conversion_of(&[Feature::Word])
-            .build();
-        prop_assert!(compile_regexp(&regexp).is_ok());
-    }
-
-    #[test]
-    #[ignore]
-    fn valid_regexes_with_converted_words_and_multiple_test_cases(
-        test_cases in prop::collection::hash_set("\\w{1,20}", 2..=10)
+    fn valid_regexes_with_conversion_features_and_escape_sequences(
+        test_cases in prop::collection::hash_set(".{1,20}", 1..=10),
+        conversion_features in prop::collection::hash_set(conversion_feature_strategy(), 1..=7)
     ) {
         let test_cases_vec = test_cases.iter().cloned().collect::<Vec<_>>();
         let regexp = RegExpBuilder::from(&test_cases_vec)
-            .with_conversion_of(&[Feature::Word])
-            .build();
-        prop_assert!(compile_regexp(&regexp).is_ok());
-    }
-
-    #[test]
-    #[ignore]
-    fn valid_regexes_with_converted_words_and_escapes_and_single_test_case(
-        test_case in "\\w{1,20}"
-    ) {
-        let regexp = RegExpBuilder::from(&[test_case])
-            .with_conversion_of(&[Feature::Word])
-            .with_escaping_of_non_ascii_chars(false)
-            .build();
-        prop_assert!(compile_regexp(&regexp).is_ok());
-    }
-
-    #[test]
-    #[ignore]
-    fn valid_regexes_with_converted_words_and_escapes_and_multiple_test_cases(
-        test_cases in prop::collection::hash_set("\\w{1,20}", 2..=10)
-    ) {
-        let test_cases_vec = test_cases.iter().cloned().collect::<Vec<_>>();
-        let regexp = RegExpBuilder::from(&test_cases_vec)
-            .with_conversion_of(&[Feature::Word])
-            .with_escaping_of_non_ascii_chars(false)
-            .build();
-        prop_assert!(compile_regexp(&regexp).is_ok());
-    }
-
-    #[test]
-    #[ignore]
-    fn valid_regexes_with_converted_spaces_and_single_test_case(
-        test_case in "[\\s\\w]{1,20}"
-    ) {
-        let regexp = RegExpBuilder::from(&[test_case])
-            .with_conversion_of(&[Feature::Space])
-            .build();
-        prop_assert!(compile_regexp(&regexp).is_ok());
-    }
-
-    #[test]
-    #[ignore]
-    fn valid_regexes_with_converted_spaces_and_multiple_test_cases(
-        test_cases in prop::collection::hash_set("[\\s\\w]{1,20}", 2..=10)
-    ) {
-        let test_cases_vec = test_cases.iter().cloned().collect::<Vec<_>>();
-        let regexp = RegExpBuilder::from(&test_cases_vec)
-            .with_conversion_of(&[Feature::Space])
-            .build();
-        prop_assert!(compile_regexp(&regexp).is_ok());
-    }
-
-    #[test]
-    #[ignore]
-    fn valid_regexes_with_converted_spaces_and_escapes_and_single_test_case(
-        test_case in "[\\s\\w]{1,20}"
-    ) {
-        let regexp = RegExpBuilder::from(&[test_case])
-            .with_conversion_of(&[Feature::Space])
-            .with_escaping_of_non_ascii_chars(false)
-            .build();
-        prop_assert!(compile_regexp(&regexp).is_ok());
-    }
-
-    #[test]
-    #[ignore]
-    fn valid_regexes_with_converted_space_and_escapes_and_multiple_test_cases(
-        test_cases in prop::collection::hash_set("[\\s\\w]{1,20}", 2..=10)
-    ) {
-        let test_cases_vec = test_cases.iter().cloned().collect::<Vec<_>>();
-        let regexp = RegExpBuilder::from(&test_cases_vec)
-            .with_conversion_of(&[Feature::Space])
-            .with_escaping_of_non_ascii_chars(false)
-            .build();
-        prop_assert!(compile_regexp(&regexp).is_ok());
-    }
-
-    #[test]
-    #[ignore]
-    fn valid_regexes_with_converted_digits_and_words_and_single_test_case(
-        test_case in "\\w{1,20}"
-    ) {
-        let regexp = RegExpBuilder::from(&[test_case])
-            .with_conversion_of(&[Feature::Digit, Feature::Word])
-            .build();
-        prop_assert!(compile_regexp(&regexp).is_ok());
-    }
-
-    #[test]
-    #[ignore]
-    fn valid_regexes_with_converted_digits_and_words_and_multiple_test_cases(
-        test_cases in prop::collection::hash_set("\\w{1,20}", 2..=10)
-    ) {
-        let test_cases_vec = test_cases.iter().cloned().collect::<Vec<_>>();
-        let regexp = RegExpBuilder::from(&test_cases_vec)
-            .with_conversion_of(&[Feature::Digit, Feature::Word])
-            .build();
-        prop_assert!(compile_regexp(&regexp).is_ok());
-    }
-
-    #[test]
-    #[ignore]
-    fn valid_regexes_with_converted_digits_and_words_and_escapes_and_single_test_case(
-        test_case in "\\w{1,20}"
-    ) {
-        let regexp = RegExpBuilder::from(&[test_case])
-            .with_conversion_of(&[Feature::Digit, Feature::Word])
-            .with_escaping_of_non_ascii_chars(false)
-            .build();
-        prop_assert!(compile_regexp(&regexp).is_ok());
-    }
-
-    #[test]
-    #[ignore]
-    fn valid_regexes_with_converted_digits_and_words_and_escapes_and_multiple_test_cases(
-        test_cases in prop::collection::hash_set("\\w{1,20}", 2..=10)
-    ) {
-        let test_cases_vec = test_cases.iter().cloned().collect::<Vec<_>>();
-        let regexp = RegExpBuilder::from(&test_cases_vec)
-            .with_conversion_of(&[Feature::Digit, Feature::Word])
-            .with_escaping_of_non_ascii_chars(false)
-            .build();
-        prop_assert!(compile_regexp(&regexp).is_ok());
-    }
-
-    #[test]
-    #[ignore]
-    fn valid_regexes_with_converted_digits_and_spaces_and_single_test_case(
-        test_case in "[\\d\\s]{1,20}"
-    ) {
-        let regexp = RegExpBuilder::from(&[test_case])
-            .with_conversion_of(&[Feature::Digit, Feature::Space])
-            .build();
-        prop_assert!(compile_regexp(&regexp).is_ok());
-    }
-
-    #[test]
-    #[ignore]
-    fn valid_regexes_with_converted_digits_and_spaces_and_multiple_test_cases(
-        test_cases in prop::collection::hash_set("[\\d\\s]{1,20}", 2..=10)
-    ) {
-        let test_cases_vec = test_cases.iter().cloned().collect::<Vec<_>>();
-        let regexp = RegExpBuilder::from(&test_cases_vec)
-            .with_conversion_of(&[Feature::Digit, Feature::Space])
-            .build();
-        prop_assert!(compile_regexp(&regexp).is_ok());
-    }
-
-    #[test]
-    #[ignore]
-    fn valid_regexes_with_converted_digits_and_spaces_and_escapes_and_single_test_case(
-        test_case in "[\\d\\s]{1,20}"
-    ) {
-        let regexp = RegExpBuilder::from(&[test_case])
-            .with_conversion_of(&[Feature::Digit, Feature::Space])
-            .with_escaping_of_non_ascii_chars(false)
-            .build();
-        prop_assert!(compile_regexp(&regexp).is_ok());
-    }
-
-    #[test]
-    #[ignore]
-    fn valid_regexes_with_converted_digits_and_spaces_and_escapes_and_multiple_test_cases(
-        test_cases in prop::collection::hash_set("[\\d\\s]{1,20}", 2..=10)
-    ) {
-        let test_cases_vec = test_cases.iter().cloned().collect::<Vec<_>>();
-        let regexp = RegExpBuilder::from(&test_cases_vec)
-            .with_conversion_of(&[Feature::Digit, Feature::Space])
-            .with_escaping_of_non_ascii_chars(false)
-            .build();
-        prop_assert!(compile_regexp(&regexp).is_ok());
-    }
-
-    #[test]
-    #[ignore]
-    fn valid_regexes_with_converted_words_and_spaces_and_single_test_case(
-        test_case in "[\\w\\s]{1,20}"
-    ) {
-        let regexp = RegExpBuilder::from(&[test_case])
-            .with_conversion_of(&[Feature::Word, Feature::Space])
-            .build();
-        prop_assert!(compile_regexp(&regexp).is_ok());
-    }
-
-    #[test]
-    #[ignore]
-    fn valid_regexes_with_converted_words_and_spaces_and_multiple_test_cases(
-        test_cases in prop::collection::hash_set("[\\w\\s]{1,20}", 2..=10)
-    ) {
-        let test_cases_vec = test_cases.iter().cloned().collect::<Vec<_>>();
-        let regexp = RegExpBuilder::from(&test_cases_vec)
-            .with_conversion_of(&[Feature::Word, Feature::Space])
-            .build();
-        prop_assert!(compile_regexp(&regexp).is_ok());
-    }
-
-    #[test]
-    #[ignore]
-    fn valid_regexes_with_converted_words_and_spaces_and_escapes_and_single_test_case(
-        test_case in "[\\w\\s]{1,20}"
-    ) {
-        let regexp = RegExpBuilder::from(&[test_case])
-            .with_conversion_of(&[Feature::Word, Feature::Space])
-            .with_escaping_of_non_ascii_chars(false)
-            .build();
-        prop_assert!(compile_regexp(&regexp).is_ok());
-    }
-
-    #[test]
-    #[ignore]
-    fn valid_regexes_with_converted_words_and_spaces_and_escapes_and_multiple_test_cases(
-        test_cases in prop::collection::hash_set("[\\w\\s]{1,20}", 2..=10)
-    ) {
-        let test_cases_vec = test_cases.iter().cloned().collect::<Vec<_>>();
-        let regexp = RegExpBuilder::from(&test_cases_vec)
-            .with_conversion_of(&[Feature::Word, Feature::Space])
-            .with_escaping_of_non_ascii_chars(false)
-            .build();
-        prop_assert!(compile_regexp(&regexp).is_ok());
-    }
-
-    #[test]
-    #[ignore]
-    fn valid_regexes_with_converted_digits_and_words_and_spaces_and_single_test_case(
-        test_case in "[\\w\\s]{1,20}"
-    ) {
-        let regexp = RegExpBuilder::from(&[test_case])
-            .with_conversion_of(&[Feature::Digit, Feature::Word, Feature::Space])
-            .build();
-        prop_assert!(compile_regexp(&regexp).is_ok());
-    }
-
-    #[test]
-    #[ignore]
-    fn valid_regexes_with_converted_digits_and_words_and_spaces_and_multiple_test_cases(
-        test_cases in prop::collection::hash_set("[\\w\\s]{1,20}", 2..=10)
-    ) {
-        let test_cases_vec = test_cases.iter().cloned().collect::<Vec<_>>();
-        let regexp = RegExpBuilder::from(&test_cases_vec)
-            .with_conversion_of(&[Feature::Digit, Feature::Word, Feature::Space])
-            .build();
-        prop_assert!(compile_regexp(&regexp).is_ok());
-    }
-
-    #[test]
-    #[ignore]
-    fn valid_regexes_with_converted_digits_and_words_and_spaces_and_escapes_and_single_test_case(
-        test_case in "[\\w\\s]{1,20}"
-    ) {
-        let regexp = RegExpBuilder::from(&[test_case])
-            .with_conversion_of(&[Feature::Digit, Feature::Word, Feature::Space])
-            .with_escaping_of_non_ascii_chars(false)
-            .build();
-        prop_assert!(compile_regexp(&regexp).is_ok());
-    }
-
-    #[test]
-    #[ignore]
-    fn valid_regexes_with_converted_digits_and_words_and_spaces_and_escapes_and_multiple_test_cases(
-        test_cases in prop::collection::hash_set("[\\w\\s]{1,20}", 2..=10)
-    ) {
-        let test_cases_vec = test_cases.iter().cloned().collect::<Vec<_>>();
-        let regexp = RegExpBuilder::from(&test_cases_vec)
-            .with_conversion_of(&[Feature::Digit, Feature::Word, Feature::Space])
-            .with_escaping_of_non_ascii_chars(false)
-            .build();
-        prop_assert!(compile_regexp(&regexp).is_ok());
-    }
-
-    #[test]
-    #[ignore]
-    fn valid_regexes_with_converted_repetitions_and_single_test_case(
-        test_case in "[ab]{1,20}"
-    ) {
-        let regexp = RegExpBuilder::from(&[test_case])
-            .with_conversion_of(&[Feature::Repetition])
-            .build();
-        prop_assert!(compile_regexp(&regexp).is_ok());
-    }
-
-    #[test]
-    #[ignore]
-    fn valid_regexes_with_converted_repetitions_and_multiple_test_cases(
-        test_cases in prop::collection::hash_set(".{1,20}", 2..=10)
-    ) {
-        let test_cases_vec = test_cases.iter().cloned().collect::<Vec<_>>();
-        let regexp = RegExpBuilder::from(&test_cases_vec)
-            .with_conversion_of(&[Feature::Repetition])
-            .build();
-        prop_assert!(compile_regexp(&regexp).is_ok());
-    }
-
-    #[test]
-    #[ignore]
-    fn valid_regexes_with_converted_repetitions_and_escapes_and_single_test_case(
-        test_case in "[♥💩]{1,20}"
-    ) {
-        let regexp = RegExpBuilder::from(&[test_case])
-            .with_conversion_of(&[Feature::Repetition])
-            .with_escaping_of_non_ascii_chars(false)
-            .build();
-        prop_assert!(compile_regexp(&regexp).is_ok());
-    }
-
-    #[test]
-    #[ignore]
-    fn valid_regexes_with_converted_repetitions_and_escapes_and_multiple_test_cases(
-        test_cases in prop::collection::hash_set("[^[:ascii:]]{1,20}", 2..=10)
-    ) {
-        let test_cases_vec = test_cases.iter().cloned().collect::<Vec<_>>();
-        let regexp = RegExpBuilder::from(&test_cases_vec)
-            .with_conversion_of(&[Feature::Repetition])
+            .with_conversion_of(&conversion_features.into_iter().collect::<Vec<_>>())
             .with_escaping_of_non_ascii_chars(false)
             .build();
         prop_assert!(compile_regexp(&regexp).is_ok());
@@ -427,21 +84,8 @@ proptest! {
 
     #[test]
     #[ignore]
-    fn matching_regexes_with_escapes_and_single_test_case(
-        test_case in "[^[:ascii:]]{1,20}"
-    ) {
-        let regexp = RegExpBuilder::from(&[&test_case])
-            .with_escaping_of_non_ascii_chars(false)
-            .build();
-        if let Ok(compiled_regexp) = compile_regexp(&regexp) {
-            prop_assert!(compiled_regexp.is_match(&test_case));
-        }
-    }
-
-    #[test]
-    #[ignore]
-    fn matching_regexes_with_escapes_and_multiple_test_cases(
-        test_cases in prop::collection::hash_set("[^[:ascii:]]{1,20}", 2..=10)
+    fn matching_regexes_with_escape_sequences(
+        test_cases in prop::collection::hash_set(".{1,20}", 1..=10)
     ) {
         let test_cases_vec = test_cases.iter().cloned().collect::<Vec<_>>();
         let regexp = RegExpBuilder::from(&test_cases_vec)
@@ -454,54 +98,28 @@ proptest! {
 
     #[test]
     #[ignore]
-    fn matching_regexes_with_converted_digits_and_single_test_case(
-        test_case in "\\d{1,20}"
-    ) {
-        let regexp = RegExpBuilder::from(&[&test_case])
-            .with_conversion_of(&[Feature::Digit])
-            .build();
-        if let Ok(compiled_regexp) = compile_regexp(&regexp) {
-            prop_assert!(compiled_regexp.is_match(&test_case));
-        }
-    }
-
-    #[test]
-    #[ignore]
-    fn matching_regexes_with_converted_digits_and_multiple_test_cases(
-        test_cases in prop::collection::hash_set("\\d{1,20}", 2..=10)
+    fn matching_regexes_with_conversion_features(
+        test_cases in prop::collection::hash_set(".{1,20}", 1..=10),
+        conversion_features in prop::collection::hash_set(conversion_feature_strategy(), 1..=7)
     ) {
         let test_cases_vec = test_cases.iter().cloned().collect::<Vec<_>>();
         let regexp = RegExpBuilder::from(&test_cases_vec)
-            .with_conversion_of(&[Feature::Digit])
+            .with_conversion_of(&conversion_features.into_iter().collect::<Vec<_>>())
             .build();
         if let Ok(compiled_regexp) = compile_regexp(&regexp) {
             prop_assert!(test_cases.iter().all(|test_case| compiled_regexp.is_match(&test_case)));
         }
     }
 
-
     #[test]
     #[ignore]
-    fn matching_regexes_with_converted_digits_and_escapes_and_single_test_case(
-        test_case in "\\w{1,20}"
-    ) {
-        let regexp = RegExpBuilder::from(&[&test_case])
-            .with_conversion_of(&[Feature::Digit])
-            .with_escaping_of_non_ascii_chars(false)
-            .build();
-        if let Ok(compiled_regexp) = compile_regexp(&regexp) {
-            prop_assert!(compiled_regexp.is_match(&test_case));
-        }
-    }
-
-    #[test]
-    #[ignore]
-    fn matching_regexes_with_converted_digits_and_escapes_and_multiple_test_cases(
-        test_cases in prop::collection::hash_set("\\w{1,20}", 2..=10)
+    fn matching_regexes_with_conversion_features_and_escape_sequences(
+        test_cases in prop::collection::hash_set(".{1,20}", 1..=10),
+        conversion_features in prop::collection::hash_set(conversion_feature_strategy(), 1..=7)
     ) {
         let test_cases_vec = test_cases.iter().cloned().collect::<Vec<_>>();
         let regexp = RegExpBuilder::from(&test_cases_vec)
-            .with_conversion_of(&[Feature::Digit])
+            .with_conversion_of(&conversion_features.into_iter().collect::<Vec<_>>())
             .with_escaping_of_non_ascii_chars(false)
             .build();
         if let Ok(compiled_regexp) = compile_regexp(&regexp) {
@@ -511,793 +129,9 @@ proptest! {
 
     #[test]
     #[ignore]
-    fn matching_regexes_with_converted_words_and_single_test_case(
-        test_case in "\\w{1,20}"
-    ) {
-        let regexp = RegExpBuilder::from(&[&test_case])
-            .with_conversion_of(&[Feature::Word])
-            .build();
-        if let Ok(compiled_regexp) = compile_regexp(&regexp) {
-            prop_assert!(compiled_regexp.is_match(&test_case));
-        }
-    }
-
-    #[test]
-    #[ignore]
-    fn matching_regexes_with_converted_words_and_multiple_test_cases(
-        test_cases in prop::collection::hash_set("\\w{1,20}", 2..=10)
-    ) {
-        let test_cases_vec = test_cases.iter().cloned().collect::<Vec<_>>();
-        let regexp = RegExpBuilder::from(&test_cases_vec)
-            .with_conversion_of(&[Feature::Word])
-            .build();
-        if let Ok(compiled_regexp) = compile_regexp(&regexp) {
-            prop_assert!(test_cases.iter().all(|test_case| compiled_regexp.is_match(&test_case)));
-        }
-    }
-
-    #[test]
-    #[ignore]
-    fn matching_regexes_with_converted_words_and_escapes_and_single_test_case(
-        test_case in "\\w{1,20}"
-    ) {
-        let regexp = RegExpBuilder::from(&[&test_case])
-            .with_conversion_of(&[Feature::Word])
-            .with_escaping_of_non_ascii_chars(false)
-            .build();
-        if let Ok(compiled_regexp) = compile_regexp(&regexp) {
-            prop_assert!(compiled_regexp.is_match(&test_case));
-        }
-    }
-
-    #[test]
-    #[ignore]
-    fn matching_regexes_with_converted_words_and_escapes_and_multiple_test_cases(
-        test_cases in prop::collection::hash_set("\\w{1,20}", 2..=10)
-    ) {
-        let test_cases_vec = test_cases.iter().cloned().collect::<Vec<_>>();
-        let regexp = RegExpBuilder::from(&test_cases_vec)
-            .with_conversion_of(&[Feature::Word])
-            .with_escaping_of_non_ascii_chars(false)
-            .build();
-        if let Ok(compiled_regexp) = compile_regexp(&regexp) {
-            prop_assert!(test_cases.iter().all(|test_case| compiled_regexp.is_match(&test_case)));
-        }
-    }
-
-    #[test]
-    #[ignore]
-    fn matching_regexes_with_converted_spaces_and_single_test_case(
-        test_case in "\\s{1,20}"
-    ) {
-        let regexp = RegExpBuilder::from(&[&test_case])
-            .with_conversion_of(&[Feature::Space])
-            .build();
-        if let Ok(compiled_regexp) = compile_regexp(&regexp) {
-            prop_assert!(compiled_regexp.is_match(&test_case));
-        }
-    }
-
-    #[test]
-    #[ignore]
-    fn matching_regexes_with_converted_spaces_and_multiple_test_cases(
-        test_cases in prop::collection::hash_set("\\s{1,20}", 2..=10)
-    ) {
-        let test_cases_vec = test_cases.iter().cloned().collect::<Vec<_>>();
-        let regexp = RegExpBuilder::from(&test_cases_vec)
-            .with_conversion_of(&[Feature::Space])
-            .build();
-        if let Ok(compiled_regexp) = compile_regexp(&regexp) {
-            prop_assert!(test_cases.iter().all(|test_case| compiled_regexp.is_match(&test_case)));
-        }
-    }
-
-    #[test]
-    #[ignore]
-    fn matching_regexes_with_converted_spaces_and_escapes_and_single_test_case(
-        test_case in "\\s{1,20}"
-    ) {
-        let regexp = RegExpBuilder::from(&[&test_case])
-            .with_conversion_of(&[Feature::Space])
-            .with_escaping_of_non_ascii_chars(false)
-            .build();
-        if let Ok(compiled_regexp) = compile_regexp(&regexp) {
-            prop_assert!(compiled_regexp.is_match(&test_case));
-        }
-    }
-
-    #[test]
-    #[ignore]
-    fn matching_regexes_with_converted_spaces_and_escapes_and_multiple_test_cases(
-        test_cases in prop::collection::hash_set("\\s{1,20}", 2..=10)
-    ) {
-        let test_cases_vec = test_cases.iter().cloned().collect::<Vec<_>>();
-        let regexp = RegExpBuilder::from(&test_cases_vec)
-            .with_conversion_of(&[Feature::Space])
-            .with_escaping_of_non_ascii_chars(false)
-            .build();
-        if let Ok(compiled_regexp) = compile_regexp(&regexp) {
-            prop_assert!(test_cases.iter().all(|test_case| compiled_regexp.is_match(&test_case)));
-        }
-    }
-
-    #[test]
-    #[ignore]
-    fn matching_regexes_with_converted_digits_and_words_and_single_test_case(
-        test_case in "\\w{1,20}"
-    ) {
-        let regexp = RegExpBuilder::from(&[&test_case])
-            .with_conversion_of(&[Feature::Digit, Feature::Word])
-            .build();
-        if let Ok(compiled_regexp) = compile_regexp(&regexp) {
-            prop_assert!(compiled_regexp.is_match(&test_case));
-        }
-    }
-
-    #[test]
-    #[ignore]
-    fn matching_regexes_with_converted_digits_and_words_and_multiple_test_cases(
-        test_cases in prop::collection::hash_set("\\w{1,20}", 2..=10)
-    ) {
-        let test_cases_vec = test_cases.iter().cloned().collect::<Vec<_>>();
-        let regexp = RegExpBuilder::from(&test_cases_vec)
-            .with_conversion_of(&[Feature::Digit, Feature::Word])
-            .build();
-        if let Ok(compiled_regexp) = compile_regexp(&regexp) {
-            prop_assert!(test_cases.iter().all(|test_case| compiled_regexp.is_match(&test_case)));
-        }
-    }
-
-    #[test]
-    #[ignore]
-    fn matching_regexes_with_converted_digits_and_words_and_escapes_and_single_test_case(
-        test_case in "\\w{1,20}"
-    ) {
-        let regexp = RegExpBuilder::from(&[&test_case])
-            .with_conversion_of(&[Feature::Digit, Feature::Word])
-            .with_escaping_of_non_ascii_chars(false)
-            .build();
-        if let Ok(compiled_regexp) = compile_regexp(&regexp) {
-            prop_assert!(compiled_regexp.is_match(&test_case));
-        }
-    }
-
-    #[test]
-    #[ignore]
-    fn matching_regexes_with_converted_digits_and_words_and_escapes_and_multiple_test_cases(
-        test_cases in prop::collection::hash_set("\\w{1,20}", 2..=10)
-    ) {
-        let test_cases_vec = test_cases.iter().cloned().collect::<Vec<_>>();
-        let regexp = RegExpBuilder::from(&test_cases_vec)
-            .with_conversion_of(&[Feature::Digit, Feature::Word])
-            .with_escaping_of_non_ascii_chars(false)
-            .build();
-        if let Ok(compiled_regexp) = compile_regexp(&regexp) {
-            prop_assert!(test_cases.iter().all(|test_case| compiled_regexp.is_match(&test_case)));
-        }
-    }
-
-    #[test]
-    #[ignore]
-    fn matching_regexes_with_converted_digits_and_spaces_and_single_test_case(
-        test_case in "[\\w\\s]{1,20}"
-    ) {
-        let regexp = RegExpBuilder::from(&[&test_case])
-            .with_conversion_of(&[Feature::Digit, Feature::Space])
-            .build();
-        if let Ok(compiled_regexp) = compile_regexp(&regexp) {
-            prop_assert!(compiled_regexp.is_match(&test_case));
-        }
-    }
-
-    #[test]
-    #[ignore]
-    fn matching_regexes_with_converted_digits_and_spaces_and_multiple_test_cases(
-        test_cases in prop::collection::hash_set("[\\w\\s]{1,20}", 2..=10)
-    ) {
-        let test_cases_vec = test_cases.iter().cloned().collect::<Vec<_>>();
-        let regexp = RegExpBuilder::from(&test_cases_vec)
-            .with_conversion_of(&[Feature::Digit, Feature::Space])
-            .build();
-        if let Ok(compiled_regexp) = compile_regexp(&regexp) {
-            prop_assert!(test_cases.iter().all(|test_case| compiled_regexp.is_match(&test_case)));
-        }
-    }
-
-    #[test]
-    #[ignore]
-    fn matching_regexes_with_converted_digits_and_spaces_and_escapes_and_single_test_case(
-        test_case in "[\\w\\s]{1,20}"
-    ) {
-        let regexp = RegExpBuilder::from(&[&test_case])
-            .with_conversion_of(&[Feature::Digit, Feature::Space])
-            .with_escaping_of_non_ascii_chars(false)
-            .build();
-        if let Ok(compiled_regexp) = compile_regexp(&regexp) {
-            prop_assert!(compiled_regexp.is_match(&test_case));
-        }
-    }
-
-    #[test]
-    #[ignore]
-    fn matching_regexes_with_converted_digits_and_spaces_and_escapes_and_multiple_test_cases(
-        test_cases in prop::collection::hash_set("[\\w\\s]{1,20}", 2..=10)
-    ) {
-        let test_cases_vec = test_cases.iter().cloned().collect::<Vec<_>>();
-        let regexp = RegExpBuilder::from(&test_cases_vec)
-            .with_conversion_of(&[Feature::Digit, Feature::Space])
-            .with_escaping_of_non_ascii_chars(false)
-            .build();
-        if let Ok(compiled_regexp) = compile_regexp(&regexp) {
-            prop_assert!(test_cases.iter().all(|test_case| compiled_regexp.is_match(&test_case)));
-        }
-    }
-
-    #[test]
-    #[ignore]
-    fn matching_regexes_with_converted_words_and_spaces_and_single_test_case(
-        test_case in "[\\w\\s]{1,20}"
-    ) {
-        let regexp = RegExpBuilder::from(&[&test_case])
-            .with_conversion_of(&[Feature::Word, Feature::Space])
-            .build();
-        if let Ok(compiled_regexp) = compile_regexp(&regexp) {
-            prop_assert!(compiled_regexp.is_match(&test_case));
-        }
-    }
-
-    #[test]
-    #[ignore]
-    fn matching_regexes_with_converted_words_and_spaces_and_multiple_test_cases(
-        test_cases in prop::collection::hash_set("[\\w\\s]{1,20}", 2..=10)
-    ) {
-        let test_cases_vec = test_cases.iter().cloned().collect::<Vec<_>>();
-        let regexp = RegExpBuilder::from(&test_cases_vec)
-            .with_conversion_of(&[Feature::Word, Feature::Space])
-            .build();
-        if let Ok(compiled_regexp) = compile_regexp(&regexp) {
-            prop_assert!(test_cases.iter().all(|test_case| compiled_regexp.is_match(&test_case)));
-        }
-    }
-
-    #[test]
-    #[ignore]
-    fn matching_regexes_with_converted_words_and_spaces_and_escapes_and_single_test_case(
-        test_case in "[\\w\\s]{1,20}"
-    ) {
-        let regexp = RegExpBuilder::from(&[&test_case])
-            .with_conversion_of(&[Feature::Word, Feature::Space])
-            .with_escaping_of_non_ascii_chars(false)
-            .build();
-        if let Ok(compiled_regexp) = compile_regexp(&regexp) {
-            prop_assert!(compiled_regexp.is_match(&test_case));
-        }
-    }
-
-    #[test]
-    #[ignore]
-    fn matching_regexes_with_converted_words_and_spaces_and_escapes_and_multiple_test_cases(
-        test_cases in prop::collection::hash_set("[\\w\\s]{1,20}", 2..=10)
-    ) {
-        let test_cases_vec = test_cases.iter().cloned().collect::<Vec<_>>();
-        let regexp = RegExpBuilder::from(&test_cases_vec)
-            .with_conversion_of(&[Feature::Word, Feature::Space])
-            .with_escaping_of_non_ascii_chars(false)
-            .build();
-        if let Ok(compiled_regexp) = compile_regexp(&regexp) {
-            prop_assert!(test_cases.iter().all(|test_case| compiled_regexp.is_match(&test_case)));
-        }
-    }
-
-    #[test]
-    #[ignore]
-    fn matching_regexes_with_converted_digits_and_words_and_spaces_and_single_test_case(
-        test_case in "[\\w\\s]{1,20}"
-    ) {
-        let regexp = RegExpBuilder::from(&[&test_case])
-            .with_conversion_of(&[Feature::Digit, Feature::Word, Feature::Space])
-            .build();
-        if let Ok(compiled_regexp) = compile_regexp(&regexp) {
-            prop_assert!(compiled_regexp.is_match(&test_case));
-        }
-    }
-
-    #[test]
-    #[ignore]
-    fn matching_regexes_with_converted_digits_and_words_and_spaces_and_multiple_test_cases(
-        test_cases in prop::collection::hash_set("[\\w\\s]{1,20}", 2..=10)
-    ) {
-        let test_cases_vec = test_cases.iter().cloned().collect::<Vec<_>>();
-        let regexp = RegExpBuilder::from(&test_cases_vec)
-            .with_conversion_of(&[Feature::Digit, Feature::Word, Feature::Space])
-            .build();
-        if let Ok(compiled_regexp) = compile_regexp(&regexp) {
-            prop_assert!(test_cases.iter().all(|test_case| compiled_regexp.is_match(&test_case)));
-        }
-    }
-
-    #[test]
-    #[ignore]
-    fn matching_regexes_with_converted_digits_and_words_and_spaces_and_escapes_and_single_test_case(
-        test_case in "[\\w\\s]{1,20}"
-    ) {
-        let regexp = RegExpBuilder::from(&[&test_case])
-            .with_conversion_of(&[Feature::Digit, Feature::Word, Feature::Space])
-            .with_escaping_of_non_ascii_chars(false)
-            .build();
-        if let Ok(compiled_regexp) = compile_regexp(&regexp) {
-            prop_assert!(compiled_regexp.is_match(&test_case));
-        }
-    }
-
-    #[test]
-    #[ignore]
-    fn matching_regexes_with_converted_digits_and_words_and_spaces_and_escapes_and_multiple_test_cases(
-        test_cases in prop::collection::hash_set("[\\w\\s]{1,20}", 2..=10)
-    ) {
-        let test_cases_vec = test_cases.iter().cloned().collect::<Vec<_>>();
-        let regexp = RegExpBuilder::from(&test_cases_vec)
-            .with_conversion_of(&[Feature::Digit, Feature::Word, Feature::Space])
-            .with_escaping_of_non_ascii_chars(false)
-            .build();
-        if let Ok(compiled_regexp) = compile_regexp(&regexp) {
-            prop_assert!(test_cases.iter().all(|test_case| compiled_regexp.is_match(&test_case)));
-        }
-    }
-
-    #[test]
-    #[ignore]
-    fn matching_regexes_with_converted_repetitions_and_single_test_case(
-        test_case in "[ab]{1,20}"
-    ) {
-        let regexp = RegExpBuilder::from(&[&test_case])
-            .with_conversion_of(&[Feature::Repetition])
-            .build();
-        if let Ok(compiled_regexp) = compile_regexp(&regexp) {
-            prop_assert!(compiled_regexp.is_match(&test_case));
-        }
-    }
-
-    #[test]
-    #[ignore]
-    fn matching_regexes_with_converted_repetitions_and_multiple_test_cases(
-        test_cases in prop::collection::hash_set(".{1,20}", 2..=10)
-    ) {
-        let test_cases_vec = test_cases.iter().cloned().collect::<Vec<_>>();
-        let regexp = RegExpBuilder::from(&test_cases_vec)
-            .with_conversion_of(&[Feature::Repetition])
-            .build();
-        if let Ok(compiled_regexp) = compile_regexp(&regexp) {
-            prop_assert!(test_cases.iter().all(|test_case| compiled_regexp.is_match(&test_case)));
-        }
-    }
-
-    #[test]
-    #[ignore]
-    fn matching_regexes_with_converted_repetitions_and_escapes_and_single_test_case(
-        test_case in "[^[:ascii:]]{1,20}"
-    ) {
-        let regexp = RegExpBuilder::from(&[&test_case])
-            .with_conversion_of(&[Feature::Repetition])
-            .with_escaping_of_non_ascii_chars(false)
-            .build();
-        if let Ok(compiled_regexp) = compile_regexp(&regexp) {
-            prop_assert!(compiled_regexp.is_match(&test_case));
-        }
-    }
-
-    #[test]
-    #[ignore]
-    fn matching_regexes_with_converted_repetitions_and_escapes_and_multiple_test_cases(
-        test_cases in prop::collection::hash_set("[^[:ascii:]]{1,20}", 2..=10)
-    ) {
-        let test_cases_vec = test_cases.iter().cloned().collect::<Vec<_>>();
-        let regexp = RegExpBuilder::from(&test_cases_vec)
-            .with_conversion_of(&[Feature::Repetition])
-            .with_escaping_of_non_ascii_chars(false)
-            .build();
-        if let Ok(compiled_regexp) = compile_regexp(&regexp) {
-            prop_assert!(test_cases.iter().all(|test_case| compiled_regexp.is_match(&test_case)));
-        }
-    }
-
-    #[test]
-    #[ignore]
-    fn matching_regexes_with_converted_repetitions_and_digits_and_single_test_case(
-        test_case in "\\d{1,20}"
-    ) {
-        let regexp = RegExpBuilder::from(&[&test_case])
-            .with_conversion_of(&[Feature::Repetition, Feature::Digit])
-            .build();
-        if let Ok(compiled_regexp) = compile_regexp(&regexp) {
-            prop_assert!(compiled_regexp.is_match(&test_case));
-        }
-    }
-
-    #[test]
-    #[ignore]
-    fn matching_regexes_with_converted_repetitions_and_digits_and_multiple_test_cases(
-        test_cases in prop::collection::hash_set("\\d{1,20}", 2..=10)
-    ) {
-        let test_cases_vec = test_cases.iter().cloned().collect::<Vec<_>>();
-        let regexp = RegExpBuilder::from(&test_cases_vec)
-            .with_conversion_of(&[Feature::Repetition, Feature::Digit])
-            .build();
-        if let Ok(compiled_regexp) = compile_regexp(&regexp) {
-            prop_assert!(test_cases.iter().all(|test_case| compiled_regexp.is_match(&test_case)));
-        }
-    }
-
-    #[test]
-    #[ignore]
-    fn matching_regexes_with_converted_repetitions_and_digits_and_escapes_and_single_test_case(
-        test_case in "\\w{1,20}"
-    ) {
-        let regexp = RegExpBuilder::from(&[&test_case])
-            .with_conversion_of(&[Feature::Repetition, Feature::Digit])
-            .with_escaping_of_non_ascii_chars(false)
-            .build();
-        if let Ok(compiled_regexp) = compile_regexp(&regexp) {
-            prop_assert!(compiled_regexp.is_match(&test_case));
-        }
-    }
-
-    #[test]
-    #[ignore]
-    fn matching_regexes_with_converted_repetitions_and_digits_and_escapes_and_multiple_test_cases(
-        test_cases in prop::collection::hash_set("\\w{1,20}", 2..=10)
-    ) {
-        let test_cases_vec = test_cases.iter().cloned().collect::<Vec<_>>();
-        let regexp = RegExpBuilder::from(&test_cases_vec)
-            .with_conversion_of(&[Feature::Repetition, Feature::Digit])
-            .with_escaping_of_non_ascii_chars(false)
-            .build();
-        if let Ok(compiled_regexp) = compile_regexp(&regexp) {
-            prop_assert!(test_cases.iter().all(|test_case| compiled_regexp.is_match(&test_case)));
-        }
-    }
-
-    #[test]
-    #[ignore]
-    fn matching_regexes_with_converted_repetitions_and_words_and_single_test_case(
-        test_case in "\\w{1,20}"
-    ) {
-        let regexp = RegExpBuilder::from(&[&test_case])
-            .with_conversion_of(&[Feature::Repetition, Feature::Word])
-            .build();
-        if let Ok(compiled_regexp) = compile_regexp(&regexp) {
-            prop_assert!(compiled_regexp.is_match(&test_case));
-        }
-    }
-
-    #[test]
-    #[ignore]
-    fn matching_regexes_with_converted_repetitions_and_words_and_multiple_test_cases(
-        test_cases in prop::collection::hash_set("\\w{1,20}", 2..=10)
-    ) {
-        let test_cases_vec = test_cases.iter().cloned().collect::<Vec<_>>();
-        let regexp = RegExpBuilder::from(&test_cases_vec)
-            .with_conversion_of(&[Feature::Repetition, Feature::Word])
-            .build();
-        if let Ok(compiled_regexp) = compile_regexp(&regexp) {
-            prop_assert!(test_cases.iter().all(|test_case| compiled_regexp.is_match(&test_case)));
-        }
-    }
-
-    #[test]
-    #[ignore]
-    fn matching_regexes_with_converted_repetitions_and_words_and_escapes_and_single_test_case(
-        test_case in "\\w{1,20}"
-    ) {
-        let regexp = RegExpBuilder::from(&[&test_case])
-            .with_conversion_of(&[Feature::Repetition, Feature::Word])
-            .with_escaping_of_non_ascii_chars(false)
-            .build();
-        if let Ok(compiled_regexp) = compile_regexp(&regexp) {
-            prop_assert!(compiled_regexp.is_match(&test_case));
-        }
-    }
-
-    #[test]
-    #[ignore]
-    fn matching_regexes_with_converted_repetitions_and_words_and_escapes_and_multiple_test_cases(
-        test_cases in prop::collection::hash_set("\\w{1,20}", 2..=10)
-    ) {
-        let test_cases_vec = test_cases.iter().cloned().collect::<Vec<_>>();
-        let regexp = RegExpBuilder::from(&test_cases_vec)
-            .with_conversion_of(&[Feature::Repetition, Feature::Word])
-            .with_escaping_of_non_ascii_chars(false)
-            .build();
-        if let Ok(compiled_regexp) = compile_regexp(&regexp) {
-            prop_assert!(test_cases.iter().all(|test_case| compiled_regexp.is_match(&test_case)));
-        }
-    }
-
-    #[test]
-    #[ignore]
-    fn matching_regexes_with_converted_repetitions_and_spaces_and_single_test_case(
-        test_case in "[\\w\\s]{1,20}"
-    ) {
-        let regexp = RegExpBuilder::from(&[&test_case])
-            .with_conversion_of(&[Feature::Repetition, Feature::Space])
-            .build();
-        if let Ok(compiled_regexp) = compile_regexp(&regexp) {
-            prop_assert!(compiled_regexp.is_match(&test_case));
-        }
-    }
-
-    #[test]
-    #[ignore]
-    fn matching_regexes_with_converted_repetitions_and_spaces_and_multiple_test_cases(
-        test_cases in prop::collection::hash_set("[\\w\\s]{1,20}", 2..=10)
-    ) {
-        let test_cases_vec = test_cases.iter().cloned().collect::<Vec<_>>();
-        let regexp = RegExpBuilder::from(&test_cases_vec)
-            .with_conversion_of(&[Feature::Repetition, Feature::Space])
-            .build();
-        if let Ok(compiled_regexp) = compile_regexp(&regexp) {
-            prop_assert!(test_cases.iter().all(|test_case| compiled_regexp.is_match(&test_case)));
-        }
-    }
-
-    #[test]
-    #[ignore]
-    fn matching_regexes_with_converted_repetitions_and_spaces_and_escapes_and_single_test_case(
-        test_case in "[\\w\\s]{1,20}"
-    ) {
-        let regexp = RegExpBuilder::from(&[&test_case])
-            .with_conversion_of(&[Feature::Repetition, Feature::Space])
-            .with_escaping_of_non_ascii_chars(false)
-            .build();
-        if let Ok(compiled_regexp) = compile_regexp(&regexp) {
-            prop_assert!(compiled_regexp.is_match(&test_case));
-        }
-    }
-
-    #[test]
-    #[ignore]
-    fn matching_regexes_with_converted_repetitions_and_spaces_and_escapes_and_multiple_test_cases(
-        test_cases in prop::collection::hash_set("[\\w\\s]{1,20}", 2..=10)
-    ) {
-        let test_cases_vec = test_cases.iter().cloned().collect::<Vec<_>>();
-        let regexp = RegExpBuilder::from(&test_cases_vec)
-            .with_conversion_of(&[Feature::Repetition, Feature::Space])
-            .with_escaping_of_non_ascii_chars(false)
-            .build();
-        if let Ok(compiled_regexp) = compile_regexp(&regexp) {
-            prop_assert!(test_cases.iter().all(|test_case| compiled_regexp.is_match(&test_case)));
-        }
-    }
-
-    #[test]
-    #[ignore]
-    fn matching_regexes_with_converted_repetitions_and_digits_and_words_and_single_test_case(
-        test_case in "\\w{1,20}"
-    ) {
-        let regexp = RegExpBuilder::from(&[&test_case])
-            .with_conversion_of(&[Feature::Repetition, Feature::Digit, Feature::Word])
-            .build();
-        if let Ok(compiled_regexp) = compile_regexp(&regexp) {
-            prop_assert!(compiled_regexp.is_match(&test_case));
-        }
-    }
-
-    #[test]
-    #[ignore]
-    fn matching_regexes_with_converted_repetitions_and_digits_and_words_and_multiple_test_cases(
-        test_cases in prop::collection::hash_set("\\w{1,20}", 2..=10)
-    ) {
-        let test_cases_vec = test_cases.iter().cloned().collect::<Vec<_>>();
-        let regexp = RegExpBuilder::from(&test_cases_vec)
-            .with_conversion_of(&[Feature::Repetition, Feature::Digit, Feature::Word])
-            .build();
-        if let Ok(compiled_regexp) = compile_regexp(&regexp) {
-            prop_assert!(test_cases.iter().all(|test_case| compiled_regexp.is_match(&test_case)));
-        }
-    }
-
-    #[test]
-    #[ignore]
-    fn matching_regexes_with_converted_repetitions_and_digits_and_words_and_escapes_and_single_test_case(
-        test_case in "\\w{1,20}"
-    ) {
-        let regexp = RegExpBuilder::from(&[&test_case])
-            .with_conversion_of(&[Feature::Repetition, Feature::Digit, Feature::Word])
-            .with_escaping_of_non_ascii_chars(false)
-            .build();
-        if let Ok(compiled_regexp) = compile_regexp(&regexp) {
-            prop_assert!(compiled_regexp.is_match(&test_case));
-        }
-    }
-
-    #[test]
-    #[ignore]
-    fn matching_regexes_with_converted_repetitions_and_digits_and_words_and_escapes_and_multiple_test_cases(
-        test_cases in prop::collection::hash_set("\\w{1,20}", 2..=10)
-    ) {
-        let test_cases_vec = test_cases.iter().cloned().collect::<Vec<_>>();
-        let regexp = RegExpBuilder::from(&test_cases_vec)
-            .with_conversion_of(&[Feature::Repetition, Feature::Digit, Feature::Word])
-            .with_escaping_of_non_ascii_chars(false)
-            .build();
-        if let Ok(compiled_regexp) = compile_regexp(&regexp) {
-            prop_assert!(test_cases.iter().all(|test_case| compiled_regexp.is_match(&test_case)));
-        }
-    }
-
-    #[test]
-    #[ignore]
-    fn matching_regexes_with_converted_repetitions_and_digits_and_spaces_and_single_test_case(
-        test_case in "[\\w\\s]{1,20}"
-    ) {
-        let regexp = RegExpBuilder::from(&[&test_case])
-            .with_conversion_of(&[Feature::Repetition, Feature::Digit, Feature::Space])
-            .build();
-        if let Ok(compiled_regexp) = compile_regexp(&regexp) {
-            prop_assert!(compiled_regexp.is_match(&test_case));
-        }
-    }
-
-    #[test]
-    #[ignore]
-    fn matching_regexes_with_converted_repetitions_and_digits_and_spaces_and_multiple_test_cases(
-        test_cases in prop::collection::hash_set("[\\w\\s]{1,20}", 2..=10)
-    ) {
-        let test_cases_vec = test_cases.iter().cloned().collect::<Vec<_>>();
-        let regexp = RegExpBuilder::from(&test_cases_vec)
-            .with_conversion_of(&[Feature::Repetition, Feature::Digit, Feature::Space])
-            .build();
-        if let Ok(compiled_regexp) = compile_regexp(&regexp) {
-            prop_assert!(test_cases.iter().all(|test_case| compiled_regexp.is_match(&test_case)));
-        }
-    }
-
-    #[test]
-    #[ignore]
-    fn matching_regexes_with_converted_repetitions_and_digits_and_spaces_and_escapes_and_single_test_case(
-        test_case in "[\\w\\s]{1,20}"
-    ) {
-        let regexp = RegExpBuilder::from(&[&test_case])
-            .with_conversion_of(&[Feature::Repetition, Feature::Digit, Feature::Space])
-            .with_escaping_of_non_ascii_chars(false)
-            .build();
-        if let Ok(compiled_regexp) = compile_regexp(&regexp) {
-            prop_assert!(compiled_regexp.is_match(&test_case));
-        }
-    }
-
-    #[test]
-    #[ignore]
-    fn matching_regexes_with_converted_repetitions_and_digits_and_spaces_and_escapes_and_multiple_test_cases(
-        test_cases in prop::collection::hash_set("[\\w\\s]{1,20}", 2..=10)
-    ) {
-        let test_cases_vec = test_cases.iter().cloned().collect::<Vec<_>>();
-        let regexp = RegExpBuilder::from(&test_cases_vec)
-            .with_conversion_of(&[Feature::Repetition, Feature::Digit, Feature::Space])
-            .with_escaping_of_non_ascii_chars(false)
-            .build();
-        if let Ok(compiled_regexp) = compile_regexp(&regexp) {
-            prop_assert!(test_cases.iter().all(|test_case| compiled_regexp.is_match(&test_case)));
-        }
-    }
-
-    #[test]
-    #[ignore]
-    fn matching_regexes_with_converted_repetitions_and_words_and_spaces_and_single_test_case(
-        test_case in "[\\w\\s]{1,20}"
-    ) {
-        let regexp = RegExpBuilder::from(&[&test_case])
-            .with_conversion_of(&[Feature::Repetition, Feature::Word, Feature::Space])
-            .build();
-        if let Ok(compiled_regexp) = compile_regexp(&regexp) {
-            prop_assert!(compiled_regexp.is_match(&test_case));
-        }
-    }
-
-    #[test]
-    #[ignore]
-    fn matching_regexes_with_converted_repetitions_and_words_and_spaces_and_multiple_test_cases(
-        test_cases in prop::collection::hash_set("[\\w\\s]{1,20}", 2..=10)
-    ) {
-        let test_cases_vec = test_cases.iter().cloned().collect::<Vec<_>>();
-        let regexp = RegExpBuilder::from(&test_cases_vec)
-            .with_conversion_of(&[Feature::Repetition, Feature::Word, Feature::Space])
-            .build();
-        if let Ok(compiled_regexp) = compile_regexp(&regexp) {
-            prop_assert!(test_cases.iter().all(|test_case| compiled_regexp.is_match(&test_case)));
-        }
-    }
-
-    #[test]
-    #[ignore]
-    fn matching_regexes_with_converted_repetitions_and_words_and_spaces_and_escapes_and_single_test_case(
-        test_case in "[\\w\\s]{1,20}"
-    ) {
-        let regexp = RegExpBuilder::from(&[&test_case])
-            .with_conversion_of(&[Feature::Repetition, Feature::Word, Feature::Space])
-            .with_escaping_of_non_ascii_chars(false)
-            .build();
-        if let Ok(compiled_regexp) = compile_regexp(&regexp) {
-            prop_assert!(compiled_regexp.is_match(&test_case));
-        }
-    }
-
-    #[test]
-    #[ignore]
-    fn matching_regexes_with_converted_repetitions_and_words_and_spaces_and_escapes_and_multiple_test_cases(
-        test_cases in prop::collection::hash_set("[\\w\\s]{1,20}", 2..=10)
-    ) {
-        let test_cases_vec = test_cases.iter().cloned().collect::<Vec<_>>();
-        let regexp = RegExpBuilder::from(&test_cases_vec)
-            .with_conversion_of(&[Feature::Repetition, Feature::Word, Feature::Space])
-            .with_escaping_of_non_ascii_chars(false)
-            .build();
-        if let Ok(compiled_regexp) = compile_regexp(&regexp) {
-            prop_assert!(test_cases.iter().all(|test_case| compiled_regexp.is_match(&test_case)));
-        }
-    }
-
-    #[test]
-    #[ignore]
-    fn matching_regexes_with_converted_repetitions_and_digits_and_words_and_spaces_and_single_test_case(
-        test_case in "[\\w\\s]{1,20}"
-    ) {
-        let regexp = RegExpBuilder::from(&[&test_case])
-            .with_conversion_of(&[Feature::Repetition, Feature::Digit, Feature::Word, Feature::Space])
-            .build();
-        if let Ok(compiled_regexp) = compile_regexp(&regexp) {
-            prop_assert!(compiled_regexp.is_match(&test_case));
-        }
-    }
-
-    #[test]
-    #[ignore]
-    fn matching_regexes_with_converted_repetitions_and_digits_and_words_and_spaces_and_multiple_test_cases(
-        test_cases in prop::collection::hash_set("[\\w\\s]{1,20}", 2..=10)
-    ) {
-        let test_cases_vec = test_cases.iter().cloned().collect::<Vec<_>>();
-        let regexp = RegExpBuilder::from(&test_cases_vec)
-            .with_conversion_of(&[Feature::Repetition, Feature::Digit, Feature::Word, Feature::Space])
-            .build();
-        if let Ok(compiled_regexp) = compile_regexp(&regexp) {
-            prop_assert!(test_cases.iter().all(|test_case| compiled_regexp.is_match(&test_case)));
-        }
-    }
-
-    #[test]
-    #[ignore]
-    fn matching_regexes_with_converted_repetitions_and_digits_and_words_and_spaces_and_escapes_and_single_test_case(
-        test_case in "[\\w\\s]{1,20}"
-    ) {
-        let regexp = RegExpBuilder::from(&[&test_case])
-            .with_conversion_of(&[Feature::Repetition, Feature::Digit, Feature::Word, Feature::Space])
-            .with_escaping_of_non_ascii_chars(false)
-            .build();
-        if let Ok(compiled_regexp) = compile_regexp(&regexp) {
-            prop_assert!(compiled_regexp.is_match(&test_case));
-        }
-    }
-
-    #[test]
-    #[ignore]
-    fn matching_regexes_with_converted_repetitions_and_digits_and_words_and_spaces_and_escapes_and_multiple_test_cases(
-        test_cases in prop::collection::hash_set("[\\w\\s]{1,20}", 2..=10)
-    ) {
-        let test_cases_vec = test_cases.iter().cloned().collect::<Vec<_>>();
-        let regexp = RegExpBuilder::from(&test_cases_vec)
-            .with_conversion_of(&[Feature::Repetition, Feature::Digit, Feature::Word, Feature::Space])
-            .with_escaping_of_non_ascii_chars(false)
-            .build();
-        if let Ok(compiled_regexp) = compile_regexp(&regexp) {
-            prop_assert!(test_cases.iter().all(|test_case| compiled_regexp.is_match(&test_case)));
-        }
-    }
-
-    #[test]
-    #[ignore]
-    fn regexes_do_not_match_other_strings_with_default_settings(
-        test_cases in prop::collection::hash_set(".{1,20}", 2..=10),
-        other_strings in prop::collection::hash_set(".{1,20}", 2..=10)
+    fn regexes_not_matching_other_strings_with_default_settings(
+        test_cases in prop::collection::hash_set(".{1,20}", 1..=10),
+        other_strings in prop::collection::hash_set(".{1,20}", 1..=10)
     ) {
         if test_cases.is_disjoint(&other_strings) {
             let test_cases_vec = test_cases.iter().cloned().collect::<Vec<_>>();
@@ -1310,24 +144,7 @@ proptest! {
 
     #[test]
     #[ignore]
-    fn regexes_do_not_match_other_strings_with_converted_repetitions(
-        test_cases in prop::collection::hash_set(".{1,20}", 1..=10),
-        other_strings in prop::collection::hash_set(".{1,20}", 1..=10)
-    ) {
-        if test_cases.is_disjoint(&other_strings) {
-            let test_cases_vec = test_cases.iter().cloned().collect::<Vec<_>>();
-            let regexp = RegExpBuilder::from(&test_cases_vec)
-                .with_conversion_of(&[Feature::Repetition])
-                .build();
-            if let Ok(compiled_regexp) = compile_regexp(&regexp) {
-                prop_assert!(other_strings.iter().all(|other_string| !compiled_regexp.is_match(&other_string)));
-            }
-        }
-    }
-
-    #[test]
-    #[ignore]
-    fn regexes_do_not_match_other_strings_with_escapes(
+    fn regexes_not_matching_other_strings_with_escape_sequences(
         test_cases in prop::collection::hash_set(".{1,20}", 1..=10),
         other_strings in prop::collection::hash_set(".{1,20}", 1..=10)
     ) {
@@ -1344,14 +161,33 @@ proptest! {
 
     #[test]
     #[ignore]
-    fn regexes_do_not_match_other_strings_with_converted_repetitions_and_escapes(
+    fn regexes_not_matching_other_strings_with_conversion_features(
         test_cases in prop::collection::hash_set(".{1,20}", 1..=10),
-        other_strings in prop::collection::hash_set(".{1,20}", 1..=10)
+        other_strings in prop::collection::hash_set(".{1,20}", 1..=10),
+        conversion_features in prop::collection::hash_set(conversion_feature_strategy(), 1..=7)
     ) {
         if test_cases.is_disjoint(&other_strings) {
             let test_cases_vec = test_cases.iter().cloned().collect::<Vec<_>>();
             let regexp = RegExpBuilder::from(&test_cases_vec)
-                .with_conversion_of(&[Feature::Repetition])
+                .with_conversion_of(&conversion_features.into_iter().collect::<Vec<_>>())
+                .build();
+            if let Ok(compiled_regexp) = compile_regexp(&regexp) {
+                prop_assert!(other_strings.iter().all(|other_string| !compiled_regexp.is_match(&other_string)));
+            }
+        }
+    }
+
+    #[test]
+    #[ignore]
+    fn regexes_not_matching_other_strings_with_conversion_features_and_escape_sequences(
+        test_cases in prop::collection::hash_set(".{1,20}", 1..=10),
+        other_strings in prop::collection::hash_set(".{1,20}", 1..=10),
+        conversion_features in prop::collection::hash_set(conversion_feature_strategy(), 1..=7)
+    ) {
+        if test_cases.is_disjoint(&other_strings) {
+            let test_cases_vec = test_cases.iter().cloned().collect::<Vec<_>>();
+            let regexp = RegExpBuilder::from(&test_cases_vec)
+                .with_conversion_of(&conversion_features.into_iter().collect::<Vec<_>>())
                 .with_escaping_of_non_ascii_chars(false)
                 .build();
             if let Ok(compiled_regexp) = compile_regexp(&regexp) {
@@ -1359,6 +195,18 @@ proptest! {
             }
         }
     }
+}
+
+fn conversion_feature_strategy() -> impl Strategy<Value = Feature> {
+    prop_oneof![
+        Just(Feature::Digit),
+        Just(Feature::NonDigit),
+        Just(Feature::Space),
+        Just(Feature::NonSpace),
+        Just(Feature::Word),
+        Just(Feature::NonWord),
+        Just(Feature::Repetition)
+    ]
 }
 
 fn compile_regexp(regexp: &str) -> Result<Regex, Error> {
