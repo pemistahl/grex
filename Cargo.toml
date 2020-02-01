@@ -29,6 +29,7 @@ categories = ["command-line-utilities"]
 keywords = ["pattern", "regex", "regexp"]
 
 [dependencies]
+colored = "1.9.2"
 itertools = "0.8.2"
 linked-list = "0.0.3"
 ndarray = "0.13.0"

@@ -146,6 +146,15 @@ struct CLI {
         display_order = 9
     )]
     is_astral_code_point_converted_to_surrogate: bool,
+
+    #[structopt(
+        name = "colorize",
+        short,
+        long,
+        help = "Provides syntax highlighting for the resulting regular expression",
+        display_order = 10
+    )]
+    is_output_colorized: bool,
 }
 
 fn main() {
@@ -211,6 +220,10 @@ fn handle_input(cli: &CLI, input: Result<Vec<String>, Error>) {
                 builder.with_escaping_of_non_ascii_chars(
                     cli.is_astral_code_point_converted_to_surrogate,
                 );
+            }
+
+            if cli.is_output_colorized {
+                builder.with_syntax_highlighting();
             }
 
             let regexp = builder.build();

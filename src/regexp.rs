@@ -17,6 +17,7 @@
 use crate::ast::Expression;
 use crate::dfa::DFA;
 use crate::grapheme::GraphemeCluster;
+use colored::Colorize;
 use itertools::Itertools;
 use std::clone::Clone;
 use std::cmp::Ordering;
@@ -28,6 +29,7 @@ pub struct RegExpBuilder {
     conversion_features: Vec<Feature>,
     is_non_ascii_char_escaped: bool,
     is_astral_code_point_converted_to_surrogate: bool,
+    is_output_colorized: bool,
 }
 
 impl RegExpBuilder {
@@ -44,6 +46,7 @@ impl RegExpBuilder {
             conversion_features: vec![],
             is_non_ascii_char_escaped: false,
             is_astral_code_point_converted_to_surrogate: false,
+            is_output_colorized: false,
         }
     }
 
@@ -69,6 +72,11 @@ impl RegExpBuilder {
         self
     }
 
+    pub fn with_syntax_highlighting(&mut self) -> &mut Self {
+        self.is_output_colorized = true;
+        self
+    }
+
     /// Builds the actual regular expression using the previously given settings.
     /// Every generated regular expression is surrounded by the anchors `^` and `$`
     /// so that substrings not being part of the test cases are not matched accidentally.
@@ -78,6 +86,7 @@ impl RegExpBuilder {
             &self.conversion_features,
             self.is_non_ascii_char_escaped,
             self.is_astral_code_point_converted_to_surrogate,
+            self.is_output_colorized,
         )
         .to_string()
     }
@@ -85,6 +94,7 @@ impl RegExpBuilder {
 
 pub(crate) struct RegExp {
     ast: Expression,
+    is_output_colorized: bool,
 }
 
 impl RegExp {
@@ -93,14 +103,20 @@ impl RegExp {
         conversion_features: &[Feature],
         is_non_ascii_char_escaped: bool,
         is_astral_code_point_converted_to_surrogate: bool,
+        is_output_colorized: bool,
     ) -> Self {
         Self::sort(test_cases);
         Self {
             ast: Expression::from(
-                DFA::from(Self::grapheme_clusters(&test_cases, conversion_features)),
+                DFA::from(
+                    Self::grapheme_clusters(&test_cases, conversion_features, is_output_colorized),
+                    is_output_colorized,
+                ),
                 is_non_ascii_char_escaped,
                 is_astral_code_point_converted_to_surrogate,
+                is_output_colorized,
             ),
+            is_output_colorized,
         }
     }
 
@@ -116,10 +132,11 @@ impl RegExp {
     fn grapheme_clusters(
         test_cases: &[String],
         conversion_features: &[Feature],
+        is_output_colorized: bool,
     ) -> Vec<GraphemeCluster> {
         let mut clusters = test_cases
             .iter()
-            .map(|it| GraphemeCluster::from(it))
+            .map(|it| GraphemeCluster::from(it, is_output_colorized))
             .collect_vec();
 
         if conversion_features.iter().any(|it| it.is_char_class()) {
@@ -130,7 +147,7 @@ impl RegExp {
 
         if conversion_features.contains(&Feature::Repetition) {
             for cluster in clusters.iter_mut() {
-                cluster.convert_repetitions();
+                cluster.convert_repetitions(is_output_colorized);
             }
         }
 
@@ -140,9 +157,41 @@ impl RegExp {
 
 impl Display for RegExp {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
+        let (left_anchor, right_anchor) = ["^", "$"]
+            .iter()
+            .map(|&it| {
+                if self.is_output_colorized {
+                    it.yellow().bold()
+                } else {
+                    it.clear()
+                }
+            })
+            .collect_tuple()
+            .unwrap();
+
+        let (left_parenthesis, right_parenthesis) = ["(", ")"]
+            .iter()
+            .map(|&it| {
+                if self.is_output_colorized {
+                    it.green().bold()
+                } else {
+                    it.clear()
+                }
+            })
+            .collect_tuple()
+            .unwrap();
+
         match self.ast {
-            Expression::Alternation(_) => write!(f, "^({})$", self.ast.to_string()),
-            _ => write!(f, "^{}$", self.ast.to_string()),
+            Expression::Alternation(_, _) => write!(
+                f,
+                "{}{}{}{}{}",
+                left_anchor,
+                left_parenthesis,
+                self.ast.to_string(),
+                right_parenthesis,
+                right_anchor
+            ),
+            _ => write!(f, "{}{}{}", left_anchor, self.ast.to_string(), right_anchor),
         }
     }
 }

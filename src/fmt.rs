@@ -14,21 +14,26 @@
  * limitations under the License.
  */
 
-use std::collections::BTreeSet;
-use std::fmt::{Display, Formatter, Result};
-
-use itertools::Itertools;
-use unic_char_range::CharRange;
-
 use crate::ast::{Expression, Quantifier};
 use crate::grapheme::GraphemeCluster;
+use colored::Colorize;
+use itertools::Itertools;
+use std::collections::BTreeSet;
+use std::fmt::{Display, Formatter, Result};
+use unic_char_range::CharRange;
 
 impl Display for Expression {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         match self {
-            Expression::Alternation(options) => format_alternation(f, &self, options),
-            Expression::CharacterClass(char_set) => format_character_class(f, char_set),
-            Expression::Concatenation(expr1, expr2) => format_concatenation(f, &self, expr1, expr2),
+            Expression::Alternation(options, is_output_colorized) => {
+                format_alternation(f, &self, options, *is_output_colorized)
+            }
+            Expression::CharacterClass(char_set, is_output_colorized) => {
+                format_character_class(f, char_set, *is_output_colorized)
+            }
+            Expression::Concatenation(expr1, expr2, is_output_colorized) => {
+                format_concatenation(f, &self, expr1, expr2, *is_output_colorized)
+            }
             Expression::Literal(
                 cluster,
                 is_non_ascii_char_escaped,
@@ -39,8 +44,8 @@ impl Display for Expression {
                 *is_non_ascii_char_escaped,
                 *is_astral_code_point_converted_to_surrogate,
             ),
-            Expression::Repetition(expr, quantifier) => {
-                format_repetition(f, &self, expr, quantifier)
+            Expression::Repetition(expr, quantifier, is_output_colorized) => {
+                format_repetition(f, &self, expr, quantifier, *is_output_colorized)
             }
         }
     }
@@ -63,22 +68,49 @@ fn get_codepoint_position(c: char) -> usize {
     CharRange::all().iter().position(|it| it == c).unwrap()
 }
 
-fn format_alternation(f: &mut Formatter<'_>, expr: &Expression, options: &[Expression]) -> Result {
+fn format_alternation(
+    f: &mut Formatter<'_>,
+    expr: &Expression,
+    options: &[Expression],
+    is_output_colorized: bool,
+) -> Result {
+    let (left_parenthesis, right_parenthesis) = ["(", ")"]
+        .iter()
+        .map(|&it| {
+            if is_output_colorized {
+                it.green().bold()
+            } else {
+                it.clear()
+            }
+        })
+        .collect_tuple()
+        .unwrap();
+
+    let pipe = if is_output_colorized {
+        "|".red().bold()
+    } else {
+        "|".clear()
+    };
+
     let alternation_str = options
         .iter()
         .map(|option| {
             if option.precedence() < expr.precedence() && !option.is_single_codepoint() {
-                format!("({})", option)
+                format!("{}{}{}", left_parenthesis, option, right_parenthesis)
             } else {
                 format!("{}", option)
             }
         })
-        .join("|");
+        .join(&pipe.to_string());
 
     write!(f, "{}", alternation_str)
 }
 
-fn format_character_class(f: &mut Formatter<'_>, char_set: &BTreeSet<char>) -> Result {
+fn format_character_class(
+    f: &mut Formatter<'_>,
+    char_set: &BTreeSet<char>,
+    is_output_colorized: bool,
+) -> Result {
     let chars_to_escape = ['[', ']', '\\', '-', '^'];
     let escaped_char_set = char_set
         .iter()
@@ -122,6 +154,17 @@ fn format_character_class(f: &mut Formatter<'_>, char_set: &BTreeSet<char>) -> R
     subsets.push(subset);
 
     let mut char_class_strs = vec![];
+    let (left_bracket, right_bracket, hyphen) = ["[", "]", "-"]
+        .iter()
+        .map(|&it| {
+            if is_output_colorized {
+                it.cyan().bold()
+            } else {
+                it.clear()
+            }
+        })
+        .collect_tuple()
+        .unwrap();
 
     for subset in subsets.iter() {
         if subset.len() <= 2 {
@@ -130,14 +173,21 @@ fn format_character_class(f: &mut Formatter<'_>, char_set: &BTreeSet<char>) -> R
             }
         } else {
             char_class_strs.push(format!(
-                "{}-{}",
+                "{}{}{}",
                 subset.first().unwrap(),
+                hyphen,
                 subset.last().unwrap()
             ));
         }
     }
 
-    write!(f, "[{}]", char_class_strs.join(""))
+    write!(
+        f,
+        "{}{}{}",
+        left_bracket,
+        char_class_strs.join(""),
+        right_bracket
+    )
 }
 
 fn format_concatenation(
@@ -145,12 +195,25 @@ fn format_concatenation(
     expr: &Expression,
     expr1: &Expression,
     expr2: &Expression,
+    is_output_colorized: bool,
 ) -> Result {
+    let (left_parenthesis, right_parenthesis) = ["(", ")"]
+        .iter()
+        .map(|&it| {
+            if is_output_colorized {
+                it.green().bold()
+            } else {
+                it.clear()
+            }
+        })
+        .collect_tuple()
+        .unwrap();
+
     let expr_strs = vec![expr1, expr2]
         .iter()
         .map(|&it| {
             if it.precedence() < expr.precedence() && !it.is_single_codepoint() {
-                format!("({})", it)
+                format!("{}{}{}", left_parenthesis, it, right_parenthesis)
             } else {
                 format!("{}", it)
             }
@@ -204,10 +267,33 @@ fn format_repetition(
     expr: &Expression,
     expr1: &Expression,
     quantifier: &Quantifier,
+    is_output_colorized: bool,
 ) -> Result {
-    if expr1.precedence() < expr.precedence() && !expr1.is_single_codepoint() {
-        write!(f, "({}){}", expr1, quantifier)
+    let (left_parenthesis, right_parenthesis) = ["(", ")"]
+        .iter()
+        .map(|&it| {
+            if is_output_colorized {
+                it.green().bold()
+            } else {
+                it.clear()
+            }
+        })
+        .collect_tuple()
+        .unwrap();
+
+    let colored_quantifier = if is_output_colorized {
+        quantifier.to_string().as_str().purple().bold()
     } else {
-        write!(f, "{}{}", expr1, quantifier)
+        quantifier.to_string().as_str().clear()
+    };
+
+    if expr1.precedence() < expr.precedence() && !expr1.is_single_codepoint() {
+        write!(
+            f,
+            "{}{}{}{}",
+            left_parenthesis, expr1, right_parenthesis, colored_quantifier
+        )
+    } else {
+        write!(f, "{}{}", expr1, colored_quantifier)
     }
 }

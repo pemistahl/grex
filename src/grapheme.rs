@@ -18,6 +18,7 @@ use crate::regexp::Feature;
 use crate::unicode_tables::perl_decimal::DECIMAL_NUMBER;
 use crate::unicode_tables::perl_space::WHITE_SPACE;
 use crate::unicode_tables::perl_word::PERL_WORD;
+use colored::Colorize;
 use itertools::Itertools;
 use std::cmp::Ordering;
 use std::collections::HashMap;
@@ -37,7 +38,7 @@ pub(crate) struct GraphemeCluster {
 }
 
 impl GraphemeCluster {
-    pub(crate) fn from(s: &str) -> Self {
+    pub(crate) fn from(s: &str, is_output_colorized: bool) -> Self {
         Self {
             graphemes: UnicodeSegmentation::graphemes(s, true)
                 .flat_map(|it| {
@@ -47,10 +48,10 @@ impl GraphemeCluster {
 
                     if starts_with_backslash || contains_combining_mark {
                         it.chars()
-                            .map(|c| Grapheme::from(&c.to_string()))
+                            .map(|c| Grapheme::from(&c.to_string(), is_output_colorized))
                             .collect_vec()
                     } else {
-                        vec![Grapheme::from(it)]
+                        vec![Grapheme::from(it, is_output_colorized)]
                     }
                 })
                 .collect_vec(),
@@ -115,9 +116,9 @@ impl GraphemeCluster {
         }
     }
 
-    pub(crate) fn convert_repetitions(&mut self) {
+    pub(crate) fn convert_repetitions(&mut self, is_output_colorized: bool) {
         let mut repetitions = vec![];
-        convert_repetitions(self.graphemes(), repetitions.as_mut());
+        convert_repetitions(self.graphemes(), repetitions.as_mut(), is_output_colorized);
         if !repetitions.is_empty() {
             self.graphemes = repetitions;
         }
@@ -160,24 +161,27 @@ pub(crate) struct Grapheme {
     repetitions: Vec<Grapheme>,
     min: u32,
     max: u32,
+    is_output_colorized: bool,
 }
 
 impl Grapheme {
-    pub(crate) fn from(s: &str) -> Self {
+    pub(crate) fn from(s: &str, is_output_colorized: bool) -> Self {
         Self {
             chars: vec![s.to_string()],
             repetitions: vec![],
             min: 1,
             max: 1,
+            is_output_colorized,
         }
     }
 
-    pub(crate) fn new(chars: Vec<String>, min: u32, max: u32) -> Self {
+    pub(crate) fn new(chars: Vec<String>, min: u32, max: u32, is_output_colorized: bool) -> Self {
         Self {
             chars,
             repetitions: vec![],
             min,
             max,
+            is_output_colorized,
         }
     }
 
@@ -297,25 +301,103 @@ impl Display for Grapheme {
             self.repetitions.iter().map(|it| it.to_string()).join("")
         };
 
-        let result = if !is_range && is_repetition && is_single_char {
-            format!("{}{{{}}}", value, self.min)
-        } else if !is_range && is_repetition && !is_single_char {
-            format!("({}){{{}}}", value, self.min)
-        } else if is_range && is_single_char {
-            format!("{}{{{},{}}}", value, self.min, self.max)
-        } else if is_range && !is_single_char {
-            format!("({}){{{},{}}}", value, self.min, self.max)
+        let (left_parenthesis, right_parenthesis) = ["(", ")"]
+            .iter()
+            .map(|&it| {
+                if self.is_output_colorized {
+                    it.green().bold()
+                } else {
+                    it.clear()
+                }
+            })
+            .collect_tuple()
+            .unwrap();
+
+        let (left_brace, right_brace) = ["{", "}"]
+            .iter()
+            .map(|&it| {
+                if self.is_output_colorized {
+                    it.white().on_bright_blue()
+                } else {
+                    it.clear()
+                }
+            })
+            .collect_tuple()
+            .unwrap();
+
+        let (min, comma, max) = [
+            self.min.to_string().as_str(),
+            ",",
+            self.max.to_string().as_str(),
+        ]
+        .iter()
+        .map(|&it| {
+            if self.is_output_colorized {
+                it.white().on_bright_blue()
+            } else {
+                it.clear()
+            }
+        })
+        .collect_tuple()
+        .unwrap();
+
+        let colored_value = if self.is_output_colorized {
+            match value.as_str() {
+                "\\d" | "\\w" | "\\s" | "\\D" | "\\W" | "\\S" => {
+                    value.as_str().black().on_bright_yellow()
+                }
+                _ => value.as_str().clear(),
+            }
         } else {
-            value
+            value.as_str().clear()
         };
-        write!(f, "{}", result)
+
+        if !is_range && is_repetition && is_single_char {
+            write!(f, "{}{}{}{}", colored_value, left_brace, min, right_brace)
+        } else if !is_range && is_repetition && !is_single_char {
+            write!(
+                f,
+                "{}{}{}{}{}{}",
+                left_parenthesis, colored_value, right_parenthesis, left_brace, min, right_brace
+            )
+        } else if is_range && is_single_char {
+            write!(
+                f,
+                "{}{}{}{}{}{}",
+                colored_value, left_brace, min, comma, max, right_brace
+            )
+        } else if is_range && !is_single_char {
+            write!(
+                f,
+                "{}{}{}{}{}{}{}{}",
+                left_parenthesis,
+                colored_value,
+                right_parenthesis,
+                left_brace,
+                min,
+                comma,
+                max,
+                right_brace
+            )
+        } else {
+            write!(f, "{}", colored_value)
+        }
     }
 }
-fn convert_repetitions(graphemes: &[Grapheme], repetitions: &mut Vec<Grapheme>) {
+fn convert_repetitions(
+    graphemes: &[Grapheme],
+    repetitions: &mut Vec<Grapheme>,
+    is_output_colorized: bool,
+) {
     let repeated_substrings = collect_repeated_substrings(graphemes);
     let ranges_of_repetitions = create_ranges_of_repetitions(repeated_substrings);
     let coalesced_repetitions = coalesce_repetitions(ranges_of_repetitions);
-    replace_graphemes_with_repetitions(coalesced_repetitions, graphemes, repetitions)
+    replace_graphemes_with_repetitions(
+        coalesced_repetitions,
+        graphemes,
+        repetitions,
+        is_output_colorized,
+    )
 }
 
 fn collect_repeated_substrings(graphemes: &[Grapheme]) -> HashMap<Vec<String>, Vec<usize>> {
@@ -410,6 +492,7 @@ fn replace_graphemes_with_repetitions(
     coalesced_repetitions: Vec<(Range<usize>, Vec<String>)>,
     graphemes: &[Grapheme],
     repetitions: &mut Vec<Grapheme>,
+    is_output_colorized: bool,
 ) {
     if coalesced_repetitions.is_empty() {
         return;
@@ -437,9 +520,14 @@ fn replace_graphemes_with_repetitions(
 
         repetitions.splice(
             range.clone(),
-            [Grapheme::new(substr.clone(), count, count)]
-                .iter()
-                .cloned(),
+            [Grapheme::new(
+                substr.clone(),
+                count,
+                count,
+                is_output_colorized,
+            )]
+            .iter()
+            .cloned(),
         );
     }
 
@@ -448,9 +536,10 @@ fn replace_graphemes_with_repetitions(
             &new_grapheme
                 .chars
                 .iter()
-                .map(|it| Grapheme::from(it))
+                .map(|it| Grapheme::from(it, is_output_colorized))
                 .collect_vec(),
             new_grapheme.repetitions.as_mut(),
+            is_output_colorized,
         );
     }
 }
