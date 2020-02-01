@@ -115,6 +115,7 @@ mod dfa;
 mod fmt;
 mod grapheme;
 mod regexp;
+mod unicode_tables;
 
 pub use regexp::Feature;
 pub use regexp::RegExpBuilder;

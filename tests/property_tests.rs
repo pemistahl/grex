@@ -158,43 +158,6 @@ proptest! {
             }
         }
     }
-
-    #[test]
-    #[ignore]
-    fn regexes_not_matching_other_strings_with_conversion_features(
-        test_cases in prop::collection::hash_set(".{1,20}", 1..=10),
-        other_strings in prop::collection::hash_set(".{1,20}", 1..=10),
-        conversion_features in prop::collection::hash_set(conversion_feature_strategy(), 1..=7)
-    ) {
-        if test_cases.is_disjoint(&other_strings) {
-            let test_cases_vec = test_cases.iter().cloned().collect::<Vec<_>>();
-            let regexp = RegExpBuilder::from(&test_cases_vec)
-                .with_conversion_of(&conversion_features.into_iter().collect::<Vec<_>>())
-                .build();
-            if let Ok(compiled_regexp) = compile_regexp(&regexp) {
-                prop_assert!(other_strings.iter().all(|other_string| !compiled_regexp.is_match(&other_string)));
-            }
-        }
-    }
-
-    #[test]
-    #[ignore]
-    fn regexes_not_matching_other_strings_with_conversion_features_and_escape_sequences(
-        test_cases in prop::collection::hash_set(".{1,20}", 1..=10),
-        other_strings in prop::collection::hash_set(".{1,20}", 1..=10),
-        conversion_features in prop::collection::hash_set(conversion_feature_strategy(), 1..=7)
-    ) {
-        if test_cases.is_disjoint(&other_strings) {
-            let test_cases_vec = test_cases.iter().cloned().collect::<Vec<_>>();
-            let regexp = RegExpBuilder::from(&test_cases_vec)
-                .with_conversion_of(&conversion_features.into_iter().collect::<Vec<_>>())
-                .with_escaping_of_non_ascii_chars(false)
-                .build();
-            if let Ok(compiled_regexp) = compile_regexp(&regexp) {
-                prop_assert!(other_strings.iter().all(|other_string| !compiled_regexp.is_match(&other_string)));
-            }
-        }
-    }
 }
 
 fn conversion_feature_strategy() -> impl Strategy<Value = Feature> {

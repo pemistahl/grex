@@ -15,31 +15,20 @@
  */
 
 use crate::regexp::Feature;
+use crate::unicode_tables::perl_decimal::DECIMAL_NUMBER;
+use crate::unicode_tables::perl_space::WHITE_SPACE;
+use crate::unicode_tables::perl_word::PERL_WORD;
 use itertools::Itertools;
 use std::cmp::Ordering;
 use std::collections::HashMap;
 use std::fmt::{Display, Formatter, Result};
 use std::ops::Range;
+use unic_char_range::CharRange;
 use unic_ucd_category::GeneralCategory;
 use unicode_segmentation::UnicodeSegmentation;
 
 const CHARS_TO_ESCAPE: [&str; 14] = [
     "(", ")", "[", "]", "{", "}", "+", "*", "-", ".", "?", "|", "^", "$",
-];
-
-const VALID_NUMERIC_CATEGORIES: [GeneralCategory; 1] = [GeneralCategory::DecimalNumber];
-
-const VALID_ALPHANUMERIC_CATEGORIES: [GeneralCategory; 10] = [
-    GeneralCategory::UppercaseLetter,
-    GeneralCategory::LowercaseLetter,
-    GeneralCategory::TitlecaseLetter,
-    GeneralCategory::ModifierLetter,
-    GeneralCategory::OtherLetter,
-    GeneralCategory::DecimalNumber,
-    GeneralCategory::EnclosingMark,
-    GeneralCategory::NonspacingMark,
-    GeneralCategory::SpacingMark,
-    GeneralCategory::ConnectorPunctuation,
 ];
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -86,6 +75,10 @@ impl GraphemeCluster {
         let is_word_converted = conversion_features.contains(&Feature::Word);
         let is_non_word_converted = conversion_features.contains(&Feature::NonWord);
 
+        let valid_numeric_chars = convert_chars_to_range(DECIMAL_NUMBER);
+        let valid_alphanumeric_chars = convert_chars_to_range(PERL_WORD);
+        let valid_space_chars = convert_chars_to_range(WHITE_SPACE);
+
         for grapheme in self.graphemes.iter_mut() {
             grapheme.chars = grapheme
                 .chars
@@ -93,32 +86,24 @@ impl GraphemeCluster {
                 .map(|it| {
                     it.chars()
                         .map(|c| {
-                            let category = GeneralCategory::of(c);
-                            let is_valid_alphanumeric_category =
-                                VALID_ALPHANUMERIC_CATEGORIES.contains(&category);
-                            let is_digit = VALID_NUMERIC_CATEGORIES.contains(&category);
-                            let is_word = is_valid_alphanumeric_category
-                                || c == '_'
-                                || c == '\u{200c}'
-                                || c == '\u{200d}'
-                                || ('\u{24b6}'..='\u{24e9}').contains(&c)
-                                || ('\u{10d00}'..='\u{10d39}').contains(&c)
-                                || ('\u{11d60}'..='\u{11da9}').contains(&c)
-                                || ('\u{1c90}'..='\u{1cbf}').contains(&c)
-                                || ('\u{16f00}'..='\u{16f9f}').contains(&c)
-                                || ('\u{119a0}'..='\u{119e4}').contains(&c);
+                            let is_digit =
+                                valid_numeric_chars.iter().any(|range| range.contains(c));
+                            let is_word = valid_alphanumeric_chars
+                                .iter()
+                                .any(|range| range.contains(c));
+                            let is_space = valid_space_chars.iter().any(|range| range.contains(c));
 
                             if is_digit_converted && is_digit {
                                 "\\d".to_string()
                             } else if is_word_converted && is_word {
                                 "\\w".to_string()
-                            } else if is_space_converted && c.is_whitespace() {
+                            } else if is_space_converted && is_space {
                                 "\\s".to_string()
                             } else if is_non_digit_converted && !is_digit {
                                 "\\D".to_string()
                             } else if is_non_word_converted && !is_word {
                                 "\\W".to_string()
-                            } else if is_non_space_converted && !c.is_whitespace() {
+                            } else if is_non_space_converted && !is_space {
                                 "\\S".to_string()
                             } else {
                                 c.to_string()
@@ -468,4 +453,11 @@ fn replace_graphemes_with_repetitions(
             new_grapheme.repetitions.as_mut(),
         );
     }
+}
+
+fn convert_chars_to_range(chars: &[(char, char)]) -> Vec<CharRange> {
+    chars
+        .iter()
+        .map(|&(start, end)| CharRange::closed(start, end))
+        .collect_vec()
 }
