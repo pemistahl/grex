@@ -1,3 +1,13 @@
+## grex 1.0.0 (released on 02 Feb 2020)
+
+### Features
+- conversion to character classes `\d`, `\D`, `\s`, `\S`, `\w`, `\W` is now supported
+- repetition detection now works with arbitrarily nested expressions. Input strings such as `aaabaaab` which were previously converted to `^(aaab){2}$` are now converted to `^(a{3}b){2}$`.
+- optional syntax highlighting for the produced regular expressions can now be enabled using the `--colorize` command-line flag or with the library method `RegExpBuilder.with_syntax_highlighting()`
+
+### Test Coverage
+- new unit tests, integration tests and property tests have been added
+
 ## grex 0.3.2 (released on 12 Jan 2020)
 
 ### Test Coverage

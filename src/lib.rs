@@ -18,7 +18,11 @@
 //!
 //! *grex* is a library as well as a command-line utility that is meant to simplify the often
 //! complicated and tedious task of creating regular expressions. It does so by automatically
-//! generating regular expressions from user-provided test cases.
+//! generating regular expressions from user-provided test cases. The produced expressions
+//! are Perl-compatible regular expressions (PCRE) which are also compatible with the
+//! regular expression parser in the [*regex*](https://crates.io/crates/regex) crate.
+//! Other regular expression parsers or respective libraries from other programming languages
+//! have not been tested so far.
 //!
 //! This project has started as a Rust port of the JavaScript tool
 //! [*regexgen*](https://github.com/devongovett/regexgen) written by
@@ -41,8 +45,9 @@
 //! - alternation using `|` operator
 //! - optionality using `?` quantifier
 //! - escaping of non-ascii characters, with optional conversion of astral code points to surrogate pairs
-//! - concatenation of all of the former
+//! - fully Unicode-aware, correctly handles graphemes consisting of multiple Unicode symbols
 //! - reading input strings from the command-line or from a file
+//! - optional syntax highlighting for nicer output in supported terminals
 //!
 //! ## 3. How to use?
 //!
@@ -71,7 +76,18 @@
 //! assert_eq!(regexp, "^a{1,3}$");
 //! ```
 //!
-//! ### 3.3 Escape non-ascii characters
+//! ### 3.3 Convert to character classes
+//!
+//! ```
+//! use grex::{Feature, RegExpBuilder};
+//!
+//! let regexp = RegExpBuilder::from(&["a", "aa", "123"])
+//!     .with_conversion_of(&[Feature::Digit, Feature::Word])
+//!     .build();
+//! assert_eq!(regexp, "^(\\d\\d\\d|\\w\\w|\\w)$");
+//! ```
+//!
+//! ### 3.4 Escape non-ascii characters
 //!
 //! ```
 //! use grex::RegExpBuilder;
@@ -82,9 +98,13 @@
 //! assert_eq!(regexp, "^You smell like \\u{1f4a9}\\.$");
 //! ```
 //!
-//! ### 3.4 Escape astral code points using surrogate pairs
+//! ### 3.5 Escape astral code points using surrogate pairs
 //!
-//! Old versions of JavaScript do not support unicode escape sequences for the astral code planes (range `U+010000` to `U+10FFFF`). In order to support these symbols in JavaScript regular expressions, the conversion to surrogate pairs is necessary. More information on that matter can be found [here](https://mathiasbynens.be/notes/javascript-unicode).
+//! Old versions of JavaScript do not support unicode escape sequences for
+//! the astral code planes (range `U+010000` to `U+10FFFF`). In order to
+//! support these symbols in JavaScript regular expressions, the conversion
+//! to surrogate pairs is necessary. More information on that matter can be
+//! found [here](https://mathiasbynens.be/notes/javascript-unicode).
 //!
 //! ```
 //! use grex::RegExpBuilder;
@@ -105,6 +125,15 @@
 //!     .with_escaping_of_non_ascii_chars(false)
 //!     .build();
 //! assert_eq!(regexp, "^You smel{2} like \\u{1f4a9}{3}\\.$");
+//! ```
+//!
+//! ```rust
+//! use grex::{Feature, RegExpBuilder};
+//!
+//! let regexp = RegExpBuilder::from(&["a", "aa", "123"])
+//!     .with_conversion_of(&[Feature::Repetition, Feature::Digit, Feature::Word])
+//!     .build();
+//! assert_eq!(regexp, "^(\\w{1,2}|\\d{3})$");
 //! ```
 
 #[macro_use]

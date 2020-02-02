@@ -14,7 +14,7 @@
 
 [package]
 name = "grex"
-version = "0.4.0"
+version = "1.0.0"
 authors = ["Peter M. Stahl <pemistahl@gmail.com>"]
 description = """
 grex generates regular expressions from user-provided test cases.

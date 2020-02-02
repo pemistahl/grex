@@ -21,7 +21,14 @@ use std::path::PathBuf;
 use structopt::StructOpt;
 
 #[derive(StructOpt)]
-#[structopt(author, about, version_short = "v")]
+#[structopt(
+    author = "© 2019-2020 Peter M. Stahl <pemistahl@gmail.com>",
+    about = "Licensed under the Apache License, Version 2.0\n\
+             Downloadable from https://crates.io/crates/grex\n\
+             Source code at https://github.com/pemistahl/grex\n\n\
+             grex generates regular expressions from user-provided test cases.",
+    version_short = "v"
+)]
 struct CLI {
     #[structopt(
         value_name = "INPUT",
