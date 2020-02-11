@@ -195,7 +195,7 @@ can be found [here](https://mathiasbynens.be/notes/javascript-unicode).
 use grex::RegExpBuilder;
 
 let regexp = RegExpBuilder::from(&["You smell like 💩."])
-    .with_escaped_non_ascii_chars(true)
+    .with_escaping_of_non_ascii_chars(true)
     .build();
 assert_eq!(regexp, "^You smell like \\u{d83d}\\u{dca9}\\.$");
 ```
@@ -207,7 +207,7 @@ use grex::{Feature, RegExpBuilder};
 
 let regexp = RegExpBuilder::from(&["You smell like 💩💩💩."])
     .with_conversion_of(&[Feature::Repetition])
-    .with_escaped_non_ascii_chars(false)
+    .with_escaping_of_non_ascii_chars(false)
     .build();
 assert_eq!(regexp, "^You smel{2} like \\u{1f4a9}{3}\\.$");
 ```
