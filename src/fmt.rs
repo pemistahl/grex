@@ -16,6 +16,7 @@
 
 use crate::ast::{Expression, Quantifier};
 use crate::grapheme::GraphemeCluster;
+use crate::regexp::RegExpConfig;
 use colored::Colorize;
 use itertools::Itertools;
 use std::collections::BTreeSet;
@@ -25,27 +26,18 @@ use unic_char_range::CharRange;
 impl Display for Expression {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         match self {
-            Expression::Alternation(options, is_output_colorized) => {
-                format_alternation(f, &self, options, *is_output_colorized)
+            Expression::Alternation(options, config) => {
+                format_alternation(f, &self, options, config)
             }
-            Expression::CharacterClass(char_set, is_output_colorized) => {
-                format_character_class(f, char_set, *is_output_colorized)
+            Expression::CharacterClass(char_set, config) => {
+                format_character_class(f, char_set, config)
             }
-            Expression::Concatenation(expr1, expr2, is_output_colorized) => {
-                format_concatenation(f, &self, expr1, expr2, *is_output_colorized)
+            Expression::Concatenation(expr1, expr2, config) => {
+                format_concatenation(f, &self, expr1, expr2, config)
             }
-            Expression::Literal(
-                cluster,
-                is_non_ascii_char_escaped,
-                is_astral_code_point_converted_to_surrogate,
-            ) => format_literal(
-                f,
-                cluster,
-                *is_non_ascii_char_escaped,
-                *is_astral_code_point_converted_to_surrogate,
-            ),
-            Expression::Repetition(expr, quantifier, is_output_colorized) => {
-                format_repetition(f, &self, expr, quantifier, *is_output_colorized)
+            Expression::Literal(cluster, config) => format_literal(f, cluster, config),
+            Expression::Repetition(expr, quantifier, config) => {
+                format_repetition(f, &self, expr, quantifier, config)
             }
         }
     }
@@ -72,12 +64,12 @@ fn format_alternation(
     f: &mut Formatter<'_>,
     expr: &Expression,
     options: &[Expression],
-    is_output_colorized: bool,
+    config: &RegExpConfig,
 ) -> Result {
     let (left_parenthesis, right_parenthesis) = ["(", ")"]
         .iter()
         .map(|&it| {
-            if is_output_colorized {
+            if config.is_output_colorized {
                 it.green().bold()
             } else {
                 it.clear()
@@ -86,7 +78,7 @@ fn format_alternation(
         .collect_tuple()
         .unwrap();
 
-    let pipe = if is_output_colorized {
+    let pipe = if config.is_output_colorized {
         "|".red().bold()
     } else {
         "|".clear()
@@ -109,7 +101,7 @@ fn format_alternation(
 fn format_character_class(
     f: &mut Formatter<'_>,
     char_set: &BTreeSet<char>,
-    is_output_colorized: bool,
+    config: &RegExpConfig,
 ) -> Result {
     let chars_to_escape = ['[', ']', '\\', '-', '^'];
     let escaped_char_set = char_set
@@ -157,7 +149,7 @@ fn format_character_class(
     let (left_bracket, right_bracket, hyphen) = ["[", "]", "-"]
         .iter()
         .map(|&it| {
-            if is_output_colorized {
+            if config.is_output_colorized {
                 it.cyan().bold()
             } else {
                 it.clear()
@@ -195,12 +187,12 @@ fn format_concatenation(
     expr: &Expression,
     expr1: &Expression,
     expr2: &Expression,
-    is_output_colorized: bool,
+    config: &RegExpConfig,
 ) -> Result {
     let (left_parenthesis, right_parenthesis) = ["(", ")"]
         .iter()
         .map(|&it| {
-            if is_output_colorized {
+            if config.is_output_colorized {
                 it.green().bold()
             } else {
                 it.clear()
@@ -231,8 +223,7 @@ fn format_concatenation(
 fn format_literal(
     f: &mut Formatter<'_>,
     cluster: &GraphemeCluster,
-    is_non_ascii_char_escaped: bool,
-    is_astral_code_point_converted_to_surrogate: bool,
+    config: &RegExpConfig,
 ) -> Result {
     let literal_str = cluster
         .graphemes()
@@ -245,14 +236,14 @@ fn format_literal(
                     .iter_mut()
                     .for_each(|repeated_grapheme| {
                         repeated_grapheme.escape_regexp_symbols(
-                            is_non_ascii_char_escaped,
-                            is_astral_code_point_converted_to_surrogate,
+                            config.is_non_ascii_char_escaped,
+                            config.is_astral_code_point_converted_to_surrogate,
                         );
                     });
             } else {
                 grapheme.escape_regexp_symbols(
-                    is_non_ascii_char_escaped,
-                    is_astral_code_point_converted_to_surrogate,
+                    config.is_non_ascii_char_escaped,
+                    config.is_astral_code_point_converted_to_surrogate,
                 );
             }
             grapheme.to_string()
@@ -267,12 +258,12 @@ fn format_repetition(
     expr: &Expression,
     expr1: &Expression,
     quantifier: &Quantifier,
-    is_output_colorized: bool,
+    config: &RegExpConfig,
 ) -> Result {
     let (left_parenthesis, right_parenthesis) = ["(", ")"]
         .iter()
         .map(|&it| {
-            if is_output_colorized {
+            if config.is_output_colorized {
                 it.green().bold()
             } else {
                 it.clear()
@@ -281,7 +272,7 @@ fn format_repetition(
         .collect_tuple()
         .unwrap();
 
-    let colored_quantifier = if is_output_colorized {
+    let colored_quantifier = if config.is_output_colorized {
         quantifier.to_string().as_str().purple().bold()
     } else {
         quantifier.to_string().as_str().clear()

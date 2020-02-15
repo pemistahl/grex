@@ -23,13 +23,29 @@ use std::clone::Clone;
 use std::cmp::Ordering;
 use std::fmt::{Display, Formatter, Result};
 
+#[derive(Clone, Debug, Hash, Ord, PartialOrd, Eq, PartialEq)]
+pub(crate) struct RegExpConfig {
+    pub(crate) conversion_features: Vec<Feature>,
+    pub(crate) is_non_ascii_char_escaped: bool,
+    pub(crate) is_astral_code_point_converted_to_surrogate: bool,
+    pub(crate) is_output_colorized: bool,
+}
+
+impl RegExpConfig {
+    pub(crate) fn new() -> Self {
+        Self {
+            conversion_features: vec![],
+            is_non_ascii_char_escaped: false,
+            is_astral_code_point_converted_to_surrogate: false,
+            is_output_colorized: false,
+        }
+    }
+}
+
 /// This struct builds regular expressions from user-provided test cases.
 pub struct RegExpBuilder {
     test_cases: Vec<String>,
-    conversion_features: Vec<Feature>,
-    is_non_ascii_char_escaped: bool,
-    is_astral_code_point_converted_to_surrogate: bool,
-    is_output_colorized: bool,
+    config: RegExpConfig,
 }
 
 impl RegExpBuilder {
@@ -43,10 +59,7 @@ impl RegExpBuilder {
         }
         Self {
             test_cases: test_cases.iter().cloned().map(|it| it.into()).collect_vec(),
-            conversion_features: vec![],
-            is_non_ascii_char_escaped: false,
-            is_astral_code_point_converted_to_surrogate: false,
-            is_output_colorized: false,
+            config: RegExpConfig::new(),
         }
     }
 
@@ -59,7 +72,7 @@ impl RegExpBuilder {
         if features.is_empty() {
             panic!("No conversion features have been provided for regular expression generation");
         }
-        self.conversion_features = features.to_vec();
+        self.config.conversion_features = features.to_vec();
         self
     }
 
@@ -67,8 +80,8 @@ impl RegExpBuilder {
     /// The parameter `use_surrogate_pairs` specifies whether to convert astral code planes
     /// (range `U+010000` to `U+10FFFF`) to surrogate pairs.
     pub fn with_escaping_of_non_ascii_chars(&mut self, use_surrogate_pairs: bool) -> &mut Self {
-        self.is_non_ascii_char_escaped = true;
-        self.is_astral_code_point_converted_to_surrogate = use_surrogate_pairs;
+        self.config.is_non_ascii_char_escaped = true;
+        self.config.is_astral_code_point_converted_to_surrogate = use_surrogate_pairs;
         self
     }
 
@@ -78,7 +91,7 @@ impl RegExpBuilder {
     /// be printed to the console. The regex string representation returned from enabling
     /// this setting cannot be fed into the [*regex*](https://crates.io/crates/regex) crate.
     pub fn with_syntax_highlighting(&mut self) -> &mut Self {
-        self.is_output_colorized = true;
+        self.config.is_output_colorized = true;
         self
     }
 
@@ -86,42 +99,24 @@ impl RegExpBuilder {
     /// Every generated regular expression is surrounded by the anchors `^` and `$`
     /// so that substrings not being part of the test cases are not matched accidentally.
     pub fn build(&mut self) -> String {
-        RegExp::from(
-            &mut self.test_cases,
-            &self.conversion_features,
-            self.is_non_ascii_char_escaped,
-            self.is_astral_code_point_converted_to_surrogate,
-            self.is_output_colorized,
-        )
-        .to_string()
+        RegExp::from(&mut self.test_cases, &self.config).to_string()
     }
 }
 
 pub(crate) struct RegExp {
     ast: Expression,
-    is_output_colorized: bool,
+    config: RegExpConfig,
 }
 
 impl RegExp {
-    fn from(
-        test_cases: &mut Vec<String>,
-        conversion_features: &[Feature],
-        is_non_ascii_char_escaped: bool,
-        is_astral_code_point_converted_to_surrogate: bool,
-        is_output_colorized: bool,
-    ) -> Self {
+    fn from(test_cases: &mut Vec<String>, config: &RegExpConfig) -> Self {
         Self::sort(test_cases);
+        let grapheme_clusters = Self::grapheme_clusters(&test_cases, config);
+        let dfa = DFA::from(grapheme_clusters, config);
+        let ast = Expression::from(dfa, config);
         Self {
-            ast: Expression::from(
-                DFA::from(
-                    Self::grapheme_clusters(&test_cases, conversion_features, is_output_colorized),
-                    is_output_colorized,
-                ),
-                is_non_ascii_char_escaped,
-                is_astral_code_point_converted_to_surrogate,
-                is_output_colorized,
-            ),
-            is_output_colorized,
+            ast,
+            config: config.clone(),
         }
     }
 
@@ -134,25 +129,25 @@ impl RegExp {
         });
     }
 
-    fn grapheme_clusters(
-        test_cases: &[String],
-        conversion_features: &[Feature],
-        is_output_colorized: bool,
-    ) -> Vec<GraphemeCluster> {
+    fn grapheme_clusters(test_cases: &[String], config: &RegExpConfig) -> Vec<GraphemeCluster> {
         let mut clusters = test_cases
             .iter()
-            .map(|it| GraphemeCluster::from(it, is_output_colorized))
+            .map(|it| GraphemeCluster::from(it, config))
             .collect_vec();
 
-        if conversion_features.iter().any(|it| it.is_char_class()) {
+        if config
+            .conversion_features
+            .iter()
+            .any(|it| it.is_char_class())
+        {
             for cluster in clusters.iter_mut() {
-                cluster.convert_to_char_classes(conversion_features);
+                cluster.convert_to_char_classes();
             }
         }
 
-        if conversion_features.contains(&Feature::Repetition) {
+        if config.conversion_features.contains(&Feature::Repetition) {
             for cluster in clusters.iter_mut() {
-                cluster.convert_repetitions(is_output_colorized);
+                cluster.convert_repetitions();
             }
         }
 
@@ -165,7 +160,7 @@ impl Display for RegExp {
         let (left_anchor, right_anchor) = ["^", "$"]
             .iter()
             .map(|&it| {
-                if self.is_output_colorized {
+                if self.config.is_output_colorized {
                     it.yellow().bold()
                 } else {
                     it.clear()
@@ -177,7 +172,7 @@ impl Display for RegExp {
         let (left_parenthesis, right_parenthesis) = ["(", ")"]
             .iter()
             .map(|&it| {
-                if self.is_output_colorized {
+                if self.config.is_output_colorized {
                     it.green().bold()
                 } else {
                     it.clear()
@@ -203,7 +198,7 @@ impl Display for RegExp {
 
 /// This enum specifies the supported conversion features which can be passed to method
 /// [`RegExpBuilder.with_conversion_of`](./struct.RegExpBuilder.html#method.with_conversion_of).
-#[derive(Clone, Debug, Hash, Eq, PartialEq)]
+#[derive(Clone, Debug, Hash, Ord, PartialOrd, Eq, PartialEq)]
 pub enum Feature {
     /// This feature converts any Unicode decimal digit to character class `\d`.
     ///
