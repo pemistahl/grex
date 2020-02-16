@@ -34,7 +34,7 @@ itertools = "0.8.2"
 linked-list = "0.0.3"
 ndarray = "0.13.0"
 petgraph = {version = "0.5.0", default-features = false, features = ["stable_graph"]}
-structopt = "0.3.8"
+structopt = "0.3.9"
 unic-char-range = "0.9.0"
 unic-ucd-category = "0.9.0"
 unicode-segmentation = "1.6.0"

@@ -38,6 +38,15 @@ mod no_conversion {
         }
 
         #[test]
+        fn succeeds_with_leading_hyphen() {
+            let mut grex = init_command();
+            grex.args(&["-a", "b", "c"]);
+            grex.assert()
+                .success()
+                .stdout(predicate::eq("^(\\-a|[bc])$\n"));
+        }
+
+        #[test]
         fn succeeds_with_escape_option() {
             let mut grex = init_command();
             grex.args(&["--escape", TEST_CASE]);

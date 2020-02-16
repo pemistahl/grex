@@ -18,6 +18,7 @@ use grex::{Feature, RegExpBuilder};
 use itertools::Itertools;
 use std::io::{Error, ErrorKind};
 use std::path::PathBuf;
+use structopt::clap::AppSettings;
 use structopt::StructOpt;
 
 #[derive(StructOpt)]
@@ -27,7 +28,8 @@ use structopt::StructOpt;
              Downloadable from https://crates.io/crates/grex\n\
              Source code at https://github.com/pemistahl/grex\n\n\
              grex generates regular expressions from user-provided test cases.",
-    version_short = "v"
+    version_short = "v",
+    global_setting = AppSettings::AllowLeadingHyphen
 )]
 struct CLI {
     #[structopt(
