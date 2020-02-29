@@ -140,6 +140,7 @@
 mod macros;
 
 mod ast;
+mod color;
 mod dfa;
 mod fmt;
 mod grapheme;

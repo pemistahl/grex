@@ -15,13 +15,13 @@
  */
 
 use crate::ast::Expression;
+use crate::color::colorize;
 use crate::dfa::DFA;
 use crate::grapheme::GraphemeCluster;
-use colored::Colorize;
 use itertools::Itertools;
 use std::clone::Clone;
 use std::cmp::Ordering;
-use std::fmt::{Display, Formatter, Result};
+use std::fmt::{Display, Error, Formatter, Result};
 
 #[derive(Clone, Debug, Hash, Ord, PartialOrd, Eq, PartialEq)]
 pub(crate) struct RegExpConfig {
@@ -157,41 +157,23 @@ impl RegExp {
 
 impl Display for RegExp {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
-        let (left_anchor, right_anchor) = ["^", "$"]
-            .iter()
-            .map(|&it| {
-                if self.config.is_output_colorized {
-                    it.yellow().bold()
-                } else {
-                    it.clear()
-                }
-            })
-            .collect_tuple()
-            .unwrap();
-
-        let (left_parenthesis, right_parenthesis) = ["(", ")"]
-            .iter()
-            .map(|&it| {
-                if self.config.is_output_colorized {
-                    it.green().bold()
-                } else {
-                    it.clear()
-                }
-            })
-            .collect_tuple()
-            .unwrap();
-
-        match self.ast {
-            Expression::Alternation(_, _) => write!(
-                f,
-                "{}{}{}{}{}",
-                left_anchor,
-                left_parenthesis,
-                self.ast.to_string(),
-                right_parenthesis,
-                right_anchor
-            ),
-            _ => write!(f, "{}{}{}", left_anchor, self.ast.to_string(), right_anchor),
+        if let [left_anchor, right_anchor, left_parenthesis, right_parenthesis] =
+            &colorize(vec!["^", "$", "(", ")"], self.config.is_output_colorized)[..]
+        {
+            match self.ast {
+                Expression::Alternation(_, _) => write!(
+                    f,
+                    "{}{}{}{}{}",
+                    left_anchor,
+                    left_parenthesis,
+                    self.ast.to_string(),
+                    right_parenthesis,
+                    right_anchor
+                ),
+                _ => write!(f, "{}{}{}", left_anchor, self.ast.to_string(), right_anchor),
+            }
+        } else {
+            Err(Error::default())
         }
     }
 }

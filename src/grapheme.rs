@@ -14,15 +14,15 @@
  * limitations under the License.
  */
 
+use crate::color::colorize;
 use crate::regexp::{Feature, RegExpConfig};
 use crate::unicode_tables::perl_decimal::DECIMAL_NUMBER;
 use crate::unicode_tables::perl_space::WHITE_SPACE;
 use crate::unicode_tables::perl_word::PERL_WORD;
-use colored::Colorize;
 use itertools::Itertools;
 use std::cmp::Ordering;
 use std::collections::HashMap;
-use std::fmt::{Display, Formatter, Result};
+use std::fmt::{Display, Error, Formatter, Result};
 use std::ops::Range;
 use unic_char_range::CharRange;
 use unic_ucd_category::GeneralCategory;
@@ -310,86 +310,58 @@ impl Display for Grapheme {
             self.repetitions.iter().map(|it| it.to_string()).join("")
         };
 
-        let (left_parenthesis, right_parenthesis) = ["(", ")"]
-            .iter()
-            .map(|&it| {
-                if self.config.is_output_colorized {
-                    it.green().bold()
-                } else {
-                    it.clear()
-                }
-            })
-            .collect_tuple()
-            .unwrap();
-
-        let (left_brace, right_brace) = ["{", "}"]
-            .iter()
-            .map(|&it| {
-                if self.config.is_output_colorized {
-                    it.white().on_bright_blue()
-                } else {
-                    it.clear()
-                }
-            })
-            .collect_tuple()
-            .unwrap();
-
-        let (min, comma, max) = [
-            self.min.to_string().as_str(),
-            ",",
-            self.max.to_string().as_str(),
-        ]
-        .iter()
-        .map(|&it| {
-            if self.config.is_output_colorized {
-                it.white().on_bright_blue()
+        if let [left_parenthesis, right_parenthesis, left_brace, right_brace, comma, min, max, colored_value] =
+            &colorize(
+                vec![
+                    "(",
+                    ")",
+                    "{",
+                    "}",
+                    ",",
+                    self.min.to_string().as_str(),
+                    self.max.to_string().as_str(),
+                    value.as_str(),
+                ],
+                self.config.is_output_colorized,
+            )[..]
+        {
+            if !is_range && is_repetition && is_single_char {
+                write!(f, "{}{}{}{}", colored_value, left_brace, min, right_brace)
+            } else if !is_range && is_repetition && !is_single_char {
+                write!(
+                    f,
+                    "{}{}{}{}{}{}",
+                    left_parenthesis,
+                    colored_value,
+                    right_parenthesis,
+                    left_brace,
+                    min,
+                    right_brace
+                )
+            } else if is_range && is_single_char {
+                write!(
+                    f,
+                    "{}{}{}{}{}{}",
+                    colored_value, left_brace, min, comma, max, right_brace
+                )
+            } else if is_range && !is_single_char {
+                write!(
+                    f,
+                    "{}{}{}{}{}{}{}{}",
+                    left_parenthesis,
+                    colored_value,
+                    right_parenthesis,
+                    left_brace,
+                    min,
+                    comma,
+                    max,
+                    right_brace
+                )
             } else {
-                it.clear()
-            }
-        })
-        .collect_tuple()
-        .unwrap();
-
-        let colored_value = if self.config.is_output_colorized {
-            match value.as_str() {
-                "\\d" | "\\w" | "\\s" | "\\D" | "\\W" | "\\S" => {
-                    value.as_str().black().on_bright_yellow()
-                }
-                _ => value.as_str().clear(),
+                write!(f, "{}", colored_value)
             }
         } else {
-            value.as_str().clear()
-        };
-
-        if !is_range && is_repetition && is_single_char {
-            write!(f, "{}{}{}{}", colored_value, left_brace, min, right_brace)
-        } else if !is_range && is_repetition && !is_single_char {
-            write!(
-                f,
-                "{}{}{}{}{}{}",
-                left_parenthesis, colored_value, right_parenthesis, left_brace, min, right_brace
-            )
-        } else if is_range && is_single_char {
-            write!(
-                f,
-                "{}{}{}{}{}{}",
-                colored_value, left_brace, min, comma, max, right_brace
-            )
-        } else if is_range && !is_single_char {
-            write!(
-                f,
-                "{}{}{}{}{}{}{}{}",
-                left_parenthesis,
-                colored_value,
-                right_parenthesis,
-                left_brace,
-                min,
-                comma,
-                max,
-                right_brace
-            )
-        } else {
-            write!(f, "{}", colored_value)
+            Err(Error::default())
         }
     }
 }
