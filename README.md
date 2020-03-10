@@ -76,12 +76,13 @@ scoop install grex
 
 #### Homebrew
 ```
-brew tap pemistahl/formulas
-brew install grex
+brew install pemistahl/formulas/grex
 ```
 
 Alternatively, you can download the self-contained executable for your platform above and put it 
-in a place of your choice. *grex* is also hosted on [crates.io](https://crates.io/crates/grex), 
+in a place of your choice.
+
+*grex* is also hosted on [crates.io](https://crates.io/crates/grex), 
 the official Rust package registry. If you are a Rust developer and already have the Rust 
 toolchain installed, you can install by compiling from source using 
 [*cargo*](https://doc.rust-lang.org/cargo/), the Rust package manager:
