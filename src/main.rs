@@ -47,7 +47,11 @@ struct CLI {
         long,
         parse(from_os_str),
         required_unless = "input",
-        help = "Reads test cases separated by newline characters from a file"
+        help = "Reads test cases on separate lines from a file",
+        long_help = "Reads test cases on separate lines from a file.\n\n\
+                     Lines may be ended with either a newline (`\\n`) or\n\
+                     a carriage return with a line feed (`\\r\\n`).\n\
+                     The final line ending is optional."
     )]
     file_path: Option<PathBuf>,
 

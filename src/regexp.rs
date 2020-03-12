@@ -22,6 +22,8 @@ use itertools::Itertools;
 use std::clone::Clone;
 use std::cmp::Ordering;
 use std::fmt::{Display, Error, Formatter, Result};
+use std::io::ErrorKind;
+use std::path::PathBuf;
 
 #[derive(Clone, Debug, Hash, Ord, PartialOrd, Eq, PartialEq)]
 pub(crate) struct RegExpConfig {
@@ -50,6 +52,7 @@ pub struct RegExpBuilder {
 
 impl RegExpBuilder {
     /// Specifies the test cases to build the regular expression from.
+    ///
     /// The test cases need not be sorted because `RegExpBuilder` sorts them internally.
     ///
     /// ⚠ Panics if `test_cases` is empty.
@@ -60,6 +63,38 @@ impl RegExpBuilder {
         Self {
             test_cases: test_cases.iter().cloned().map(|it| it.into()).collect_vec(),
             config: RegExpConfig::new(),
+        }
+    }
+
+    /// Specifies a text file containing test cases to build the regular expression from.
+    ///
+    /// The test cases need not be sorted because `RegExpBuilder` sorts them internally.
+    ///
+    /// Each test case needs to be on a separate line.
+    /// Lines may be ended with either a newline (`\n`) or
+    /// a carriage return with a line feed (`\r\n`).
+    /// The final line ending is optional.
+    ///
+    /// ⚠ Panics if:
+    /// - the file cannot be found
+    /// - the file's encoding is not valid UTF-8 data
+    /// - the file cannot be opened because of conflicting permissions
+    pub fn from_file<T: Into<PathBuf>>(file_path: T) -> Self {
+        match std::fs::read_to_string(file_path.into()) {
+            Ok(file_content) => Self {
+                test_cases: file_content.lines().map(|it| it.to_string()).collect_vec(),
+                config: RegExpConfig::new(),
+            },
+            Err(error) => match error.kind() {
+                ErrorKind::NotFound => panic!("The specified file could not be found"),
+                ErrorKind::InvalidData => {
+                    panic!("The specified file's encoding is not valid UTF-8")
+                }
+                ErrorKind::PermissionDenied => {
+                    panic!("Permission denied: The specified file could not be opened")
+                }
+                _ => panic!(error),
+            },
         }
     }
 
@@ -258,13 +293,15 @@ mod tests {
     use super::{Feature, RegExpBuilder};
 
     #[test]
-    #[should_panic]
+    #[should_panic(expected = "No test cases have been provided for regular expression generation")]
     fn regexp_builder_panics_without_test_cases() {
         RegExpBuilder::from(&Vec::<String>::new());
     }
 
     #[test]
-    #[should_panic]
+    #[should_panic(
+        expected = "No conversion features have been provided for regular expression generation"
+    )]
     fn regexp_builder_panics_without_conversion_features() {
         RegExpBuilder::from(&["abc"]).with_conversion_of(&Vec::<Feature>::new());
     }

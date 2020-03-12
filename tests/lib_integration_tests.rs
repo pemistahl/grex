@@ -17,6 +17,8 @@
 use grex::{Feature, RegExpBuilder};
 use regex::Regex;
 use rstest::rstest;
+use std::io::Write;
+use tempfile::NamedTempFile;
 
 mod no_conversion {
     use super::*;
@@ -112,6 +114,26 @@ mod no_conversion {
                 .with_escaping_of_non_ascii_chars(true)
                 .build();
             test_if_regexp_is_correct(regexp, expected_output, &test_cases);
+        }
+
+        #[test]
+        #[allow(unused_must_use)]
+        fn succeeds_with_file_input() {
+            let mut file = NamedTempFile::new().unwrap();
+            writeln!(file, "a\nb\nc\r\nxyz");
+
+            let expected_output = "^(xyz|[a-c])$";
+            let test_cases = vec!["a", "b", "c", "xyz"];
+
+            let regexp = RegExpBuilder::from_file(file.path()).build();
+            test_if_regexp_is_correct(regexp, expected_output, &test_cases);
+            test_if_regexp_matches_test_cases(expected_output, test_cases);
+        }
+
+        #[test]
+        #[should_panic(expected = "The specified file could not be found")]
+        fn fails_when_file_does_not_exist() {
+            RegExpBuilder::from_file("/path/to/non-existing/file");
         }
     }
 
