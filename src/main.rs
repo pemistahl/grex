@@ -143,6 +143,17 @@ struct CLI {
     is_repetition_converted: bool,
 
     #[structopt(
+        name = "min-repeated-chars",
+        value_name = "QUANTITY",
+        long,
+        default_value = "4",
+        validator = min_repeated_chars_validator,
+        help = "Specifies the minimum quantity of repeated characters\n\
+                to be converted if --repetitions is set"
+    )]
+    minimum_repeated_chars: u32,
+
+    #[structopt(
         name = "escape",
         short,
         long,
@@ -239,6 +250,8 @@ fn handle_input(cli: &CLI, input: Result<Vec<String>, Error>) {
                 builder.with_syntax_highlighting();
             }
 
+            builder.with_minimum_quantity_of_repeated_chars(cli.minimum_repeated_chars);
+
             let regexp = builder.build();
 
             println!("{}", regexp);
@@ -253,5 +266,21 @@ fn handle_input(cli: &CLI, input: Result<Vec<String>, Error>) {
             }
             _ => eprintln!("error: {}", error),
         },
+    }
+}
+
+fn min_repeated_chars_validator(quantity: String) -> Result<(), String> {
+    match quantity.parse::<u32>() {
+        Ok(parsed_quantity) => {
+            if parsed_quantity >= 2 {
+                Ok(())
+            } else {
+                Err(format!(
+                    "Quantity must not be less than 2 but is {}",
+                    quantity
+                ))
+            }
+        }
+        Err(_) => Err(String::from("Quantity is not a valid unsigned integer")),
     }
 }

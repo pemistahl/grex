@@ -484,6 +484,11 @@ fn replace_graphemes_with_repetitions(
         }
 
         let count = ((range.end - range.start) / substr.len()) as u32;
+
+        if count < config.minimum_repeated_chars {
+            break;
+        }
+
         let joined_substr = substr.iter().join("").repeat(count as usize);
         let graphemes_slice = repetitions[range.clone()]
             .iter()
