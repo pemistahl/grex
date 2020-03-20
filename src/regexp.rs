@@ -28,7 +28,8 @@ use std::path::PathBuf;
 #[derive(Clone, Debug, Hash, Ord, PartialOrd, Eq, PartialEq)]
 pub(crate) struct RegExpConfig {
     pub(crate) conversion_features: Vec<Feature>,
-    pub(crate) minimum_repeated_chars: u32,
+    pub(crate) minimum_repetitions: u32,
+    pub(crate) minimum_substring_length: u32,
     pub(crate) is_non_ascii_char_escaped: bool,
     pub(crate) is_astral_code_point_converted_to_surrogate: bool,
     pub(crate) is_output_colorized: bool,
@@ -38,7 +39,8 @@ impl RegExpConfig {
     pub(crate) fn new() -> Self {
         Self {
             conversion_features: vec![],
-            minimum_repeated_chars: 4,
+            minimum_repetitions: 2,
+            minimum_substring_length: 1,
             is_non_ascii_char_escaped: false,
             is_astral_code_point_converted_to_surrogate: false,
             is_output_colorized: false,
@@ -113,22 +115,38 @@ impl RegExpBuilder {
         self
     }
 
-    /// Specifies the minimum quantity of repeated characters to be converted if
+    /// Specifies the minimum quantity of substring repetitions to be converted if
     /// [`Feature::Repetition`](./enum.Feature.html#variant.Repetition)
     /// is set as one of the features in method
     /// [`with_conversion_of`](./struct.RegExpBuilder.html#method.with_conversion_of).
     ///
-    /// If the quantity is not explicitly set with this method, a default value of 4 will be used.
+    /// If the quantity is not explicitly set with this method, a default value of 2 will be used.
     ///
     /// ⚠ Panics if `quantity` is less than 2.
-    pub fn with_minimum_quantity_of_repeated_chars(&mut self, quantity: u32) -> &mut Self {
+    pub fn with_minimum_repetitions(&mut self, quantity: u32) -> &mut Self {
         if quantity < 2 {
             panic!(format!(
                 "Quantity must not be less than 2 but is {}",
                 quantity
             ));
         }
-        self.config.minimum_repeated_chars = quantity;
+        self.config.minimum_repetitions = quantity;
+        self
+    }
+
+    /// Specifies the minimum length a repeated substring must have in order to be converted if
+    /// [`Feature::Repetition`](./enum.Feature.html#variant.Repetition)
+    /// is set as one of the features in method
+    /// [`with_conversion_of`](./struct.RegExpBuilder.html#method.with_conversion_of).
+    ///
+    /// If the length is not explicitly set with this method, a default value of 1 will be used.
+    ///
+    /// ⚠ Panics if `length` is zero.
+    pub fn with_minimum_substring_length(&mut self, length: u32) -> &mut Self {
+        if length == 0 {
+            panic!("Substring length must not be zero");
+        }
+        self.config.minimum_substring_length = length;
         self
     }
 

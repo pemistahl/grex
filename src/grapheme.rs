@@ -485,8 +485,10 @@ fn replace_graphemes_with_repetitions(
 
         let count = ((range.end - range.start) / substr.len()) as u32;
 
-        if count < config.minimum_repeated_chars {
-            break;
+        if count < config.minimum_repetitions
+            || substr.len() < config.minimum_substring_length as usize
+        {
+            continue;
         }
 
         let joined_substr = substr.iter().join("").repeat(count as usize);

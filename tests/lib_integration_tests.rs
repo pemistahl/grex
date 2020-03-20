@@ -160,7 +160,7 @@ mod no_conversion {
             case(vec!["aababab"], "^a(ab){3}$"),
             case(vec!["abababaa"], "^(ab){3}a{2}$"),
             case(vec!["aaaaaabbbbb"], "^a{6}b{5}$"),
-            case(vec!["aabaababab"], "^(a{2}b){2}abab$"), // goal: ^(a{2}b){2}(ab)2$
+            case(vec!["aabaababab"], "^(a{2}b){2}abab$"), // goal: ^(a{2}b){2}(ab){2}$
             case(vec!["aaaaaaabbbbbba"], "^a{7}b{6}a$"),
             case(vec!["abaaaabaaba"], "^abaa(a{2}b){2}a$"),
             case(vec!["bbaababb"], "^b{2}a{2}bab{2}$"),
@@ -226,6 +226,61 @@ mod no_conversion {
                 .with_escaping_of_non_ascii_chars(true)
                 .build();
             test_if_regexp_is_correct(regexp, expected_output, &test_cases);
+        }
+
+        #[rstest(test_cases, expected_output,
+            case(vec![""], "^$"),
+            case(vec![" "], "^ $"),
+            case(vec!["   "], "^   $"),
+            case(vec!["    "], "^ {4}$"),
+            case(vec!["      "], "^ {6}$"),
+            case(vec!["a"], "^a$"),
+            case(vec!["aa"], "^aa$"),
+            case(vec!["aaa"], "^aaa$"),
+            case(vec!["aaaa"], "^a{4}$"),
+            case(vec!["aaaaa"], "^a{5}$"),
+            case(vec!["aabbaaaabbbabbbbba"], "^aabba{4}bbbab{5}a$"),
+            case(vec!["baabaaaaaabb"], "^baaba{6}bb$"),
+            case(vec!["ababab"], "^ababab$"),
+            case(vec!["abababab"], "^(ab){4}$"),
+            case(vec!["abababa"], "^abababa$"),
+            case(vec!["ababababa"], "^a(ba){4}$"),
+            case(vec!["aababab"], "^aababab$"),
+            case(vec!["aabababab"], "^a(ab){4}$"),
+            case(vec!["xy̆y̆z", "xy̆y̆y̆y̆z"], "^x(y̆y̆|(y̆){4})z$"),
+            case(vec!["aaa", "a", "aa"], "^a(aa?)?$"),
+            case(vec!["a", "aa", "aaa", "aaaa"], "^(aaa|aa?|a{4})$"),
+            case(vec!["a", "aa", "aaa", "aaaa", "aaaaa", "aaaaaa"], "^(aaa|aa?|a{4,6})$")
+        )]
+        fn succeeds_with_increased_minimum_repetitions(
+            test_cases: Vec<&str>,
+            expected_output: &str,
+        ) {
+            let regexp = RegExpBuilder::from(&test_cases)
+                .with_conversion_of(&[Feature::Repetition])
+                .with_minimum_repetitions(4)
+                .build();
+            test_if_regexp_is_correct(regexp, expected_output, &test_cases);
+            test_if_regexp_matches_test_cases(expected_output, test_cases);
+        }
+
+        #[rstest(test_cases, expected_output,
+            case(vec!["aaa"], "^aaa$"),
+            case(vec!["ababab"], "^ababab$"),
+            case(vec!["abcabcabc"], "^(abc){3}$"),
+            case(vec!["abcabcabc", "dede"], "^(dede|(abc){3})$"),
+            case(vec!["abcabcabc", "defgdefg"], "^((defg){2}|(abc){3})$")
+        )]
+        fn succeeds_with_increased_minimum_substring_length(
+            test_cases: Vec<&str>,
+            expected_output: &str,
+        ) {
+            let regexp = RegExpBuilder::from(&test_cases)
+                .with_conversion_of(&[Feature::Repetition])
+                .with_minimum_substring_length(3)
+                .build();
+            test_if_regexp_is_correct(regexp, expected_output, &test_cases);
+            test_if_regexp_matches_test_cases(expected_output, test_cases);
         }
     }
 }

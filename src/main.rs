@@ -143,15 +143,26 @@ struct CLI {
     is_repetition_converted: bool,
 
     #[structopt(
-        name = "min-repeated-chars",
+        name = "min-repetitions",
         value_name = "QUANTITY",
         long,
-        default_value = "4",
-        validator = min_repeated_chars_validator,
-        help = "Specifies the minimum quantity of repeated characters\n\
+        default_value = "2",
+        validator = min_repetitions_validator,
+        help = "Specifies the minimum quantity of substring repetitions\n\
                 to be converted if --repetitions is set"
     )]
-    minimum_repeated_chars: u32,
+    minimum_repetitions: u32,
+
+    #[structopt(
+        name = "min-length",
+        value_name = "LENGTH",
+        long,
+        default_value = "1",
+        validator = min_substring_length_validator,
+        help = "Specifies the minimum length a repeated substring must have\n\
+                in order to be converted if --repetitions is set"
+    )]
+    minimum_substring_length: u32,
 
     #[structopt(
         name = "escape",
@@ -250,7 +261,9 @@ fn handle_input(cli: &CLI, input: Result<Vec<String>, Error>) {
                 builder.with_syntax_highlighting();
             }
 
-            builder.with_minimum_quantity_of_repeated_chars(cli.minimum_repeated_chars);
+            builder
+                .with_minimum_repetitions(cli.minimum_repetitions)
+                .with_minimum_substring_length(cli.minimum_substring_length);
 
             let regexp = builder.build();
 
@@ -269,7 +282,7 @@ fn handle_input(cli: &CLI, input: Result<Vec<String>, Error>) {
     }
 }
 
-fn min_repeated_chars_validator(quantity: String) -> Result<(), String> {
+fn min_repetitions_validator(quantity: String) -> Result<(), String> {
     match quantity.parse::<u32>() {
         Ok(parsed_quantity) => {
             if parsed_quantity >= 2 {
@@ -282,5 +295,20 @@ fn min_repeated_chars_validator(quantity: String) -> Result<(), String> {
             }
         }
         Err(_) => Err(String::from("Quantity is not a valid unsigned integer")),
+    }
+}
+
+fn min_substring_length_validator(length: String) -> Result<(), String> {
+    match length.parse::<u32>() {
+        Ok(parsed_length) => {
+            if parsed_length > 0 {
+                Ok(())
+            } else {
+                Err(String::from("Substring length must not be zero"))
+            }
+        }
+        Err(_) => Err(String::from(
+            "Substring length is not a valid unsigned integer",
+        )),
     }
 }
