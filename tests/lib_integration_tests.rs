@@ -129,12 +129,6 @@ mod no_conversion {
             test_if_regexp_is_correct(regexp, expected_output, &test_cases);
             test_if_regexp_matches_test_cases(expected_output, test_cases);
         }
-
-        #[test]
-        #[should_panic(expected = "The specified file could not be found")]
-        fn fails_when_file_does_not_exist() {
-            RegExpBuilder::from_file("/path/to/non-existing/file");
-        }
     }
 
     mod repetition {
@@ -277,6 +271,26 @@ mod no_conversion {
         ) {
             let regexp = RegExpBuilder::from(&test_cases)
                 .with_conversion_of(&[Feature::Repetition])
+                .with_minimum_substring_length(3)
+                .build();
+            test_if_regexp_is_correct(regexp, expected_output, &test_cases);
+            test_if_regexp_matches_test_cases(expected_output, test_cases);
+        }
+
+        #[rstest(test_cases, expected_output,
+            case(vec!["abababab"], "^abababab$"),
+            case(vec!["abcabcabc"], "^abcabcabc$"),
+            case(vec!["abcabcabcabc"], "^(abc){4}$"),
+            case(vec!["aaaaaaaaaaaa"], "^aaaaaaaaaaaa$"),
+            case(vec!["abababab", "abcabcabcabc"], "^(abababab|(abc){4})$")
+        )]
+        fn succeeds_with_increased_minimum_repetitions_and_substring_length(
+            test_cases: Vec<&str>,
+            expected_output: &str,
+        ) {
+            let regexp = RegExpBuilder::from(&test_cases)
+                .with_conversion_of(&[Feature::Repetition])
+                .with_minimum_repetitions(4)
                 .with_minimum_substring_length(3)
                 .build();
             test_if_regexp_is_correct(regexp, expected_output, &test_cases);

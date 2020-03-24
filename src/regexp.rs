@@ -126,7 +126,7 @@ impl RegExpBuilder {
     pub fn with_minimum_repetitions(&mut self, quantity: u32) -> &mut Self {
         if quantity < 2 {
             panic!(format!(
-                "Quantity must not be less than 2 but is {}",
+                "Quantity of minimum repetitions must not be less than 2 but is {}",
                 quantity
             ));
         }
@@ -144,7 +144,7 @@ impl RegExpBuilder {
     /// ⚠ Panics if `length` is zero.
     pub fn with_minimum_substring_length(&mut self, length: u32) -> &mut Self {
         if length == 0 {
-            panic!("Substring length must not be zero");
+            panic!("Minimum substring length must not be zero");
         }
         self.config.minimum_substring_length = length;
         self
@@ -343,5 +343,23 @@ mod tests {
     )]
     fn regexp_builder_panics_without_conversion_features() {
         RegExpBuilder::from(&["abc"]).with_conversion_of(&Vec::<Feature>::new());
+    }
+
+    #[test]
+    #[should_panic(expected = "The specified file could not be found")]
+    fn regexp_builder_panics_if_file_does_not_exist() {
+        RegExpBuilder::from_file("/path/to/non-existing/file");
+    }
+
+    #[test]
+    #[should_panic(expected = "Quantity of minimum repetitions must not be less than 2 but is 1")]
+    fn regexp_builder_panics_if_minimum_repetitions_is_less_than_two() {
+        RegExpBuilder::from(&["abc"]).with_minimum_repetitions(1);
+    }
+
+    #[test]
+    #[should_panic(expected = "Minimum substring length must not be zero")]
+    fn regexp_builder_panics_if_minimum_substring_length_is_zero() {
+        RegExpBuilder::from(&["abc"]).with_minimum_substring_length(0);
     }
 }

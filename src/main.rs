@@ -154,7 +154,7 @@ struct CLI {
     minimum_repetitions: u32,
 
     #[structopt(
-        name = "min-length",
+        name = "min-substring-length",
         value_name = "LENGTH",
         long,
         default_value = "1",
