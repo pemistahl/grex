@@ -83,7 +83,7 @@ mod no_conversion {
             case(vec!["My ♥ is yours.", "My 💩 is yours."], "^My [♥💩] is yours\\.$"),
             case(vec!["[\u{c3e}"], "^\\[\u{c3e}$"),
             case(vec!["\\\u{10376}"], "^\\\\\u{10376}$"),
-            case(vec!["I   ♥♥♥ 36 and ٣ and 💩💩."], "^I   ♥♥♥ 36 and ٣ and 💩💩\\.$")
+            case(vec!["I   ♥♥♥ 36 and ٣ and y̆y̆ and 💩💩."], "^I   ♥♥♥ 36 and ٣ and y̆y̆ and 💩💩\\.$")
         )]
         fn succeeds(test_cases: Vec<&str>, expected_output: &str) {
             let regexp = RegExpBuilder::from(&test_cases).build();
@@ -94,7 +94,10 @@ mod no_conversion {
         #[rstest(test_cases, expected_output,
             case(vec!["My ♥ and 💩 is yours."], "^My \\u{2665} and \\u{1f4a9} is yours\\.$"),
             case(vec!["My ♥ is yours.", "My 💩 is yours."], "^My (\\u{2665}|\\u{1f4a9}) is yours\\.$"),
-            case(vec!["I   ♥♥♥ 36 and ٣ and 💩💩."], "^I   \\u{2665}\\u{2665}\\u{2665} 36 and \\u{663} and \\u{1f4a9}\\u{1f4a9}\\.$")
+            case(
+                vec!["I   ♥♥♥ 36 and ٣ and y̆y̆ and 💩💩."],
+                "^I   \\u{2665}\\u{2665}\\u{2665} 36 and \\u{663} and y\\u{306}y\\u{306} and \\u{1f4a9}\\u{1f4a9}\\.$"
+            )
         )]
         fn succeeds_with_escape_option(test_cases: Vec<&str>, expected_output: &str) {
             let regexp = RegExpBuilder::from(&test_cases)
@@ -107,7 +110,10 @@ mod no_conversion {
         #[rstest(test_cases, expected_output,
             case(vec!["My ♥ and 💩 is yours."], "^My \\u{2665} and \\u{d83d}\\u{dca9} is yours\\.$"),
             case(vec!["My ♥ is yours.", "My 💩 is yours."], "^My (\\u{2665}|\\u{d83d}\\u{dca9}) is yours\\.$"),
-            case(vec!["I   ♥♥♥ 36 and ٣ and 💩💩."], "^I   \\u{2665}\\u{2665}\\u{2665} 36 and \\u{663} and \\u{d83d}\\u{dca9}\\u{d83d}\\u{dca9}\\.$")
+            case(
+                vec!["I   ♥♥♥ 36 and ٣ and y̆y̆ and 💩💩."],
+                "^I   \\u{2665}\\u{2665}\\u{2665} 36 and \\u{663} and y\\u{306}y\\u{306} and \\u{d83d}\\u{dca9}\\u{d83d}\\u{dca9}\\.$"
+            )
         )]
         fn succeeds_with_escape_and_surrogate_option(test_cases: Vec<&str>, expected_output: &str) {
             let regexp = RegExpBuilder::from(&test_cases)
@@ -185,7 +191,7 @@ mod no_conversion {
             case(vec!["I \\u{2665}\\u{2665} cake"], "^I (\\\\u\\{26{2}5\\}){2} cake$"),
             case(vec!["I \\u2665\\u2665 cake"], "^I (\\\\u26{2}5){2} cake$"),
             case(vec!["My ♥♥♥ is yours.", "My 💩💩 is yours."], "^My (💩{2}|♥{3}) is yours\\.$"),
-            case(vec!["I   ♥♥♥ 36 and ٣ and 💩💩."], "^I {3}♥{3} 36 and ٣ and 💩{2}\\.$")
+            case(vec!["I   ♥♥♥ 36 and ٣ and y̆y̆ and 💩💩."], "^I {3}♥{3} 36 and ٣ and (y̆){2} and 💩{2}\\.$")
         )]
         fn succeeds(test_cases: Vec<&str>, expected_output: &str) {
             let regexp = RegExpBuilder::from(&test_cases)
@@ -198,7 +204,10 @@ mod no_conversion {
         #[rstest(test_cases, expected_output,
             case(vec!["My ♥♥♥ and 💩💩 is yours."], "^My \\u{2665}{3} and \\u{1f4a9}{2} is yours\\.$"),
             case(vec!["My ♥♥♥ is yours.", "My 💩💩 is yours."], "^My (\\u{1f4a9}{2}|\\u{2665}{3}) is yours\\.$"),
-            case(vec!["I   ♥♥♥ 36 and ٣ and 💩💩."], "^I {3}\\u{2665}{3} 36 and \\u{663} and \\u{1f4a9}{2}\\.$")
+            case(
+                vec!["I   ♥♥♥ 36 and ٣ and y̆y̆ and 💩💩."],
+                "^I {3}\\u{2665}{3} 36 and \\u{663} and (y\\u{306}){2} and \\u{1f4a9}{2}\\.$"
+            )
         )]
         fn succeeds_with_escape_option(test_cases: Vec<&str>, expected_output: &str) {
             let regexp = RegExpBuilder::from(&test_cases)
@@ -212,7 +221,10 @@ mod no_conversion {
         #[rstest(test_cases, expected_output,
             case(vec!["My ♥♥♥ and 💩💩 is yours."], "^My \\u{2665}{3} and (\\u{d83d}\\u{dca9}){2} is yours\\.$"),
             case(vec!["My ♥♥♥ is yours.", "My 💩💩 is yours."], "^My ((\\u{d83d}\\u{dca9}){2}|\\u{2665}{3}) is yours\\.$"),
-            case(vec!["I   ♥♥♥ 36 and ٣ and 💩💩."], "^I {3}\\u{2665}{3} 36 and \\u{663} and (\\u{d83d}\\u{dca9}){2}\\.$")
+            case(
+                vec!["I   ♥♥♥ 36 and ٣ and y̆y̆ and 💩💩."],
+                "^I {3}\\u{2665}{3} 36 and \\u{663} and (y\\u{306}){2} and (\\u{d83d}\\u{dca9}){2}\\.$"
+            )
         )]
         fn succeeds_with_escape_and_surrogate_option(test_cases: Vec<&str>, expected_output: &str) {
             let regexp = RegExpBuilder::from(&test_cases)
@@ -323,7 +335,7 @@ mod digit_conversion {
             case(vec!["١٣٥"], "^\\d\\d\\d$"),
             case(vec!["a٣3", "b5٥"], "^[ab]\\d\\d$"),
             case(vec!["I ♥ 123"], "^I ♥ \\d\\d\\d$"),
-            case(vec!["I   ♥♥♥ 36 and ٣ and 💩💩."], "^I   ♥♥♥ \\d\\d and \\d and 💩💩\\.$")
+            case(vec!["I   ♥♥♥ 36 and ٣ and y̆y̆ and 💩💩."], "^I   ♥♥♥ \\d\\d and \\d and y̆y̆ and 💩💩\\.$")
         )]
         fn succeeds(test_cases: Vec<&str>, expected_output: &str) {
             let regexp = RegExpBuilder::from(&test_cases)
@@ -335,8 +347,8 @@ mod digit_conversion {
 
         #[rstest(test_cases, expected_output,
             case(
-                vec!["I   ♥♥♥ 36 and ٣ and 💩💩."],
-                "^I   \\u{2665}\\u{2665}\\u{2665} \\d\\d and \\d and \\u{1f4a9}\\u{1f4a9}\\.$"
+                vec!["I   ♥♥♥ 36 and ٣ and y̆y̆ and 💩💩."],
+                "^I   \\u{2665}\\u{2665}\\u{2665} \\d\\d and \\d and y\\u{306}y\\u{306} and \\u{1f4a9}\\u{1f4a9}\\.$"
             )
         )]
         fn succeeds_with_escape_option(test_cases: Vec<&str>, expected_output: &str) {
@@ -350,8 +362,8 @@ mod digit_conversion {
 
         #[rstest(test_cases, expected_output,
             case(
-                vec!["I   ♥♥♥ 36 and ٣ and 💩💩."],
-                "^I   \\u{2665}\\u{2665}\\u{2665} \\d\\d and \\d and \\u{d83d}\\u{dca9}\\u{d83d}\\u{dca9}\\.$"
+                vec!["I   ♥♥♥ 36 and ٣ and y̆y̆ and 💩💩."],
+                "^I   \\u{2665}\\u{2665}\\u{2665} \\d\\d and \\d and y\\u{306}y\\u{306} and \\u{d83d}\\u{dca9}\\u{d83d}\\u{dca9}\\.$"
             )
         )]
         fn succeeds_with_escape_and_surrogate_option(test_cases: Vec<&str>, expected_output: &str) {
@@ -367,7 +379,7 @@ mod digit_conversion {
         use super::*;
 
         #[rstest(test_cases, expected_output,
-            case(vec!["I   ♥♥♥ 36 and ٣ and 💩💩."], "^I {3}♥{3} \\d(\\d and ){2}💩{2}\\.$")
+            case(vec!["I   ♥♥♥ 36 and ٣ and y̆y̆ and 💩💩."], "^I {3}♥{3} \\d(\\d and ){2}(y̆){2} and 💩{2}\\.$")
         )]
         fn succeeds(test_cases: Vec<&str>, expected_output: &str) {
             let regexp = RegExpBuilder::from(&test_cases)
@@ -379,8 +391,8 @@ mod digit_conversion {
 
         #[rstest(test_cases, expected_output,
             case(
-                vec!["I   ♥♥♥ 36 and ٣ and 💩💩."],
-                "^I {3}\\u{2665}{3} \\d(\\d and ){2}\\u{1f4a9}{2}\\.$"
+                vec!["I   ♥♥♥ 36 and ٣ and y̆y̆ and 💩💩."],
+                "^I {3}\\u{2665}{3} \\d(\\d and ){2}(y\\u{306}){2} and \\u{1f4a9}{2}\\.$"
             )
         )]
         fn succeeds_with_escape_option(test_cases: Vec<&str>, expected_output: &str) {
@@ -394,8 +406,8 @@ mod digit_conversion {
 
         #[rstest(test_cases, expected_output,
             case(
-                vec!["I   ♥♥♥ 36 and ٣ and 💩💩."],
-                "^I {3}\\u{2665}{3} \\d(\\d and ){2}(\\u{d83d}\\u{dca9}){2}\\.$"
+                vec!["I   ♥♥♥ 36 and ٣ and y̆y̆ and 💩💩."],
+                "^I {3}\\u{2665}{3} \\d(\\d and ){2}(y\\u{306}){2} and (\\u{d83d}\\u{dca9}){2}\\.$"
             )
         )]
         fn succeeds_with_escape_and_surrogate_option(test_cases: Vec<&str>, expected_output: &str) {
@@ -404,6 +416,27 @@ mod digit_conversion {
                 .with_escaping_of_non_ascii_chars(true)
                 .build();
             test_if_regexp_is_correct(regexp, expected_output, &test_cases);
+        }
+
+        #[rstest(test_cases, expected_output,
+            case(vec!["1"], "^\\d$"),
+            case(vec!["12"], "^\\d\\d$"),
+            case(vec!["123"], "^\\d{3}$"),
+            case(vec!["1", "12", "123"], "^(\\d\\d|\\d|\\d{3})$"),
+            case(vec!["12", "123", "1234"], "^(\\d\\d|\\d{3,4})$"),
+            case(vec!["123", "1234", "12345"], "^\\d{3,5}$"),
+            case(vec!["I   ♥♥♥ 36 and ٣ and y̆y̆ and 💩💩."], "^I {3}♥{3} \\d\\d and \\d and y̆y̆ and 💩💩\\.$")
+        )]
+        fn succeeds_with_increased_minimum_repetitions(
+            test_cases: Vec<&str>,
+            expected_output: &str,
+        ) {
+            let regexp = RegExpBuilder::from(&test_cases)
+                .with_conversion_of(&[Feature::Repetition, Feature::Digit])
+                .with_minimum_repetitions(3)
+                .build();
+            test_if_regexp_is_correct(regexp, expected_output, &test_cases);
+            test_if_regexp_matches_test_cases(expected_output, test_cases);
         }
     }
 }
@@ -426,7 +459,7 @@ mod space_conversion {
             case(vec!["a"], "^a$"),
             case(vec!["1"], "^1$"),
             case(vec!["I ♥ 123"], "^I\\s♥\\s123$"),
-            case(vec!["I   ♥♥♥ 36 and ٣ and 💩💩."], "^I\\s\\s\\s♥♥♥\\s36\\sand\\s٣\\sand\\s💩💩\\.$")
+            case(vec!["I   ♥♥♥ 36 and ٣ and y̆y̆ and 💩💩."], "^I\\s\\s\\s♥♥♥\\s36\\sand\\s٣\\sand\\sy̆y̆\\sand\\s💩💩\\.$")
         )]
         fn succeeds(test_cases: Vec<&str>, expected_output: &str) {
             let regexp = RegExpBuilder::from(&test_cases)
@@ -438,8 +471,8 @@ mod space_conversion {
 
         #[rstest(test_cases, expected_output,
             case(
-                vec!["I   ♥♥♥ 36 and ٣ and 💩💩."],
-                "^I\\s\\s\\s\\u{2665}\\u{2665}\\u{2665}\\s36\\sand\\s\\u{663}\\sand\\s\\u{1f4a9}\\u{1f4a9}\\.$"
+                vec!["I   ♥♥♥ 36 and ٣ and y̆y̆ and 💩💩."],
+                "^I\\s\\s\\s\\u{2665}\\u{2665}\\u{2665}\\s36\\sand\\s\\u{663}\\sand\\sy\\u{306}y\\u{306}\\sand\\s\\u{1f4a9}\\u{1f4a9}\\.$"
             )
         )]
         fn succeeds_with_escape_option(test_cases: Vec<&str>, expected_output: &str) {
@@ -453,8 +486,8 @@ mod space_conversion {
 
         #[rstest(test_cases, expected_output,
             case(
-                vec!["I   ♥♥♥ 36 and ٣ and 💩💩."],
-                "^I\\s\\s\\s\\u{2665}\\u{2665}\\u{2665}\\s36\\sand\\s\\u{663}\\sand\\s\\u{d83d}\\u{dca9}\\u{d83d}\\u{dca9}\\.$"
+                vec!["I   ♥♥♥ 36 and ٣ and y̆y̆ and 💩💩."],
+                "^I\\s\\s\\s\\u{2665}\\u{2665}\\u{2665}\\s36\\sand\\s\\u{663}\\sand\\sy\\u{306}y\\u{306}\\sand\\s\\u{d83d}\\u{dca9}\\u{d83d}\\u{dca9}\\.$"
             )
         )]
         fn succeeds_with_escape_and_surrogate_option(test_cases: Vec<&str>, expected_output: &str) {
@@ -470,7 +503,10 @@ mod space_conversion {
         use super::*;
 
         #[rstest(test_cases, expected_output,
-            case(vec!["I   ♥♥♥ 36 and ٣ and 💩💩."], "^I\\s{3}♥{3}\\s36\\sand\\s٣\\sand\\s💩{2}\\.$")
+            case(
+                vec!["I   ♥♥♥ 36 and ٣ and y̆y̆ and 💩💩."],
+                "^I\\s{3}♥{3}\\s36\\sand\\s٣\\sand\\s(y̆){2}\\sand\\s💩{2}\\.$"
+            )
         )]
         fn succeeds(test_cases: Vec<&str>, expected_output: &str) {
             let regexp = RegExpBuilder::from(&test_cases)
@@ -482,8 +518,8 @@ mod space_conversion {
 
         #[rstest(test_cases, expected_output,
             case(
-                vec!["I   ♥♥♥ 36 and ٣ and 💩💩."],
-                "^I\\s{3}\\u{2665}{3}\\s36\\sand\\s\\u{663}\\sand\\s\\u{1f4a9}{2}\\.$"
+                vec!["I   ♥♥♥ 36 and ٣ and y̆y̆ and 💩💩."],
+                "^I\\s{3}\\u{2665}{3}\\s36\\sand\\s\\u{663}\\sand\\s(y\\u{306}){2}\\sand\\s\\u{1f4a9}{2}\\.$"
             )
         )]
         fn succeeds_with_escape_option(test_cases: Vec<&str>, expected_output: &str) {
@@ -497,8 +533,8 @@ mod space_conversion {
 
         #[rstest(test_cases, expected_output,
             case(
-                vec!["I   ♥♥♥ 36 and ٣ and 💩💩."],
-                "^I\\s{3}\\u{2665}{3}\\s36\\sand\\s\\u{663}\\sand\\s(\\u{d83d}\\u{dca9}){2}\\.$"
+                vec!["I   ♥♥♥ 36 and ٣ and y̆y̆ and 💩💩."],
+                "^I\\s{3}\\u{2665}{3}\\s36\\sand\\s\\u{663}\\sand\\s(y\\u{306}){2}\\sand\\s(\\u{d83d}\\u{dca9}){2}\\.$"
             )
         )]
         fn succeeds_with_escape_and_surrogate_option(test_cases: Vec<&str>, expected_output: &str) {
@@ -507,6 +543,30 @@ mod space_conversion {
                 .with_escaping_of_non_ascii_chars(true)
                 .build();
             test_if_regexp_is_correct(regexp, expected_output, &test_cases);
+        }
+
+        #[rstest(test_cases, expected_output,
+            case(vec![" "], "^\\s$"),
+            case(vec!["  "], "^\\s\\s$"),
+            case(vec!["   "], "^\\s{3}$"),
+            case(vec![" ", "  ", "   "], "^(\\s\\s|\\s|\\s{3})$"),
+            case(vec!["  ", "   ", "    "], "^(\\s\\s|\\s{3,4})$"),
+            case(vec!["   ", "    ", "     "], "^\\s{3,5}$"),
+            case(
+                vec!["I   ♥♥♥ 36 and ٣ and y̆y̆ and 💩💩."],
+                "^I\\s{3}♥{3}\\s36\\sand\\s٣\\sand\\sy\u{306}y\u{306}\\sand\\s💩💩\\.$"
+            )
+        )]
+        fn succeeds_with_increased_minimum_repetitions(
+            test_cases: Vec<&str>,
+            expected_output: &str,
+        ) {
+            let regexp = RegExpBuilder::from(&test_cases)
+                .with_conversion_of(&[Feature::Repetition, Feature::Space])
+                .with_minimum_repetitions(3)
+                .build();
+            test_if_regexp_is_correct(regexp, expected_output, &test_cases);
+            test_if_regexp_matches_test_cases(expected_output, test_cases);
         }
     }
 }
@@ -530,7 +590,10 @@ mod word_conversion {
             case(vec!["١٣٥"], "^\\w\\w\\w$"),
             case(vec!["a٣3", "b5٥"], "^\\w\\w\\w$"),
             case(vec!["I ♥ 123"], "^\\w ♥ \\w\\w\\w$"),
-            case(vec!["I   ♥♥♥ 36 and ٣ and 💩💩."], "^\\w   ♥♥♥ \\w\\w \\w\\w\\w \\w \\w\\w\\w 💩💩\\.$")
+            case(
+                vec!["I   ♥♥♥ 36 and ٣ and y̆y̆ and 💩💩."],
+                "^\\w   ♥♥♥ \\w\\w \\w\\w\\w \\w \\w\\w\\w \\w\\w\\w\\w \\w\\w\\w 💩💩\\.$"
+            )
         )]
         fn succeeds(test_cases: Vec<&str>, expected_output: &str) {
             let regexp = RegExpBuilder::from(&test_cases)
@@ -542,8 +605,8 @@ mod word_conversion {
 
         #[rstest(test_cases, expected_output,
             case(
-                vec!["I   ♥♥♥ 36 and ٣ and 💩💩."],
-                "^\\w   \\u{2665}\\u{2665}\\u{2665} \\w\\w \\w\\w\\w \\w \\w\\w\\w \\u{1f4a9}\\u{1f4a9}\\.$"
+                vec!["I   ♥♥♥ 36 and ٣ and y̆y̆ and 💩💩."],
+                "^\\w   \\u{2665}\\u{2665}\\u{2665} \\w\\w \\w\\w\\w \\w \\w\\w\\w \\w\\w\\w\\w \\w\\w\\w \\u{1f4a9}\\u{1f4a9}\\.$"
             )
         )]
         fn succeeds_with_escape_option(test_cases: Vec<&str>, expected_output: &str) {
@@ -557,8 +620,8 @@ mod word_conversion {
 
         #[rstest(test_cases, expected_output,
             case(
-                vec!["I   ♥♥♥ 36 and ٣ and 💩💩."],
-                "^\\w   \\u{2665}\\u{2665}\\u{2665} \\w\\w \\w\\w\\w \\w \\w\\w\\w \\u{d83d}\\u{dca9}\\u{d83d}\\u{dca9}\\.$"
+                vec!["I   ♥♥♥ 36 and ٣ and y̆y̆ and 💩💩."],
+                "^\\w   \\u{2665}\\u{2665}\\u{2665} \\w\\w \\w\\w\\w \\w \\w\\w\\w \\w\\w\\w\\w \\w\\w\\w \\u{d83d}\\u{dca9}\\u{d83d}\\u{dca9}\\.$"
             )
         )]
         fn succeeds_with_escape_and_surrogate_option(test_cases: Vec<&str>, expected_output: &str) {
@@ -574,7 +637,10 @@ mod word_conversion {
         use super::*;
 
         #[rstest(test_cases, expected_output,
-            case(vec!["I   ♥♥♥ 36 and ٣ and 💩💩."], "^\\w {3}♥{3} \\w(\\w \\w{3} ){2}💩{2}\\.$")
+            case(
+                vec!["I   ♥♥♥ 36 and ٣ and y̆y̆ and 💩💩."],
+                "^\\w {3}♥{3} \\w{2} \\w{3} \\w \\w{3} \\w{4} \\w{3} 💩{2}\\.$"
+            )
         )]
         fn succeeds(test_cases: Vec<&str>, expected_output: &str) {
             let regexp = RegExpBuilder::from(&test_cases)
@@ -586,8 +652,8 @@ mod word_conversion {
 
         #[rstest(test_cases, expected_output,
             case(
-                vec!["I   ♥♥♥ 36 and ٣ and 💩💩."],
-                "^\\w {3}\\u{2665}{3} \\w(\\w \\w{3} ){2}\\u{1f4a9}{2}\\.$"
+                vec!["I   ♥♥♥ 36 and ٣ and y̆y̆ and 💩💩."],
+                "^\\w {3}\\u{2665}{3} \\w{2} \\w{3} \\w \\w{3} \\w{4} \\w{3} \\u{1f4a9}{2}\\.$"
             )
         )]
         fn succeeds_with_escape_option(test_cases: Vec<&str>, expected_output: &str) {
@@ -601,8 +667,8 @@ mod word_conversion {
 
         #[rstest(test_cases, expected_output,
             case(
-                vec!["I   ♥♥♥ 36 and ٣ and 💩💩."],
-                "^\\w {3}\\u{2665}{3} \\w(\\w \\w{3} ){2}(\\u{d83d}\\u{dca9}){2}\\.$"
+                vec!["I   ♥♥♥ 36 and ٣ and y̆y̆ and 💩💩."],
+                "^\\w {3}\\u{2665}{3} \\w{2} \\w{3} \\w \\w{3} \\w{4} \\w{3} (\\u{d83d}\\u{dca9}){2}\\.$"
             )
         )]
         fn succeeds_with_escape_and_surrogate_option(test_cases: Vec<&str>, expected_output: &str) {
@@ -611,6 +677,30 @@ mod word_conversion {
                 .with_escaping_of_non_ascii_chars(true)
                 .build();
             test_if_regexp_is_correct(regexp, expected_output, &test_cases);
+        }
+
+        #[rstest(test_cases, expected_output,
+            case(vec!["a"], "^\\w$"),
+            case(vec!["ab"], "^\\w\\w$"),
+            case(vec!["abc"], "^\\w{3}$"),
+            case(vec!["a", "ab", "abc"], "^(\\w\\w|\\w|\\w{3})$"),
+            case(vec!["ab", "abc", "abcd"], "^(\\w\\w|\\w{3,4})$"),
+            case(vec!["abc", "abcd", "abcde"], "^\\w{3,5}$"),
+            case(
+                vec!["I   ♥♥♥ 36 and ٣ and y̆y̆ and 💩💩."],
+                "^\\w {3}♥{3} \\w\\w \\w{3} \\w \\w{3} \\w{4} \\w{3} 💩💩\\.$"
+            )
+        )]
+        fn succeeds_with_increased_minimum_repetitions(
+            test_cases: Vec<&str>,
+            expected_output: &str,
+        ) {
+            let regexp = RegExpBuilder::from(&test_cases)
+                .with_conversion_of(&[Feature::Repetition, Feature::Word])
+                .with_minimum_repetitions(3)
+                .build();
+            test_if_regexp_is_correct(regexp, expected_output, &test_cases);
+            test_if_regexp_matches_test_cases(expected_output, test_cases);
         }
     }
 }
@@ -622,7 +712,10 @@ mod digit_space_conversion {
         use super::*;
 
         #[rstest(test_cases, expected_output,
-            case(vec!["I   ♥♥♥ 36 and ٣ and 💩💩."], "^I\\s\\s\\s♥♥♥\\s\\d\\d\\sand\\s\\d\\sand\\s💩💩\\.$")
+            case(
+                vec!["I   ♥♥♥ 36 and ٣ and y̆y̆ and 💩💩."],
+                "^I\\s\\s\\s♥♥♥\\s\\d\\d\\sand\\s\\d\\sand\\sy̆y̆\\sand\\s💩💩\\.$"
+            )
         )]
         fn succeeds(test_cases: Vec<&str>, expected_output: &str) {
             let regexp = RegExpBuilder::from(&test_cases)
@@ -634,8 +727,8 @@ mod digit_space_conversion {
 
         #[rstest(test_cases, expected_output,
             case(
-                vec!["I   ♥♥♥ 36 and ٣ and 💩💩."],
-                "^I\\s\\s\\s\\u{2665}\\u{2665}\\u{2665}\\s\\d\\d\\sand\\s\\d\\sand\\s\\u{1f4a9}\\u{1f4a9}\\.$"
+                vec!["I   ♥♥♥ 36 and ٣ and y̆y̆ and 💩💩."],
+                "^I\\s\\s\\s\\u{2665}\\u{2665}\\u{2665}\\s\\d\\d\\sand\\s\\d\\sand\\sy\\u{306}y\\u{306}\\sand\\s\\u{1f4a9}\\u{1f4a9}\\.$"
             )
         )]
         fn succeeds_with_escape_option(test_cases: Vec<&str>, expected_output: &str) {
@@ -649,8 +742,8 @@ mod digit_space_conversion {
 
         #[rstest(test_cases, expected_output,
             case(
-                vec!["I   ♥♥♥ 36 and ٣ and 💩💩."],
-                "^I\\s\\s\\s\\u{2665}\\u{2665}\\u{2665}\\s\\d\\d\\sand\\s\\d\\sand\\s\\u{d83d}\\u{dca9}\\u{d83d}\\u{dca9}\\.$"
+                vec!["I   ♥♥♥ 36 and ٣ and y̆y̆ and 💩💩."],
+                "^I\\s\\s\\s\\u{2665}\\u{2665}\\u{2665}\\s\\d\\d\\sand\\s\\d\\sand\\sy\\u{306}y\\u{306}\\sand\\s\\u{d83d}\\u{dca9}\\u{d83d}\\u{dca9}\\.$"
             )
         )]
         fn succeeds_with_escape_and_surrogate_option(test_cases: Vec<&str>, expected_output: &str) {
@@ -666,7 +759,10 @@ mod digit_space_conversion {
         use super::*;
 
         #[rstest(test_cases, expected_output,
-            case(vec!["I   ♥♥♥ 36 and ٣ and 💩💩."], "^I\\s{3}♥{3}\\s\\d(\\d\\sand\\s){2}💩{2}\\.$")
+            case(
+                vec!["I   ♥♥♥ 36 and ٣ and y̆y̆ and 💩💩."],
+                "^I\\s{3}♥{3}\\s\\d(\\d\\sand\\s){2}(y̆){2}\\sand\\s💩{2}\\.$"
+            )
         )]
         fn succeeds(test_cases: Vec<&str>, expected_output: &str) {
             let regexp = RegExpBuilder::from(&test_cases)
@@ -678,8 +774,8 @@ mod digit_space_conversion {
 
         #[rstest(test_cases, expected_output,
             case(
-                vec!["I   ♥♥♥ 36 and ٣ and 💩💩."],
-                "^I\\s{3}\\u{2665}{3}\\s\\d(\\d\\sand\\s){2}\\u{1f4a9}{2}\\.$"
+                vec!["I   ♥♥♥ 36 and ٣ and y̆y̆ and 💩💩."],
+                "^I\\s{3}\\u{2665}{3}\\s\\d(\\d\\sand\\s){2}(y\\u{306}){2}\\sand\\s\\u{1f4a9}{2}\\.$"
             )
         )]
         fn succeeds_with_escape_option(test_cases: Vec<&str>, expected_output: &str) {
@@ -693,8 +789,8 @@ mod digit_space_conversion {
 
         #[rstest(test_cases, expected_output,
             case(
-                vec!["I   ♥♥♥ 36 and ٣ and 💩💩."],
-                "^I\\s{3}\\u{2665}{3}\\s\\d(\\d\\sand\\s){2}(\\u{d83d}\\u{dca9}){2}\\.$"
+                vec!["I   ♥♥♥ 36 and ٣ and y̆y̆ and 💩💩."],
+                "^I\\s{3}\\u{2665}{3}\\s\\d(\\d\\sand\\s){2}(y\\u{306}){2}\\sand\\s(\\u{d83d}\\u{dca9}){2}\\.$"
             )
         )]
         fn succeeds_with_escape_and_surrogate_option(test_cases: Vec<&str>, expected_output: &str) {
@@ -703,6 +799,65 @@ mod digit_space_conversion {
                 .with_escaping_of_non_ascii_chars(true)
                 .build();
             test_if_regexp_is_correct(regexp, expected_output, &test_cases);
+        }
+
+        #[rstest(test_cases, expected_output,
+            case(vec!["1\n"], "^\\d\\s$"),
+            case(vec!["1\n1\n"], "^\\d\\s\\d\\s$"),
+            case(vec!["1\n1\n1\n"], "^(\\d\\s){3}$"),
+            case(vec!["1\n", "1\n1\n", "1\n1\n1\n"], "^(\\d\\s\\d\\s|\\d\\s|(\\d\\s){3})$"),
+            case(vec!["1\n1\n", "1\n1\n1\n", "1\n1\n1\n1\n"], "^(\\d\\s\\d\\s|(\\d\\s){3,4})$"),
+            case(vec!["1\n1\n1\n", "1\n1\n1\n1\n", "1\n1\n1\n1\n1\n"], "^(\\d\\s){3,5}$"),
+            case(
+                vec!["I   ♥♥♥ 36 and ٣ and y̆y̆ and 💩💩."],
+                "^I\\s{3}♥{3}\\s\\d\\d\\sand\\s\\d\\sand\\sy̆y̆\\sand\\s💩💩\\.$"
+            )
+        )]
+        fn succeeds_with_increased_minimum_repetitions(
+            test_cases: Vec<&str>,
+            expected_output: &str,
+        ) {
+            let regexp = RegExpBuilder::from(&test_cases)
+                .with_conversion_of(&[Feature::Repetition, Feature::Digit, Feature::Space])
+                .with_minimum_repetitions(3)
+                .build();
+            test_if_regexp_is_correct(regexp, expected_output, &test_cases);
+            test_if_regexp_matches_test_cases(expected_output, test_cases);
+        }
+
+        #[rstest(test_cases, expected_output,
+            case(vec!["1\n1\n"], "^1\\n1\\n$"),
+            case(vec!["1\n\n1\n\n"], "^(1\\n\\n){2}$")
+        )]
+        fn succeeds_with_increased_minimum_substring_length(
+            test_cases: Vec<&str>,
+            expected_output: &str,
+        ) {
+            let regexp = RegExpBuilder::from(&test_cases)
+                .with_conversion_of(&[Feature::Repetition])
+                .with_minimum_substring_length(3)
+                .build();
+            test_if_regexp_is_correct(regexp, expected_output, &test_cases);
+            test_if_regexp_matches_test_cases(expected_output, test_cases);
+        }
+
+        #[rstest(test_cases, expected_output,
+            case(vec!["1\n1\n"], "^1\\n1\\n$"),
+            case(vec!["1\n1\n1\n"], "^1\\n1\\n1\\n$"),
+            case(vec!["1\n\n1\n\n"], "^1\\n\\n1\\n\\n$"),
+            case(vec!["1\n\n1\n\n1\n\n"], "^(1\\n\\n){3}$")
+        )]
+        fn succeeds_with_increased_minimum_repetitions_and_substring_length(
+            test_cases: Vec<&str>,
+            expected_output: &str,
+        ) {
+            let regexp = RegExpBuilder::from(&test_cases)
+                .with_conversion_of(&[Feature::Repetition])
+                .with_minimum_repetitions(3)
+                .with_minimum_substring_length(3)
+                .build();
+            test_if_regexp_is_correct(regexp, expected_output, &test_cases);
+            test_if_regexp_matches_test_cases(expected_output, test_cases);
         }
     }
 }
@@ -714,7 +869,10 @@ mod digit_word_conversion {
         use super::*;
 
         #[rstest(test_cases, expected_output,
-            case(vec!["I   ♥♥♥ 36 and ٣ and 💩💩."], "^\\w   ♥♥♥ \\d\\d \\w\\w\\w \\d \\w\\w\\w 💩💩\\.$")
+            case(
+                vec!["I   ♥♥♥ 36 and ٣ and y̆y̆ and 💩💩."],
+                "^\\w   ♥♥♥ \\d\\d \\w\\w\\w \\d \\w\\w\\w \\w\\w\\w\\w \\w\\w\\w 💩💩\\.$"
+            )
         )]
         fn succeeds(test_cases: Vec<&str>, expected_output: &str) {
             let regexp = RegExpBuilder::from(&test_cases)
@@ -726,8 +884,8 @@ mod digit_word_conversion {
 
         #[rstest(test_cases, expected_output,
             case(
-                vec!["I   ♥♥♥ 36 and ٣ and 💩💩."],
-                "^\\w   \\u{2665}\\u{2665}\\u{2665} \\d\\d \\w\\w\\w \\d \\w\\w\\w \\u{1f4a9}\\u{1f4a9}\\.$"
+                vec!["I   ♥♥♥ 36 and ٣ and y̆y̆ and 💩💩."],
+                "^\\w   \\u{2665}\\u{2665}\\u{2665} \\d\\d \\w\\w\\w \\d \\w\\w\\w \\w\\w\\w\\w \\w\\w\\w \\u{1f4a9}\\u{1f4a9}\\.$"
             )
         )]
         fn succeeds_with_escape_option(test_cases: Vec<&str>, expected_output: &str) {
@@ -741,8 +899,8 @@ mod digit_word_conversion {
 
         #[rstest(test_cases, expected_output,
             case(
-                vec!["I   ♥♥♥ 36 and ٣ and 💩💩."],
-                "^\\w   \\u{2665}\\u{2665}\\u{2665} \\d\\d \\w\\w\\w \\d \\w\\w\\w \\u{d83d}\\u{dca9}\\u{d83d}\\u{dca9}\\.$"
+                vec!["I   ♥♥♥ 36 and ٣ and y̆y̆ and 💩💩."],
+                "^\\w   \\u{2665}\\u{2665}\\u{2665} \\d\\d \\w\\w\\w \\d \\w\\w\\w \\w\\w\\w\\w \\w\\w\\w \\u{d83d}\\u{dca9}\\u{d83d}\\u{dca9}\\.$"
             )
         )]
         fn succeeds_with_escape_and_surrogate_option(test_cases: Vec<&str>, expected_output: &str) {
@@ -758,7 +916,10 @@ mod digit_word_conversion {
         use super::*;
 
         #[rstest(test_cases, expected_output,
-            case(vec!["I   ♥♥♥ 36 and ٣ and 💩💩."], "^\\w {3}♥{3} \\d(\\d \\w{3} ){2}💩{2}\\.$")
+            case(
+                vec!["I   ♥♥♥ 36 and ٣ and y̆y̆ and 💩💩."],
+                "^\\w {3}♥{3} \\d(\\d \\w{3} ){2}\\w{4} \\w{3} 💩{2}\\.$"
+            )
         )]
         fn succeeds(test_cases: Vec<&str>, expected_output: &str) {
             let regexp = RegExpBuilder::from(&test_cases)
@@ -770,8 +931,8 @@ mod digit_word_conversion {
 
         #[rstest(test_cases, expected_output,
             case(
-                vec!["I   ♥♥♥ 36 and ٣ and 💩💩."],
-                "^\\w {3}\\u{2665}{3} \\d(\\d \\w{3} ){2}\\u{1f4a9}{2}\\.$"
+                vec!["I   ♥♥♥ 36 and ٣ and y̆y̆ and 💩💩."],
+                "^\\w {3}\\u{2665}{3} \\d(\\d \\w{3} ){2}\\w{4} \\w{3} \\u{1f4a9}{2}\\.$"
             )
         )]
         fn succeeds_with_escape_option(test_cases: Vec<&str>, expected_output: &str) {
@@ -785,8 +946,8 @@ mod digit_word_conversion {
 
         #[rstest(test_cases, expected_output,
             case(
-                vec!["I   ♥♥♥ 36 and ٣ and 💩💩."],
-                "^\\w {3}\\u{2665}{3} \\d(\\d \\w{3} ){2}(\\u{d83d}\\u{dca9}){2}\\.$"
+                vec!["I   ♥♥♥ 36 and ٣ and y̆y̆ and 💩💩."],
+                "^\\w {3}\\u{2665}{3} \\d(\\d \\w{3} ){2}\\w{4} \\w{3} (\\u{d83d}\\u{dca9}){2}\\.$"
             )
         )]
         fn succeeds_with_escape_and_surrogate_option(test_cases: Vec<&str>, expected_output: &str) {
@@ -807,8 +968,8 @@ mod space_word_conversion {
 
         #[rstest(test_cases, expected_output,
             case(
-                vec!["I   ♥♥♥ 36 and ٣ and 💩💩."],
-                "^\\w\\s\\s\\s♥♥♥\\s\\w\\w\\s\\w\\w\\w\\s\\w\\s\\w\\w\\w\\s💩💩\\.$"
+                vec!["I   ♥♥♥ 36 and ٣ and y̆y̆ and 💩💩."],
+                "^\\w\\s\\s\\s♥♥♥\\s\\w\\w\\s\\w\\w\\w\\s\\w\\s\\w\\w\\w\\s\\w\\w\\w\\w\\s\\w\\w\\w\\s💩💩\\.$"
             )
         )]
         fn succeeds(test_cases: Vec<&str>, expected_output: &str) {
@@ -821,8 +982,8 @@ mod space_word_conversion {
 
         #[rstest(test_cases, expected_output,
             case(
-                vec!["I   ♥♥♥ 36 and ٣ and 💩💩."],
-                "^\\w\\s\\s\\s\\u{2665}\\u{2665}\\u{2665}\\s\\w\\w\\s\\w\\w\\w\\s\\w\\s\\w\\w\\w\\s\\u{1f4a9}\\u{1f4a9}\\.$"
+                vec!["I   ♥♥♥ 36 and ٣ and y̆y̆ and 💩💩."],
+                "^\\w\\s\\s\\s\\u{2665}\\u{2665}\\u{2665}\\s\\w\\w\\s\\w\\w\\w\\s\\w\\s\\w\\w\\w\\s\\w\\w\\w\\w\\s\\w\\w\\w\\s\\u{1f4a9}\\u{1f4a9}\\.$"
             )
         )]
         fn succeeds_with_escape_option(test_cases: Vec<&str>, expected_output: &str) {
@@ -836,8 +997,8 @@ mod space_word_conversion {
 
         #[rstest(test_cases, expected_output,
             case(
-                vec!["I   ♥♥♥ 36 and ٣ and 💩💩."],
-                "^\\w\\s\\s\\s\\u{2665}\\u{2665}\\u{2665}\\s\\w\\w\\s\\w\\w\\w\\s\\w\\s\\w\\w\\w\\s\\u{d83d}\\u{dca9}\\u{d83d}\\u{dca9}\\.$"
+                vec!["I   ♥♥♥ 36 and ٣ and y̆y̆ and 💩💩."],
+                "^\\w\\s\\s\\s\\u{2665}\\u{2665}\\u{2665}\\s\\w\\w\\s\\w\\w\\w\\s\\w\\s\\w\\w\\w\\s\\w\\w\\w\\w\\s\\w\\w\\w\\s\\u{d83d}\\u{dca9}\\u{d83d}\\u{dca9}\\.$"
             )
         )]
         fn succeeds_with_escape_and_surrogate_option(test_cases: Vec<&str>, expected_output: &str) {
@@ -853,7 +1014,10 @@ mod space_word_conversion {
         use super::*;
 
         #[rstest(test_cases, expected_output,
-            case(vec!["I   ♥♥♥ 36 and ٣ and 💩💩."], "^\\w\\s{3}♥{3}\\s\\w(\\w\\s\\w{3}\\s){2}💩{2}\\.$")
+            case(
+                vec!["I   ♥♥♥ 36 and ٣ and y̆y̆ and 💩💩."],
+                "^\\w\\s{3}♥{3}\\s\\w{2}\\s\\w{3}\\s\\w\\s\\w{3}\\s\\w{4}\\s\\w{3}\\s💩{2}\\.$"
+            )
         )]
         fn succeeds(test_cases: Vec<&str>, expected_output: &str) {
             let regexp = RegExpBuilder::from(&test_cases)
@@ -865,8 +1029,8 @@ mod space_word_conversion {
 
         #[rstest(test_cases, expected_output,
             case(
-                vec!["I   ♥♥♥ 36 and ٣ and 💩💩."],
-                "^\\w\\s{3}\\u{2665}{3}\\s\\w(\\w\\s\\w{3}\\s){2}\\u{1f4a9}{2}\\.$"
+                vec!["I   ♥♥♥ 36 and ٣ and y̆y̆ and 💩💩."],
+                "^\\w\\s{3}\\u{2665}{3}\\s\\w{2}\\s\\w{3}\\s\\w\\s\\w{3}\\s\\w{4}\\s\\w{3}\\s\\u{1f4a9}{2}\\.$"
             )
         )]
         fn succeeds_with_escape_option(test_cases: Vec<&str>, expected_output: &str) {
@@ -880,8 +1044,8 @@ mod space_word_conversion {
 
         #[rstest(test_cases, expected_output,
             case(
-                vec!["I   ♥♥♥ 36 and ٣ and 💩💩."],
-                "^\\w\\s{3}\\u{2665}{3}\\s\\w(\\w\\s\\w{3}\\s){2}(\\u{d83d}\\u{dca9}){2}\\.$"
+                vec!["I   ♥♥♥ 36 and ٣ and y̆y̆ and 💩💩."],
+                "^\\w\\s{3}\\u{2665}{3}\\s\\w{2}\\s\\w{3}\\s\\w\\s\\w{3}\\s\\w{4}\\s\\w{3}\\s(\\u{d83d}\\u{dca9}){2}\\.$"
             )
         )]
         fn succeeds_with_escape_and_surrogate_option(test_cases: Vec<&str>, expected_output: &str) {
@@ -902,8 +1066,8 @@ mod digit_space_word_conversion {
 
         #[rstest(test_cases, expected_output,
             case(
-                vec!["I   ♥♥♥ 36 and ٣ and 💩💩."],
-                "^\\w\\s\\s\\s♥♥♥\\s\\d\\d\\s\\w\\w\\w\\s\\d\\s\\w\\w\\w\\s💩💩\\.$"
+                vec!["I   ♥♥♥ 36 and ٣ and y̆y̆ and 💩💩."],
+                "^\\w\\s\\s\\s♥♥♥\\s\\d\\d\\s\\w\\w\\w\\s\\d\\s\\w\\w\\w\\s\\w\\w\\w\\w\\s\\w\\w\\w\\s💩💩\\.$"
             )
         )]
         fn succeeds(test_cases: Vec<&str>, expected_output: &str) {
@@ -916,8 +1080,8 @@ mod digit_space_word_conversion {
 
         #[rstest(test_cases, expected_output,
             case(
-                vec!["I   ♥♥♥ 36 and ٣ and 💩💩."],
-                "^\\w\\s\\s\\s\\u{2665}\\u{2665}\\u{2665}\\s\\d\\d\\s\\w\\w\\w\\s\\d\\s\\w\\w\\w\\s\\u{1f4a9}\\u{1f4a9}\\.$"
+                vec!["I   ♥♥♥ 36 and ٣ and y̆y̆ and 💩💩."],
+                "^\\w\\s\\s\\s\\u{2665}\\u{2665}\\u{2665}\\s\\d\\d\\s\\w\\w\\w\\s\\d\\s\\w\\w\\w\\s\\w\\w\\w\\w\\s\\w\\w\\w\\s\\u{1f4a9}\\u{1f4a9}\\.$"
             )
         )]
         fn succeeds_with_escape_option(test_cases: Vec<&str>, expected_output: &str) {
@@ -931,8 +1095,8 @@ mod digit_space_word_conversion {
 
         #[rstest(test_cases, expected_output,
             case(
-                vec!["I   ♥♥♥ 36 and ٣ and 💩💩."],
-                "^\\w\\s\\s\\s\\u{2665}\\u{2665}\\u{2665}\\s\\d\\d\\s\\w\\w\\w\\s\\d\\s\\w\\w\\w\\s\\u{d83d}\\u{dca9}\\u{d83d}\\u{dca9}\\.$"
+                vec!["I   ♥♥♥ 36 and ٣ and y̆y̆ and 💩💩."],
+                "^\\w\\s\\s\\s\\u{2665}\\u{2665}\\u{2665}\\s\\d\\d\\s\\w\\w\\w\\s\\d\\s\\w\\w\\w\\s\\w\\w\\w\\w\\s\\w\\w\\w\\s\\u{d83d}\\u{dca9}\\u{d83d}\\u{dca9}\\.$"
             )
         )]
         fn succeeds_with_escape_and_surrogate_option(test_cases: Vec<&str>, expected_output: &str) {
@@ -949,8 +1113,8 @@ mod digit_space_word_conversion {
 
         #[rstest(test_cases, expected_output,
             case(
-                vec!["I   ♥♥♥ 36 and ٣ and 💩💩."],
-                "^\\w\\s{3}♥{3}\\s\\d(\\d\\s\\w{3}\\s){2}💩{2}\\.$"
+                vec!["I   ♥♥♥ 36 and ٣ and y̆y̆ and 💩💩."],
+                "^\\w\\s{3}♥{3}\\s\\d(\\d\\s\\w{3}\\s){2}\\w{4}\\s\\w{3}\\s💩{2}\\.$"
             )
         )]
         fn succeeds(test_cases: Vec<&str>, expected_output: &str) {
@@ -968,8 +1132,8 @@ mod digit_space_word_conversion {
 
         #[rstest(test_cases, expected_output,
             case(
-                vec!["I   ♥♥♥ 36 and ٣ and 💩💩."],
-                "^\\w\\s{3}\\u{2665}{3}\\s\\d(\\d\\s\\w{3}\\s){2}\\u{1f4a9}{2}\\.$"
+                vec!["I   ♥♥♥ 36 and ٣ and y̆y̆ and 💩💩."],
+                "^\\w\\s{3}\\u{2665}{3}\\s\\d(\\d\\s\\w{3}\\s){2}\\w{4}\\s\\w{3}\\s\\u{1f4a9}{2}\\.$"
             )
         )]
         fn succeeds_with_escape_option(test_cases: Vec<&str>, expected_output: &str) {
@@ -988,8 +1152,8 @@ mod digit_space_word_conversion {
 
         #[rstest(test_cases, expected_output,
             case(
-                vec!["I   ♥♥♥ 36 and ٣ and 💩💩."],
-                "^\\w\\s{3}\\u{2665}{3}\\s\\d(\\d\\s\\w{3}\\s){2}(\\u{d83d}\\u{dca9}){2}\\.$"
+                vec!["I   ♥♥♥ 36 and ٣ and y̆y̆ and 💩💩."],
+                "^\\w\\s{3}\\u{2665}{3}\\s\\d(\\d\\s\\w{3}\\s){2}\\w{4}\\s\\w{3}\\s(\\u{d83d}\\u{dca9}){2}\\.$"
             )
         )]
         fn succeeds_with_escape_and_surrogate_option(test_cases: Vec<&str>, expected_output: &str) {
@@ -1015,8 +1179,8 @@ mod non_digit_conversion {
 
         #[rstest(test_cases, expected_output,
             case(
-                vec!["I   ♥♥♥ 36 and ٣ and 💩💩."],
-                "^\\D\\D\\D\\D\\D\\D\\D\\D36\\D\\D\\D\\D\\D٣\\D\\D\\D\\D\\D\\D\\D\\D$"
+                vec!["I   ♥♥♥ 36 and ٣ and y̆y̆ and 💩💩."],
+                "^\\D\\D\\D\\D\\D\\D\\D\\D36\\D\\D\\D\\D\\D٣\\D\\D\\D\\D\\D\\D\\D\\D\\D\\D\\D\\D\\D\\D\\D\\D\\D$"
             )
         )]
         fn succeeds(test_cases: Vec<&str>, expected_output: &str) {
@@ -1029,8 +1193,8 @@ mod non_digit_conversion {
 
         #[rstest(test_cases, expected_output,
             case(
-                vec!["I   ♥♥♥ 36 and ٣ and 💩💩."],
-                "^\\D\\D\\D\\D\\D\\D\\D\\D36\\D\\D\\D\\D\\D\\u{663}\\D\\D\\D\\D\\D\\D\\D\\D$"
+                vec!["I   ♥♥♥ 36 and ٣ and y̆y̆ and 💩💩."],
+                "^\\D\\D\\D\\D\\D\\D\\D\\D36\\D\\D\\D\\D\\D\\u{663}\\D\\D\\D\\D\\D\\D\\D\\D\\D\\D\\D\\D\\D\\D\\D\\D\\D$"
             )
         )]
         fn succeeds_with_escape_option(test_cases: Vec<&str>, expected_output: &str) {
@@ -1047,7 +1211,7 @@ mod non_digit_conversion {
         use super::*;
 
         #[rstest(test_cases, expected_output,
-            case(vec!["I   ♥♥♥ 36 and ٣ and 💩💩."], "^\\D{8}36\\D{5}٣\\D{8}$")
+            case(vec!["I   ♥♥♥ 36 and ٣ and y̆y̆ and 💩💩."], "^\\D{8}36\\D{5}٣\\D{17}$")
         )]
         fn succeeds(test_cases: Vec<&str>, expected_output: &str) {
             let regexp = RegExpBuilder::from(&test_cases)
@@ -1058,7 +1222,7 @@ mod non_digit_conversion {
         }
 
         #[rstest(test_cases, expected_output,
-            case(vec!["I   ♥♥♥ 36 and ٣ and 💩💩."], "^\\D{8}36\\D{5}\\u{663}\\D{8}$")
+            case(vec!["I   ♥♥♥ 36 and ٣ and y̆y̆ and 💩💩."], "^\\D{8}36\\D{5}\\u{663}\\D{17}$")
         )]
         fn succeeds_with_escape_option(test_cases: Vec<&str>, expected_output: &str) {
             let regexp = RegExpBuilder::from(&test_cases)
@@ -1079,8 +1243,8 @@ mod non_space_conversion {
 
         #[rstest(test_cases, expected_output,
             case(
-                vec!["I   ♥♥♥ 36 and ٣ and 💩💩."],
-                "^\\S   \\S\\S\\S \\S\\S \\S\\S\\S \\S \\S\\S\\S \\S\\S\\S$"
+                vec!["I   ♥♥♥ 36 and ٣ and y̆y̆ and 💩💩."],
+                "^\\S   \\S\\S\\S \\S\\S \\S\\S\\S \\S \\S\\S\\S \\S\\S\\S\\S \\S\\S\\S \\S\\S\\S$"
             )
         )]
         fn succeeds(test_cases: Vec<&str>, expected_output: &str) {
@@ -1096,7 +1260,10 @@ mod non_space_conversion {
         use super::*;
 
         #[rstest(test_cases, expected_output,
-            case(vec!["I   ♥♥♥ 36 and ٣ and 💩💩."], "^\\S {3}\\S{3} \\S(\\S \\S{3} ){2}\\S{3}$")
+            case(
+                vec!["I   ♥♥♥ 36 and ٣ and y̆y̆ and 💩💩."],
+                "^\\S {3}\\S{3} \\S{2} \\S{3} \\S \\S{3} \\S{4} \\S{3} \\S{3}$"
+            )
         )]
         fn succeeds(test_cases: Vec<&str>, expected_output: &str) {
             let regexp = RegExpBuilder::from(&test_cases)
@@ -1116,8 +1283,8 @@ mod non_word_conversion {
 
         #[rstest(test_cases, expected_output,
             case(
-                vec!["I   ♥♥♥ 36 and ٣ and 💩💩."],
-                "^I\\W\\W\\W\\W\\W\\W\\W36\\Wand\\W٣\\Wand\\W\\W\\W\\W$"
+                vec!["I   ♥♥♥ 36 and ٣ and y̆y̆ and 💩💩."],
+                "^I\\W\\W\\W\\W\\W\\W\\W36\\Wand\\W٣\\Wand\\Wy̆y̆\\Wand\\W\\W\\W\\W$"
             )
         )]
         fn succeeds(test_cases: Vec<&str>, expected_output: &str) {
@@ -1130,8 +1297,8 @@ mod non_word_conversion {
 
         #[rstest(test_cases, expected_output,
             case(
-                vec!["I   ♥♥♥ 36 and ٣ and 💩💩."],
-                "^I\\W\\W\\W\\W\\W\\W\\W36\\Wand\\W\\u{663}\\Wand\\W\\W\\W\\W$"
+                vec!["I   ♥♥♥ 36 and ٣ and y̆y̆ and 💩💩."],
+                "^I\\W\\W\\W\\W\\W\\W\\W36\\Wand\\W\\u{663}\\Wand\\Wy\\u{306}y\\u{306}\\Wand\\W\\W\\W\\W$"
             )
         )]
         fn succeeds_with_escape_option(test_cases: Vec<&str>, expected_output: &str) {
@@ -1149,8 +1316,8 @@ mod non_word_conversion {
 
         #[rstest(test_cases, expected_output,
             case(
-                vec!["I   ♥♥♥ 36 and ٣ and 💩💩."],
-                "^I\\W{7}36\\Wand\\W٣\\Wand\\W{4}$"
+                vec!["I   ♥♥♥ 36 and ٣ and y̆y̆ and 💩💩."],
+                "^I\\W{7}36\\Wand\\W٣\\Wand\\W(y̆){2}\\Wand\\W{4}$"
             )
         )]
         fn succeeds(test_cases: Vec<&str>, expected_output: &str) {
@@ -1163,8 +1330,8 @@ mod non_word_conversion {
 
         #[rstest(test_cases, expected_output,
             case(
-                vec!["I   ♥♥♥ 36 and ٣ and 💩💩."],
-                "^I\\W{7}36\\Wand\\W\\u{663}\\Wand\\W{4}$"
+                vec!["I   ♥♥♥ 36 and ٣ and y̆y̆ and 💩💩."],
+                "^I\\W{7}36\\Wand\\W\\u{663}\\Wand\\W(y\\u{306}){2}\\Wand\\W{4}$"
             )
         )]
         fn succeeds_with_escape_option(test_cases: Vec<&str>, expected_output: &str) {
@@ -1186,8 +1353,8 @@ mod non_digit_non_space_conversion {
 
         #[rstest(test_cases, expected_output,
             case(
-                vec!["I   ♥♥♥ 36 and ٣ and 💩💩."],
-                "^\\D\\D\\D\\D\\D\\D\\D\\D\\S\\S\\D\\D\\D\\D\\D\\S\\D\\D\\D\\D\\D\\D\\D\\D$"
+                vec!["I   ♥♥♥ 36 and ٣ and y̆y̆ and 💩💩."],
+                "^\\D\\D\\D\\D\\D\\D\\D\\D\\S\\S\\D\\D\\D\\D\\D\\S\\D\\D\\D\\D\\D\\D\\D\\D\\D\\D\\D\\D\\D\\D\\D\\D\\D$"
             )
         )]
         fn succeeds(test_cases: Vec<&str>, expected_output: &str) {
@@ -1203,7 +1370,7 @@ mod non_digit_non_space_conversion {
         use super::*;
 
         #[rstest(test_cases, expected_output,
-            case(vec!["I   ♥♥♥ 36 and ٣ and 💩💩."], "^\\D{8}\\S{2}\\D{5}\\S\\D{8}$")
+            case(vec!["I   ♥♥♥ 36 and ٣ and y̆y̆ and 💩💩."], "^\\D{8}\\S{2}\\D{5}\\S\\D{17}$")
         )]
         fn succeeds(test_cases: Vec<&str>, expected_output: &str) {
             let regexp = RegExpBuilder::from(&test_cases)
@@ -1223,8 +1390,8 @@ mod non_digit_non_word_conversion {
 
         #[rstest(test_cases, expected_output,
             case(
-                vec!["I   ♥♥♥ 36 and ٣ and 💩💩."],
-                "^\\D\\D\\D\\D\\D\\D\\D\\D36\\D\\D\\D\\D\\D٣\\D\\D\\D\\D\\D\\D\\D\\D$"
+                vec!["I   ♥♥♥ 36 and ٣ and y̆y̆ and 💩💩."],
+                "^\\D\\D\\D\\D\\D\\D\\D\\D36\\D\\D\\D\\D\\D٣\\D\\D\\D\\D\\D\\D\\D\\D\\D\\D\\D\\D\\D\\D\\D\\D\\D$"
             )
         )]
         fn succeeds(test_cases: Vec<&str>, expected_output: &str) {
@@ -1240,7 +1407,7 @@ mod non_digit_non_word_conversion {
         use super::*;
 
         #[rstest(test_cases, expected_output,
-            case(vec!["I   ♥♥♥ 36 and ٣ and 💩💩."], "^\\D{8}36\\D{5}٣\\D{8}$")
+            case(vec!["I   ♥♥♥ 36 and ٣ and y̆y̆ and 💩💩."], "^\\D{8}36\\D{5}٣\\D{17}$")
         )]
         fn succeeds(test_cases: Vec<&str>, expected_output: &str) {
             let regexp = RegExpBuilder::from(&test_cases)
@@ -1260,8 +1427,8 @@ mod non_space_non_word_conversion {
 
         #[rstest(test_cases, expected_output,
             case(
-                vec!["I   ♥♥♥ 36 and ٣ and 💩💩."],
-                "^\\S\\W\\W\\W\\W\\W\\W\\W\\S\\S\\W\\S\\S\\S\\W\\S\\W\\S\\S\\S\\W\\W\\W\\W$"
+                vec!["I   ♥♥♥ 36 and ٣ and y̆y̆ and 💩💩."],
+                "^\\S\\W\\W\\W\\W\\W\\W\\W\\S\\S\\W\\S\\S\\S\\W\\S\\W\\S\\S\\S\\W\\S\\S\\S\\S\\W\\S\\S\\S\\W\\W\\W\\W$"
             )
         )]
         fn succeeds(test_cases: Vec<&str>, expected_output: &str) {
@@ -1277,7 +1444,10 @@ mod non_space_non_word_conversion {
         use super::*;
 
         #[rstest(test_cases, expected_output,
-            case(vec!["I   ♥♥♥ 36 and ٣ and 💩💩."], "^\\S\\W{7}(\\S{2}\\W\\S){2}\\W\\S{3}\\W{4}$")
+            case(
+                vec!["I   ♥♥♥ 36 and ٣ and y̆y̆ and 💩💩."],
+                "^\\S\\W{7}\\S{2}\\W\\S{3}\\W\\S\\W\\S{3}\\W\\S{4}\\W\\S{3}\\W{4}$"
+            )
         )]
         fn succeeds(test_cases: Vec<&str>, expected_output: &str) {
             let regexp = RegExpBuilder::from(&test_cases)
@@ -1297,8 +1467,8 @@ mod non_digit_non_space_non_word_conversion {
 
         #[rstest(test_cases, expected_output,
             case(
-                vec!["I   ♥♥♥ 36 and ٣ and 💩💩."],
-                "^\\D\\D\\D\\D\\D\\D\\D\\D\\S\\S\\D\\D\\D\\D\\D\\S\\D\\D\\D\\D\\D\\D\\D\\D$"
+                vec!["I   ♥♥♥ 36 and ٣ and y̆y̆ and 💩💩."],
+                "^\\D\\D\\D\\D\\D\\D\\D\\D\\S\\S\\D\\D\\D\\D\\D\\S\\D\\D\\D\\D\\D\\D\\D\\D\\D\\D\\D\\D\\D\\D\\D\\D\\D$"
             )
         )]
         fn succeeds(test_cases: Vec<&str>, expected_output: &str) {
@@ -1314,7 +1484,7 @@ mod non_digit_non_space_non_word_conversion {
         use super::*;
 
         #[rstest(test_cases, expected_output,
-            case(vec!["I   ♥♥♥ 36 and ٣ and 💩💩."], "^\\D{8}\\S{2}\\D{5}\\S\\D{8}$")
+            case(vec!["I   ♥♥♥ 36 and ٣ and y̆y̆ and 💩💩."], "^\\D{8}\\S{2}\\D{5}\\S\\D{17}$")
         )]
         fn succeeds(test_cases: Vec<&str>, expected_output: &str) {
             let regexp = RegExpBuilder::from(&test_cases)
@@ -1339,8 +1509,8 @@ mod digit_non_digit_conversion {
 
         #[rstest(test_cases, expected_output,
             case(
-                vec!["I   ♥♥♥ 36 and ٣ and 💩💩."],
-                "^\\D\\D\\D\\D\\D\\D\\D\\D\\d\\d\\D\\D\\D\\D\\D\\d\\D\\D\\D\\D\\D\\D\\D\\D$"
+                vec!["I   ♥♥♥ 36 and ٣ and y̆y̆ and 💩💩."],
+                "^\\D\\D\\D\\D\\D\\D\\D\\D\\d\\d\\D\\D\\D\\D\\D\\d\\D\\D\\D\\D\\D\\D\\D\\D\\D\\D\\D\\D\\D\\D\\D\\D\\D$"
             )
         )]
         fn succeeds(test_cases: Vec<&str>, expected_output: &str) {
@@ -1356,7 +1526,7 @@ mod digit_non_digit_conversion {
         use super::*;
 
         #[rstest(test_cases, expected_output,
-            case(vec!["I   ♥♥♥ 36 and ٣ and 💩💩."], "^\\D{8}\\d{2}\\D{5}\\d\\D{8}$")
+            case(vec!["I   ♥♥♥ 36 and ٣ and y̆y̆ and 💩💩."], "^\\D{8}\\d{2}\\D{5}\\d\\D{17}$")
         )]
         fn succeeds(test_cases: Vec<&str>, expected_output: &str) {
             let regexp = RegExpBuilder::from(&test_cases)
@@ -1376,8 +1546,8 @@ mod space_non_space_conversion {
 
         #[rstest(test_cases, expected_output,
             case(
-                vec!["I   ♥♥♥ 36 and ٣ and 💩💩."],
-                "^\\S\\s\\s\\s\\S\\S\\S\\s\\S\\S\\s\\S\\S\\S\\s\\S\\s\\S\\S\\S\\s\\S\\S\\S$"
+                vec!["I   ♥♥♥ 36 and ٣ and y̆y̆ and 💩💩."],
+                "^\\S\\s\\s\\s\\S\\S\\S\\s\\S\\S\\s\\S\\S\\S\\s\\S\\s\\S\\S\\S\\s\\S\\S\\S\\S\\s\\S\\S\\S\\s\\S\\S\\S$"
             )
         )]
         fn succeeds(test_cases: Vec<&str>, expected_output: &str) {
@@ -1394,8 +1564,8 @@ mod space_non_space_conversion {
 
         #[rstest(test_cases, expected_output,
             case(
-                vec!["I   ♥♥♥ 36 and ٣ and 💩💩."],
-                "^\\S\\s{3}\\S{3}\\s\\S(\\S\\s\\S{3}\\s){2}\\S{3}$"
+                vec!["I   ♥♥♥ 36 and ٣ and y̆y̆ and 💩💩."],
+                "^\\S\\s{3}\\S{3}\\s\\S{2}\\s\\S{3}\\s\\S\\s\\S{3}\\s\\S{4}\\s\\S{3}\\s\\S{3}$"
             )
         )]
         fn succeeds(test_cases: Vec<&str>, expected_output: &str) {
@@ -1416,8 +1586,8 @@ mod word_non_word_conversion {
 
         #[rstest(test_cases, expected_output,
             case(
-                vec!["I   ♥♥♥ 36 and ٣ and 💩💩."],
-                "^\\w\\W\\W\\W\\W\\W\\W\\W\\w\\w\\W\\w\\w\\w\\W\\w\\W\\w\\w\\w\\W\\W\\W\\W$"
+                vec!["I   ♥♥♥ 36 and ٣ and y̆y̆ and 💩💩."],
+                "^\\w\\W\\W\\W\\W\\W\\W\\W\\w\\w\\W\\w\\w\\w\\W\\w\\W\\w\\w\\w\\W\\w\\w\\w\\w\\W\\w\\w\\w\\W\\W\\W\\W$"
             )
         )]
         fn succeeds(test_cases: Vec<&str>, expected_output: &str) {
@@ -1433,7 +1603,10 @@ mod word_non_word_conversion {
         use super::*;
 
         #[rstest(test_cases, expected_output,
-            case(vec!["I   ♥♥♥ 36 and ٣ and 💩💩."], "^\\w\\W{7}(\\w{2}\\W\\w){2}\\W\\w{3}\\W{4}$")
+            case(
+                vec!["I   ♥♥♥ 36 and ٣ and y̆y̆ and 💩💩."],
+                "^\\w\\W{7}\\w{2}\\W\\w{3}\\W\\w\\W\\w{3}\\W\\w{4}\\W\\w{3}\\W{4}$"
+            )
         )]
         fn succeeds(test_cases: Vec<&str>, expected_output: &str) {
             let regexp = RegExpBuilder::from(&test_cases)

@@ -32,6 +32,9 @@ use structopt::StructOpt;
     global_setting = AppSettings::AllowLeadingHyphen
 )]
 struct CLI {
+    // --------------------
+    // ARGS
+    // --------------------
     #[structopt(
         value_name = "INPUT",
         required_unless = "file",
@@ -40,21 +43,9 @@ struct CLI {
     )]
     input: Vec<String>,
 
-    #[structopt(
-        name = "file",
-        value_name = "FILE",
-        short,
-        long,
-        parse(from_os_str),
-        required_unless = "input",
-        help = "Reads test cases on separate lines from a file",
-        long_help = "Reads test cases on separate lines from a file.\n\n\
-                     Lines may be ended with either a newline (`\\n`) or\n\
-                     a carriage return with a line feed (`\\r\\n`).\n\
-                     The final line ending is optional."
-    )]
-    file_path: Option<PathBuf>,
-
+    // --------------------
+    // FLAGS
+    // --------------------
     #[structopt(
         name = "digits",
         short,
@@ -143,28 +134,6 @@ struct CLI {
     is_repetition_converted: bool,
 
     #[structopt(
-        name = "min-repetitions",
-        value_name = "QUANTITY",
-        long,
-        default_value = "2",
-        validator = min_repetitions_validator,
-        help = "Specifies the minimum quantity of substring repetitions\n\
-                to be converted if --repetitions is set"
-    )]
-    minimum_repetitions: u32,
-
-    #[structopt(
-        name = "min-substring-length",
-        value_name = "LENGTH",
-        long,
-        default_value = "1",
-        validator = min_substring_length_validator,
-        help = "Specifies the minimum length a repeated substring must have\n\
-                in order to be converted if --repetitions is set"
-    )]
-    minimum_substring_length: u32,
-
-    #[structopt(
         name = "escape",
         short,
         long,
@@ -190,6 +159,46 @@ struct CLI {
         display_order = 10
     )]
     is_output_colorized: bool,
+
+    // --------------------
+    // OPTIONS
+    // --------------------
+    #[structopt(
+        name = "file",
+        value_name = "FILE",
+        short,
+        long,
+        parse(from_os_str),
+        required_unless = "input",
+        help = "Reads test cases on separate lines from a file",
+        long_help = "Reads test cases on separate lines from a file.\n\n\
+                     Lines may be ended with either a newline (`\\n`) or\n\
+                     a carriage return with a line feed (`\\r\\n`).\n\
+                     The final line ending is optional."
+    )]
+    file_path: Option<PathBuf>,
+
+    #[structopt(
+        name = "min-repetitions",
+        value_name = "QUANTITY",
+        long,
+        default_value = "2",
+        validator = min_repetitions_validator,
+        help = "Specifies the minimum quantity of substring repetitions\n\
+                to be converted if --repetitions is set"
+    )]
+    minimum_repetitions: u32,
+
+    #[structopt(
+        name = "min-substring-length",
+        value_name = "LENGTH",
+        long,
+        default_value = "1",
+        validator = min_substring_length_validator,
+        help = "Specifies the minimum length a repeated substring must have\n\
+                in order to be converted if --repetitions is set"
+    )]
+    minimum_substring_length: u32,
 }
 
 fn main() {
