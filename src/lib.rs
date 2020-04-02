@@ -62,7 +62,7 @@
 //! use grex::RegExpBuilder;
 //!
 //! let regexp = RegExpBuilder::from(&["a", "aa", "aaa"]).build();
-//! assert_eq!(regexp, "^a(aa?)?$");
+//! assert_eq!(regexp, "^a(?:aa?)?$");
 //! ```
 //!
 //! ### 3.2 Convert repeated substrings
@@ -84,7 +84,7 @@
 //! let regexp = RegExpBuilder::from(&["a", "aa", "123"])
 //!     .with_conversion_of(&[Feature::Digit, Feature::Word])
 //!     .build();
-//! assert_eq!(regexp, "^(\\d\\d\\d|\\w\\w|\\w)$");
+//! assert_eq!(regexp, "^(?:\\d\\d\\d|\\w\\w|\\w)$");
 //! ```
 //!
 //! ### 3.4 Escape non-ascii characters
@@ -133,7 +133,7 @@
 //! let regexp = RegExpBuilder::from(&["a", "aa", "123"])
 //!     .with_conversion_of(&[Feature::Repetition, Feature::Digit, Feature::Word])
 //!     .build();
-//! assert_eq!(regexp, "^(\\w{1,2}|\\d{3})$");
+//! assert_eq!(regexp, "^(?:\\w{1,2}|\\d{3})$");
 //! ```
 
 #[macro_use]

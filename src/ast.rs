@@ -566,7 +566,7 @@ mod tests {
             Expression::new_repetition(literal1, Quantifier::KleeneStar, &RegExpConfig::new());
         let concatenation =
             Expression::new_concatenation(repetition, literal2, &RegExpConfig::new());
-        assert_eq!(concatenation.to_string(), "(abc)*def");
+        assert_eq!(concatenation.to_string(), "(?:abc)*def");
     }
 
     #[test]
@@ -633,7 +633,7 @@ mod tests {
         );
         let repetition =
             Expression::new_repetition(literal, Quantifier::KleeneStar, &RegExpConfig::new());
-        assert_eq!(repetition.to_string(), "(abc)*");
+        assert_eq!(repetition.to_string(), "(?:abc)*");
     }
 
     #[test]

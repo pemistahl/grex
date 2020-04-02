@@ -66,13 +66,19 @@ fn format_alternation(
     options: &[Expression],
     config: &RegExpConfig,
 ) -> Result {
-    if let [left_parenthesis, right_parenthesis, pipe] =
-        &colorize(vec!["(", ")", "|"], config.is_output_colorized)[..]
+    if let [left_non_capturing_parenthesis, left_capturing_parenthesis, right_parenthesis, pipe] =
+        &colorize(vec!["(?:", "(", ")", "|"], config.is_output_colorized)[..]
     {
         let alternation_str = options
             .iter()
             .map(|option| {
                 if option.precedence() < expr.precedence() && !option.is_single_codepoint() {
+                    let left_parenthesis = if config.is_group_captured {
+                        left_capturing_parenthesis
+                    } else {
+                        left_non_capturing_parenthesis
+                    };
+
                     format!("{}{}{}", left_parenthesis, option, right_parenthesis)
                 } else {
                     format!("{}", option)
@@ -172,13 +178,18 @@ fn format_concatenation(
     expr2: &Expression,
     config: &RegExpConfig,
 ) -> Result {
-    if let [left_parenthesis, right_parenthesis] =
-        &colorize(vec!["(", ")"], config.is_output_colorized)[..]
+    if let [left_non_capturing_parenthesis, left_capturing_parenthesis, right_parenthesis] =
+        &colorize(vec!["(?:", "(", ")"], config.is_output_colorized)[..]
     {
         let expr_strs = vec![expr1, expr2]
             .iter()
             .map(|&it| {
                 if it.precedence() < expr.precedence() && !it.is_single_codepoint() {
+                    let left_parenthesis = if config.is_group_captured {
+                        left_capturing_parenthesis
+                    } else {
+                        left_non_capturing_parenthesis
+                    };
                     format!("{}{}{}", left_parenthesis, it, right_parenthesis)
                 } else {
                     format!("{}", it)
@@ -237,12 +248,18 @@ fn format_repetition(
     quantifier: &Quantifier,
     config: &RegExpConfig,
 ) -> Result {
-    if let [left_parenthesis, right_parenthesis, colored_quantifier] = &colorize(
-        vec!["(", ")", quantifier.to_string().as_str()],
-        config.is_output_colorized,
-    )[..]
+    if let [left_non_capturing_parenthesis, left_capturing_parenthesis, right_parenthesis, colored_quantifier] =
+        &colorize(
+            vec!["(?:", "(", ")", quantifier.to_string().as_str()],
+            config.is_output_colorized,
+        )[..]
     {
         if expr1.precedence() < expr.precedence() && !expr1.is_single_codepoint() {
+            let left_parenthesis = if config.is_group_captured {
+                left_capturing_parenthesis
+            } else {
+                left_non_capturing_parenthesis
+            };
             write!(
                 f,
                 "{}{}{}{}",

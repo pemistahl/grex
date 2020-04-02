@@ -30,7 +30,7 @@ pub(crate) fn colorize(characters: Vec<&str>, is_output_colorized: bool) -> Vec<
                 }
             }
             match it {
-                "(" | ")" => it.green().bold(),
+                "(?:" | "(" | ")" => it.green().bold(),
                 "{" | "}" | "," => it.white().on_bright_blue(),
                 "[" | "]" | "-" => it.cyan().bold(),
                 "^" | "$" => it.yellow().bold(),

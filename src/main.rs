@@ -152,11 +152,20 @@ struct CLI {
     is_astral_code_point_converted_to_surrogate: bool,
 
     #[structopt(
+        name = "capture-groups",
+        short = "g",
+        long,
+        help = "Replaces non-capturing groups by capturing ones",
+        display_order = 10
+    )]
+    is_group_captured: bool,
+
+    #[structopt(
         name = "colorize",
         short,
         long,
         help = "Provides syntax highlighting for the resulting regular expression",
-        display_order = 10
+        display_order = 11
     )]
     is_output_colorized: bool,
 
@@ -264,6 +273,10 @@ fn handle_input(cli: &CLI, input: Result<Vec<String>, Error>) {
                 builder.with_escaping_of_non_ascii_chars(
                     cli.is_astral_code_point_converted_to_surrogate,
                 );
+            }
+
+            if cli.is_group_captured {
+                builder.with_capturing_groups();
             }
 
             if cli.is_output_colorized {

@@ -32,6 +32,7 @@ pub(crate) struct RegExpConfig {
     pub(crate) minimum_substring_length: u32,
     pub(crate) is_non_ascii_char_escaped: bool,
     pub(crate) is_astral_code_point_converted_to_surrogate: bool,
+    pub(crate) is_group_captured: bool,
     pub(crate) is_output_colorized: bool,
 }
 
@@ -43,6 +44,7 @@ impl RegExpConfig {
             minimum_substring_length: 1,
             is_non_ascii_char_escaped: false,
             is_astral_code_point_converted_to_surrogate: false,
+            is_group_captured: false,
             is_output_colorized: false,
         }
     }
@@ -159,6 +161,13 @@ impl RegExpBuilder {
         self
     }
 
+    /// Tells `RegExpBuilder` to replace the default non-capturing groups by
+    /// capturing ones in the resulting regular expression.
+    pub fn with_capturing_groups(&mut self) -> &mut Self {
+        self.config.is_group_captured = true;
+        self
+    }
+
     /// Tells `RegExpBuilder` to provide syntax highlighting for the resulting regular expression.
     ///
     /// ⚠ This method may only be used if the resulting regular expression is meant to
@@ -231,19 +240,30 @@ impl RegExp {
 
 impl Display for RegExp {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
-        if let [left_anchor, right_anchor, left_parenthesis, right_parenthesis] =
-            &colorize(vec!["^", "$", "(", ")"], self.config.is_output_colorized)[..]
+        if let [left_anchor, right_anchor, left_non_capturing_parenthesis, left_capturing_parenthesis, right_parenthesis] =
+            &colorize(
+                vec!["^", "$", "(?:", "(", ")"],
+                self.config.is_output_colorized,
+            )[..]
         {
             match self.ast {
-                Expression::Alternation(_, _) => write!(
-                    f,
-                    "{}{}{}{}{}",
-                    left_anchor,
-                    left_parenthesis,
-                    self.ast.to_string(),
-                    right_parenthesis,
-                    right_anchor
-                ),
+                Expression::Alternation(_, _) => {
+                    let left_parenthesis = if self.config.is_group_captured {
+                        left_capturing_parenthesis
+                    } else {
+                        left_non_capturing_parenthesis
+                    };
+
+                    write!(
+                        f,
+                        "{}{}{}{}{}",
+                        left_anchor,
+                        left_parenthesis,
+                        self.ast.to_string(),
+                        right_parenthesis,
+                        right_anchor
+                    )
+                }
                 _ => write!(f, "{}{}{}", left_anchor, self.ast.to_string(), right_anchor),
             }
         } else {

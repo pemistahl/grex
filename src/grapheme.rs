@@ -310,9 +310,10 @@ impl Display for Grapheme {
             self.repetitions.iter().map(|it| it.to_string()).join("")
         };
 
-        if let [left_parenthesis, right_parenthesis, left_brace, right_brace, comma, min, max, colored_value] =
+        if let [left_non_capturing_parenthesis, left_capturing_parenthesis, right_parenthesis, left_brace, right_brace, comma, min, max, colored_value] =
             &colorize(
                 vec![
+                    "(?:",
                     "(",
                     ")",
                     "{",
@@ -325,6 +326,12 @@ impl Display for Grapheme {
                 self.config.is_output_colorized,
             )[..]
         {
+            let left_parenthesis = if self.config.is_group_captured {
+                left_capturing_parenthesis
+            } else {
+                left_non_capturing_parenthesis
+            };
+
             if !is_range && is_repetition && is_single_char {
                 write!(f, "{}{}{}{}", colored_value, left_brace, min, right_brace)
             } else if !is_range && is_repetition && !is_single_char {
