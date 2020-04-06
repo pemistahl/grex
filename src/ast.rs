@@ -447,11 +447,6 @@ fn find_common_substring(
 ) -> Option<Vec<Grapheme>> {
     let mut graphemes_a = a.value(Some(substring)).unwrap_or_else(|| vec![]);
     let mut graphemes_b = b.value(Some(substring)).unwrap_or_else(|| vec![]);
-
-    if graphemes_a.len() < 2 || graphemes_b.len() < 2 {
-        return None;
-    }
-
     let mut common_graphemes = vec![];
 
     if let Substring::Suffix = substring {

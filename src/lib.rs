@@ -84,7 +84,7 @@
 //! let regexp = RegExpBuilder::from(&["a", "aa", "123"])
 //!     .with_conversion_of(&[Feature::Digit, Feature::Word])
 //!     .build();
-//! assert_eq!(regexp, "^(?:\\d\\d\\d|\\w\\w|\\w)$");
+//! assert_eq!(regexp, "^(?:\\d\\d\\d|\\w(?:\\w)?)$");
 //! ```
 //!
 //! ### 3.4 Escape non-ascii characters
