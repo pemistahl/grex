@@ -124,12 +124,21 @@ struct CLI {
     is_non_word_converted: bool,
 
     #[structopt(
+        name = "ignore-case",
+        short,
+        long,
+        help = "Performs case-insensitive matching, letters match both upper and lower case",
+        display_order = 7
+    )]
+    is_case_ignored: bool,
+
+    #[structopt(
         name = "repetitions",
         short,
         long,
         help = "Detects repeated non-overlapping substrings and\n\
                 converts them to {min,max} quantifier notation",
-        display_order = 7
+        display_order = 8
     )]
     is_repetition_converted: bool,
 
@@ -138,7 +147,7 @@ struct CLI {
         short,
         long,
         help = "Replaces all non-ASCII characters with unicode escape sequences",
-        display_order = 8
+        display_order = 9
     )]
     is_non_ascii_char_escaped: bool,
 
@@ -147,7 +156,7 @@ struct CLI {
         long,
         requires = "escape",
         help = "Converts astral code points to surrogate pairs if --escape is set",
-        display_order = 9
+        display_order = 10
     )]
     is_astral_code_point_converted_to_surrogate: bool,
 
@@ -156,7 +165,7 @@ struct CLI {
         short = "g",
         long,
         help = "Replaces non-capturing groups by capturing ones",
-        display_order = 10
+        display_order = 11
     )]
     is_group_captured: bool,
 
@@ -165,7 +174,7 @@ struct CLI {
         short,
         long,
         help = "Provides syntax highlighting for the resulting regular expression",
-        display_order = 11
+        display_order = 12
     )]
     is_output_colorized: bool,
 
@@ -267,6 +276,10 @@ fn handle_input(cli: &CLI, input: Result<Vec<String>, Error>) {
 
             if !conversion_features.is_empty() {
                 builder.with_conversion_of(&conversion_features);
+            }
+
+            if cli.is_case_ignored {
+                builder.with_case_insensitive_matching();
             }
 
             if cli.is_non_ascii_char_escaped {

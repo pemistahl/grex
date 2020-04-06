@@ -18,6 +18,7 @@ use crate::ast::Expression;
 use crate::color::colorize;
 use crate::dfa::DFA;
 use crate::grapheme::GraphemeCluster;
+use colored::Colorize;
 use itertools::Itertools;
 use std::clone::Clone;
 use std::cmp::Ordering;
@@ -30,6 +31,7 @@ pub(crate) struct RegExpConfig {
     pub(crate) conversion_features: Vec<Feature>,
     pub(crate) minimum_repetitions: u32,
     pub(crate) minimum_substring_length: u32,
+    pub(crate) is_case_ignored: bool,
     pub(crate) is_non_ascii_char_escaped: bool,
     pub(crate) is_astral_code_point_converted_to_surrogate: bool,
     pub(crate) is_group_captured: bool,
@@ -42,6 +44,7 @@ impl RegExpConfig {
             conversion_features: vec![],
             minimum_repetitions: 2,
             minimum_substring_length: 1,
+            is_case_ignored: false,
             is_non_ascii_char_escaped: false,
             is_astral_code_point_converted_to_surrogate: false,
             is_group_captured: false,
@@ -114,6 +117,13 @@ impl RegExpBuilder {
             panic!("No conversion features have been provided for regular expression generation");
         }
         self.config.conversion_features = features.to_vec();
+        self
+    }
+
+    /// Tells `RegExpBuilder` to perform case-insensitive matching of test cases
+    /// so that letters match both upper and lower case.
+    pub fn with_case_insensitive_matching(&mut self) -> &mut Self {
+        self.config.is_case_ignored = true;
         self
     }
 
@@ -193,6 +203,9 @@ pub(crate) struct RegExp {
 
 impl RegExp {
     fn from(test_cases: &mut Vec<String>, config: &RegExpConfig) -> Self {
+        if config.is_case_ignored {
+            Self::convert_to_lowercase(test_cases);
+        }
         Self::sort(test_cases);
         let grapheme_clusters = Self::grapheme_clusters(&test_cases, config);
         let dfa = DFA::from(grapheme_clusters, config);
@@ -201,6 +214,13 @@ impl RegExp {
             ast,
             config: config.clone(),
         }
+    }
+
+    fn convert_to_lowercase(test_cases: &mut Vec<String>) {
+        std::mem::replace(
+            test_cases,
+            test_cases.iter().map(|it| it.to_lowercase()).collect_vec(),
+        );
     }
 
     fn sort(test_cases: &mut Vec<String>) {
@@ -240,12 +260,18 @@ impl RegExp {
 
 impl Display for RegExp {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
-        if let [left_anchor, right_anchor, left_non_capturing_parenthesis, left_capturing_parenthesis, right_parenthesis] =
+        if let [case_insensitive_flag, left_anchor, right_anchor, left_non_capturing_parenthesis, left_capturing_parenthesis, right_parenthesis] =
             &colorize(
-                vec!["^", "$", "(?:", "(", ")"],
+                vec!["(?i)", "^", "$", "(?:", "(", ")"],
                 self.config.is_output_colorized,
             )[..]
         {
+            let flag = if self.config.is_case_ignored {
+                case_insensitive_flag.clone()
+            } else {
+                "".clear()
+            };
+
             match self.ast {
                 Expression::Alternation(_, _) => {
                     let left_parenthesis = if self.config.is_group_captured {
@@ -256,7 +282,8 @@ impl Display for RegExp {
 
                     write!(
                         f,
-                        "{}{}{}{}{}",
+                        "{}{}{}{}{}{}",
+                        flag,
                         left_anchor,
                         left_parenthesis,
                         self.ast.to_string(),
@@ -264,7 +291,14 @@ impl Display for RegExp {
                         right_anchor
                     )
                 }
-                _ => write!(f, "{}{}{}", left_anchor, self.ast.to_string(), right_anchor),
+                _ => write!(
+                    f,
+                    "{}{}{}{}",
+                    flag,
+                    left_anchor,
+                    self.ast.to_string(),
+                    right_anchor
+                ),
             }
         } else {
             Err(Error::default())
