@@ -33,7 +33,6 @@ pub(crate) struct RegExpConfig {
     pub(crate) minimum_substring_length: u32,
     pub(crate) is_non_ascii_char_escaped: bool,
     pub(crate) is_astral_code_point_converted_to_surrogate: bool,
-    pub(crate) is_group_captured: bool,
     pub(crate) is_output_colorized: bool,
 }
 
@@ -45,7 +44,6 @@ impl RegExpConfig {
             minimum_substring_length: 1,
             is_non_ascii_char_escaped: false,
             is_astral_code_point_converted_to_surrogate: false,
-            is_group_captured: false,
             is_output_colorized: false,
         }
     }
@@ -81,6 +79,10 @@ impl RegExpConfig {
     pub(crate) fn is_case_insensitive_matching(&self) -> bool {
         self.conversion_features
             .contains(&Feature::CaseInsensitivity)
+    }
+
+    pub(crate) fn is_capturing_group_enabled(&self) -> bool {
+        self.conversion_features.contains(&Feature::CapturingGroup)
     }
 
     pub(crate) fn is_char_class_feature_enabled(&self) -> bool {
@@ -199,13 +201,6 @@ impl RegExpBuilder {
         self
     }
 
-    /// Tells `RegExpBuilder` to replace the default non-capturing groups by
-    /// capturing ones in the resulting regular expression.
-    pub fn with_capturing_groups(&mut self) -> &mut Self {
-        self.config.is_group_captured = true;
-        self
-    }
-
     /// Tells `RegExpBuilder` to provide syntax highlighting for the resulting regular expression.
     ///
     /// ⚠ This method may only be used if the resulting regular expression is meant to
@@ -298,7 +293,7 @@ impl Display for RegExp {
 
             match self.ast {
                 Expression::Alternation(_, _) => {
-                    let left_parenthesis = if self.config.is_group_captured {
+                    let left_parenthesis = if self.config.is_capturing_group_enabled() {
                         left_capturing_parenthesis
                     } else {
                         left_non_capturing_parenthesis
@@ -398,6 +393,9 @@ pub enum Feature {
     /// This feature enables case-insensitive matching of test cases
     /// so that letters match both upper and lower case.
     CaseInsensitivity,
+
+    /// This feature replaces non-capturing groups by capturing ones.
+    CapturingGroup,
 }
 
 impl Feature {

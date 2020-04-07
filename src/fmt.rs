@@ -73,7 +73,7 @@ fn format_alternation(
             .iter()
             .map(|option| {
                 if option.precedence() < expr.precedence() && !option.is_single_codepoint() {
-                    let left_parenthesis = if config.is_group_captured {
+                    let left_parenthesis = if config.is_capturing_group_enabled() {
                         left_capturing_parenthesis
                     } else {
                         left_non_capturing_parenthesis
@@ -185,7 +185,7 @@ fn format_concatenation(
             .iter()
             .map(|&it| {
                 if it.precedence() < expr.precedence() && !it.is_single_codepoint() {
-                    let left_parenthesis = if config.is_group_captured {
+                    let left_parenthesis = if config.is_capturing_group_enabled() {
                         left_capturing_parenthesis
                     } else {
                         left_non_capturing_parenthesis
@@ -255,7 +255,7 @@ fn format_repetition(
         )[..]
     {
         if expr1.precedence() < expr.precedence() && !expr1.is_single_codepoint() {
-            let left_parenthesis = if config.is_group_captured {
+            let left_parenthesis = if config.is_capturing_group_enabled() {
                 left_capturing_parenthesis
             } else {
                 left_non_capturing_parenthesis

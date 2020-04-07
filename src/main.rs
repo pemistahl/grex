@@ -278,6 +278,10 @@ fn handle_input(cli: &CLI, input: Result<Vec<String>, Error>) {
                 conversion_features.push(Feature::CaseInsensitivity);
             }
 
+            if cli.is_group_captured {
+                conversion_features.push(Feature::CapturingGroup);
+            }
+
             if !conversion_features.is_empty() {
                 builder.with_conversion_of(&conversion_features);
             }
@@ -286,10 +290,6 @@ fn handle_input(cli: &CLI, input: Result<Vec<String>, Error>) {
                 builder.with_escaping_of_non_ascii_chars(
                     cli.is_astral_code_point_converted_to_surrogate,
                 );
-            }
-
-            if cli.is_group_captured {
-                builder.with_capturing_groups();
             }
 
             if cli.is_output_colorized {

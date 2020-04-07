@@ -47,7 +47,7 @@ proptest! {
     #[ignore]
     fn valid_regexes_with_conversion_features(
         test_cases in prop::collection::hash_set(".{1,20}", 1..=10),
-        conversion_features in prop::collection::hash_set(conversion_feature_strategy(), 1..=8),
+        conversion_features in prop::collection::hash_set(conversion_feature_strategy(), 1..=9),
         minimum_repetitions in 2..100u32,
         minimum_substring_length in 1..100u32
     ) {
@@ -64,7 +64,7 @@ proptest! {
     #[ignore]
     fn valid_regexes_with_conversion_features_and_escape_sequences(
         test_cases in prop::collection::hash_set(".{1,20}", 1..=10),
-        conversion_features in prop::collection::hash_set(conversion_feature_strategy(), 1..=8),
+        conversion_features in prop::collection::hash_set(conversion_feature_strategy(), 1..=9),
         minimum_repetitions in 2..100u32,
         minimum_substring_length in 1..100u32
     ) {
@@ -108,7 +108,7 @@ proptest! {
     #[ignore]
     fn matching_regexes_with_conversion_features(
         test_cases in prop::collection::hash_set(".{1,20}", 1..=10),
-        conversion_features in prop::collection::hash_set(conversion_feature_strategy(), 1..=8),
+        conversion_features in prop::collection::hash_set(conversion_feature_strategy(), 1..=9),
         minimum_repetitions in 2..100u32,
         minimum_substring_length in 1..100u32
     ) {
@@ -127,7 +127,7 @@ proptest! {
     #[ignore]
     fn matching_regexes_with_conversion_features_and_escape_sequences(
         test_cases in prop::collection::hash_set(".{1,20}", 1..=10),
-        conversion_features in prop::collection::hash_set(conversion_feature_strategy(), 1..=8),
+        conversion_features in prop::collection::hash_set(conversion_feature_strategy(), 1..=9),
         minimum_repetitions in 2..100u32,
         minimum_substring_length in 1..100u32
     ) {
@@ -185,7 +185,8 @@ fn conversion_feature_strategy() -> impl Strategy<Value = Feature> {
         Just(Feature::Word),
         Just(Feature::NonWord),
         Just(Feature::Repetition),
-        Just(Feature::CaseInsensitivity)
+        Just(Feature::CaseInsensitivity),
+        Just(Feature::CapturingGroup)
     ]
 }
 

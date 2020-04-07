@@ -326,7 +326,7 @@ impl Display for Grapheme {
                 self.config.is_output_colorized,
             )[..]
         {
-            let left_parenthesis = if self.config.is_group_captured {
+            let left_parenthesis = if self.config.is_capturing_group_enabled() {
                 left_capturing_parenthesis
             } else {
                 left_non_capturing_parenthesis

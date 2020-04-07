@@ -146,7 +146,7 @@ mod no_conversion {
         )]
         fn succeeds_with_capturing_groups_option(test_cases: Vec<&str>, expected_output: &str) {
             let regexp = RegExpBuilder::from(&test_cases)
-                .with_capturing_groups()
+                .with_conversion_of(&[Feature::CapturingGroup])
                 .build();
             test_if_regexp_is_correct(regexp, expected_output, &test_cases);
             test_if_regexp_matches_test_cases(expected_output, test_cases);
