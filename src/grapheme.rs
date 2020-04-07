@@ -15,7 +15,7 @@
  */
 
 use crate::color::colorize;
-use crate::regexp::{Feature, RegExpConfig};
+use crate::regexp::RegExpConfig;
 use crate::unicode_tables::perl_decimal::DECIMAL_NUMBER;
 use crate::unicode_tables::perl_space::WHITE_SPACE;
 use crate::unicode_tables::perl_word::PERL_WORD;
@@ -75,12 +75,12 @@ impl GraphemeCluster {
     }
 
     pub(crate) fn convert_to_char_classes(&mut self) {
-        let is_digit_converted = self.config.conversion_features.contains(&Feature::Digit);
-        let is_non_digit_converted = self.config.conversion_features.contains(&Feature::NonDigit);
-        let is_space_converted = self.config.conversion_features.contains(&Feature::Space);
-        let is_non_space_converted = self.config.conversion_features.contains(&Feature::NonSpace);
-        let is_word_converted = self.config.conversion_features.contains(&Feature::Word);
-        let is_non_word_converted = self.config.conversion_features.contains(&Feature::NonWord);
+        let is_digit_converted = self.config.is_digit_converted();
+        let is_non_digit_converted = self.config.is_non_digit_converted();
+        let is_space_converted = self.config.is_space_converted();
+        let is_non_space_converted = self.config.is_non_space_converted();
+        let is_word_converted = self.config.is_word_converted();
+        let is_non_word_converted = self.config.is_non_word_converted();
 
         let valid_numeric_chars = convert_chars_to_range(DECIMAL_NUMBER);
         let valid_alphanumeric_chars = convert_chars_to_range(PERL_WORD);

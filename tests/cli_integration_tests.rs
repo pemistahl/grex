@@ -38,6 +38,15 @@ mod no_conversion {
         }
 
         #[test]
+        fn succeeds_with_ignore_case_option() {
+            let mut grex = init_command();
+            grex.args(&["--ignore-case", "Ä@Ö€Ü", "ä@ö€ü", "Ä@ö€Ü", "ä@Ö€ü"]);
+            grex.assert()
+                .success()
+                .stdout(predicate::eq("(?i)^ä@ö€ü$\n"));
+        }
+
+        #[test]
         fn succeeds_with_leading_hyphen() {
             let mut grex = init_command();
             grex.args(&["-a", "b", "c"]);
@@ -136,6 +145,15 @@ mod no_conversion {
             grex.assert().success().stdout(predicate::eq(
                 "^I {3}♥{3} 36 and ٣ and (?:y̆){2} and 💩{2}\\.$\n",
             ));
+        }
+
+        #[test]
+        fn succeeds_with_ignore_case_option() {
+            let mut grex = init_command();
+            grex.args(&["--repetitions", "--ignore-case", "ÄÖÜäöü@Ö€", "äöüÄöÜ@ö€"]);
+            grex.assert()
+                .success()
+                .stdout(predicate::eq("(?i)^(?:äöü){2}@ö€$\n"));
         }
 
         #[test]

@@ -96,6 +96,18 @@ mod no_conversion {
         }
 
         #[rstest(test_cases, expected_output,
+            case(vec!["ABC", "abc", "AbC", "aBc"], "(?i)^abc$"),
+            case(vec!["Ä@Ö€Ü", "ä@ö€ü", "Ä@ö€Ü", "ä@Ö€ü"], "(?i)^ä@ö€ü$"),
+        )]
+        fn succeeds_with_ignore_case_option(test_cases: Vec<&str>, expected_output: &str) {
+            let regexp = RegExpBuilder::from(&test_cases)
+                .with_conversion_of(&[Feature::CaseInsensitivity])
+                .build();
+            test_if_regexp_is_correct(regexp, expected_output, &test_cases);
+            test_if_regexp_matches_test_cases(expected_output, test_cases);
+        }
+
+        #[rstest(test_cases, expected_output,
             case(vec!["My ♥ and 💩 is yours."], "^My \\u{2665} and \\u{1f4a9} is yours\\.$"),
             case(vec!["My ♥ is yours.", "My 💩 is yours."], "^My (?:\\u{2665}|\\u{1f4a9}) is yours\\.$"),
             case(
@@ -214,6 +226,18 @@ mod no_conversion {
         fn succeeds(test_cases: Vec<&str>, expected_output: &str) {
             let regexp = RegExpBuilder::from(&test_cases)
                 .with_conversion_of(&[Feature::Repetition])
+                .build();
+            test_if_regexp_is_correct(regexp, expected_output, &test_cases);
+            test_if_regexp_matches_test_cases(expected_output, test_cases);
+        }
+
+        #[rstest(test_cases, expected_output,
+            case(vec!["AAAAB", "aaaab", "AaAaB", "aAaAB"], "(?i)^a{4}b$"),
+            case(vec!["ÄÖÜäöü@Ö€", "äöüÄöÜ@ö€"], "(?i)^(?:äöü){2}@ö€$"),
+        )]
+        fn succeeds_with_ignore_case_option(test_cases: Vec<&str>, expected_output: &str) {
+            let regexp = RegExpBuilder::from(&test_cases)
+                .with_conversion_of(&[Feature::Repetition, Feature::CaseInsensitivity])
                 .build();
             test_if_regexp_is_correct(regexp, expected_output, &test_cases);
             test_if_regexp_matches_test_cases(expected_output, test_cases);

@@ -274,12 +274,12 @@ fn handle_input(cli: &CLI, input: Result<Vec<String>, Error>) {
                 conversion_features.push(Feature::Repetition);
             }
 
-            if !conversion_features.is_empty() {
-                builder.with_conversion_of(&conversion_features);
+            if cli.is_case_ignored {
+                conversion_features.push(Feature::CaseInsensitivity);
             }
 
-            if cli.is_case_ignored {
-                builder.with_case_insensitive_matching();
+            if !conversion_features.is_empty() {
+                builder.with_conversion_of(&conversion_features);
             }
 
             if cli.is_non_ascii_char_escaped {
