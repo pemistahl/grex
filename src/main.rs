@@ -124,21 +124,12 @@ struct CLI {
     is_non_word_converted: bool,
 
     #[structopt(
-        name = "ignore-case",
-        short,
-        long,
-        help = "Performs case-insensitive matching, letters match both upper and lower case",
-        display_order = 7
-    )]
-    is_case_ignored: bool,
-
-    #[structopt(
         name = "repetitions",
         short,
         long,
         help = "Detects repeated non-overlapping substrings and\n\
                 converts them to {min,max} quantifier notation",
-        display_order = 8
+        display_order = 7
     )]
     is_repetition_converted: bool,
 
@@ -147,7 +138,7 @@ struct CLI {
         short,
         long,
         help = "Replaces all non-ASCII characters with unicode escape sequences",
-        display_order = 9
+        display_order = 8
     )]
     is_non_ascii_char_escaped: bool,
 
@@ -156,9 +147,18 @@ struct CLI {
         long,
         requires = "escape",
         help = "Converts astral code points to surrogate pairs if --escape is set",
-        display_order = 10
+        display_order = 9
     )]
     is_astral_code_point_converted_to_surrogate: bool,
+
+    #[structopt(
+        name = "ignore-case",
+        short,
+        long,
+        help = "Performs case-insensitive matching, letters match both upper and lower case",
+        display_order = 10
+    )]
+    is_case_ignored: bool,
 
     #[structopt(
         name = "capture-groups",
@@ -200,8 +200,8 @@ struct CLI {
         name = "min-repetitions",
         value_name = "QUANTITY",
         long,
-        default_value = "2",
-        validator = min_repetitions_validator,
+        default_value = "1",
+        validator = repetition_options_validator,
         help = "Specifies the minimum quantity of substring repetitions\n\
                 to be converted if --repetitions is set"
     )]
@@ -212,7 +212,7 @@ struct CLI {
         value_name = "LENGTH",
         long,
         default_value = "1",
-        validator = min_substring_length_validator,
+        validator = repetition_options_validator,
         help = "Specifies the minimum length a repeated substring must have\n\
                 in order to be converted if --repetitions is set"
     )]
@@ -317,33 +317,15 @@ fn handle_input(cli: &CLI, input: Result<Vec<String>, Error>) {
     }
 }
 
-fn min_repetitions_validator(quantity: String) -> Result<(), String> {
-    match quantity.parse::<u32>() {
-        Ok(parsed_quantity) => {
-            if parsed_quantity >= 2 {
+fn repetition_options_validator(value: String) -> Result<(), String> {
+    match value.parse::<u32>() {
+        Ok(parsed_value) => {
+            if parsed_value > 0 {
                 Ok(())
             } else {
-                Err(format!(
-                    "Quantity must not be less than 2 but is {}",
-                    quantity
-                ))
+                Err(String::from("Value must not be zero"))
             }
         }
-        Err(_) => Err(String::from("Quantity is not a valid unsigned integer")),
-    }
-}
-
-fn min_substring_length_validator(length: String) -> Result<(), String> {
-    match length.parse::<u32>() {
-        Ok(parsed_length) => {
-            if parsed_length > 0 {
-                Ok(())
-            } else {
-                Err(String::from("Substring length must not be zero"))
-            }
-        }
-        Err(_) => Err(String::from(
-            "Substring length is not a valid unsigned integer",
-        )),
+        Err(_) => Err(String::from("Value is not a valid unsigned integer")),
     }
 }

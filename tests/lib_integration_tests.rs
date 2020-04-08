@@ -306,7 +306,7 @@ mod no_conversion {
         ) {
             let regexp = RegExpBuilder::from(&test_cases)
                 .with_conversion_of(&[Feature::Repetition])
-                .with_minimum_repetitions(4)
+                .with_minimum_repetitions(3)
                 .build();
             test_if_regexp_is_correct(regexp, expected_output, &test_cases);
             test_if_regexp_matches_test_cases(expected_output, test_cases);
@@ -344,7 +344,7 @@ mod no_conversion {
         ) {
             let regexp = RegExpBuilder::from(&test_cases)
                 .with_conversion_of(&[Feature::Repetition])
-                .with_minimum_repetitions(4)
+                .with_minimum_repetitions(3)
                 .with_minimum_substring_length(3)
                 .build();
             test_if_regexp_is_correct(regexp, expected_output, &test_cases);
@@ -478,7 +478,7 @@ mod digit_conversion {
         ) {
             let regexp = RegExpBuilder::from(&test_cases)
                 .with_conversion_of(&[Feature::Repetition, Feature::Digit])
-                .with_minimum_repetitions(3)
+                .with_minimum_repetitions(2)
                 .build();
             test_if_regexp_is_correct(regexp, expected_output, &test_cases);
             test_if_regexp_matches_test_cases(expected_output, test_cases);
@@ -608,7 +608,7 @@ mod space_conversion {
         ) {
             let regexp = RegExpBuilder::from(&test_cases)
                 .with_conversion_of(&[Feature::Repetition, Feature::Space])
-                .with_minimum_repetitions(3)
+                .with_minimum_repetitions(2)
                 .build();
             test_if_regexp_is_correct(regexp, expected_output, &test_cases);
             test_if_regexp_matches_test_cases(expected_output, test_cases);
@@ -742,7 +742,7 @@ mod word_conversion {
         ) {
             let regexp = RegExpBuilder::from(&test_cases)
                 .with_conversion_of(&[Feature::Repetition, Feature::Word])
-                .with_minimum_repetitions(3)
+                .with_minimum_repetitions(2)
                 .build();
             test_if_regexp_is_correct(regexp, expected_output, &test_cases);
             test_if_regexp_matches_test_cases(expected_output, test_cases);
@@ -864,7 +864,7 @@ mod digit_space_conversion {
         ) {
             let regexp = RegExpBuilder::from(&test_cases)
                 .with_conversion_of(&[Feature::Repetition, Feature::Digit, Feature::Space])
-                .with_minimum_repetitions(3)
+                .with_minimum_repetitions(2)
                 .build();
             test_if_regexp_is_correct(regexp, expected_output, &test_cases);
             test_if_regexp_matches_test_cases(expected_output, test_cases);
@@ -898,7 +898,7 @@ mod digit_space_conversion {
         ) {
             let regexp = RegExpBuilder::from(&test_cases)
                 .with_conversion_of(&[Feature::Repetition])
-                .with_minimum_repetitions(3)
+                .with_minimum_repetitions(2)
                 .with_minimum_substring_length(3)
                 .build();
             test_if_regexp_is_correct(regexp, expected_output, &test_cases);

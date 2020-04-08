@@ -40,7 +40,7 @@ impl RegExpConfig {
     pub(crate) fn new() -> Self {
         Self {
             conversion_features: vec![],
-            minimum_repetitions: 2,
+            minimum_repetitions: 1,
             minimum_substring_length: 1,
             is_non_ascii_char_escaped: false,
             is_astral_code_point_converted_to_surrogate: false,
@@ -162,14 +162,13 @@ impl RegExpBuilder {
     /// is set as one of the features in method
     /// [`with_conversion_of`](./struct.RegExpBuilder.html#method.with_conversion_of).
     ///
-    /// If the quantity is not explicitly set with this method, a default value of 2 will be used.
+    /// If the quantity is not explicitly set with this method, a default value of 1 will be used.
     ///
-    /// ⚠ Panics if `quantity` is less than 2.
+    /// ⚠ Panics if `quantity` is zero.
     pub fn with_minimum_repetitions(&mut self, quantity: u32) -> &mut Self {
-        if quantity < 2 {
-            panic!(format!(
-                "Quantity of minimum repetitions must not be less than 2 but is {}",
-                quantity
+        if quantity == 0 {
+            panic!(String::from(
+                "Quantity of minimum repetitions must not be zero"
             ));
         }
         self.config.minimum_repetitions = quantity;
@@ -432,9 +431,9 @@ mod tests {
     }
 
     #[test]
-    #[should_panic(expected = "Quantity of minimum repetitions must not be less than 2 but is 1")]
+    #[should_panic(expected = "Quantity of minimum repetitions must not be zero")]
     fn regexp_builder_panics_if_minimum_repetitions_is_less_than_two() {
-        RegExpBuilder::from(&["abc"]).with_minimum_repetitions(1);
+        RegExpBuilder::from(&["abc"]).with_minimum_repetitions(0);
     }
 
     #[test]

@@ -177,7 +177,7 @@ mod no_conversion {
         #[test]
         fn succeeds_with_increased_minimum_repetitions() {
             let mut grex = init_command();
-            grex.args(&["--repetitions", "--min-repetitions", "3", TEST_CASE]);
+            grex.args(&["--repetitions", "--min-repetitions", "2", TEST_CASE]);
             grex.assert()
                 .success()
                 .stdout(predicate::eq("^I {3}♥{3} 36 and ٣ and y̆y̆ and 💩💩\\.$\n"));
@@ -279,7 +279,7 @@ mod digit_conversion {
             grex.args(&[
                 "--repetitions",
                 "--min-repetitions",
-                "3",
+                "2",
                 "--digits",
                 TEST_CASE,
             ]);
