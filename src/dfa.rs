@@ -19,7 +19,6 @@ use std::collections::{BTreeSet, HashMap, HashSet};
 use crate::grapheme::{Grapheme, GraphemeCluster};
 use crate::regexp::RegExpConfig;
 use itertools::Itertools;
-use linked_list::LinkedList;
 use petgraph::dot::{Config, Dot};
 use petgraph::graph::NodeIndex;
 use petgraph::stable_graph::{Edges, StableGraph};
@@ -143,7 +142,6 @@ impl DFA {
     fn minimize(&mut self) {
         let mut p = self.get_initial_partition();
         let mut w = p.iter().cloned().collect_vec();
-        let mut p_cursor = p.cursor();
 
         while !w.is_empty() {
             let a = w.drain(0..1).next().unwrap();
@@ -151,32 +149,42 @@ impl DFA {
             for edge_label in self.alphabet.iter() {
                 let x = self.get_parent_states(&a, edge_label);
                 let mut replacements = vec![];
+                let mut is_replacement_needed = true;
+                let mut start_idx = 0;
 
-                while let Some(y) = p_cursor.peek_next() {
-                    let i = x.intersection(y).copied().collect::<HashSet<State>>();
+                while is_replacement_needed {
+                    for idx in start_idx..p.len() {
+                        let y = &p[idx];
+                        let i = x.intersection(y).copied().collect::<HashSet<State>>();
 
-                    if i.is_empty() {
-                        p_cursor.next();
-                        continue;
+                        if i.is_empty() {
+                            is_replacement_needed = false;
+                            continue;
+                        }
+
+                        let d = y.difference(&x).copied().collect::<HashSet<State>>();
+
+                        if d.is_empty() {
+                            is_replacement_needed = false;
+                            continue;
+                        }
+
+                        is_replacement_needed = true;
+                        start_idx = idx;
+
+                        replacements.push((y.clone(), i.clone(), d.clone()));
+
+                        break;
                     }
 
-                    let d = y.difference(&x).copied().collect::<HashSet<State>>();
+                    if is_replacement_needed {
+                        let (_, i, d) = replacements.last().unwrap();
 
-                    if d.is_empty() {
-                        p_cursor.next();
-                        continue;
+                        p.remove(start_idx);
+                        p.insert(start_idx, i.clone());
+                        p.insert(start_idx + 1, d.clone());
                     }
-
-                    replacements.push((y.clone(), i.clone(), d.clone()));
-
-                    p_cursor.remove();
-                    p_cursor.insert(i);
-                    p_cursor.next();
-                    p_cursor.insert(d);
-                    p_cursor.prev();
                 }
-
-                p_cursor.reset();
 
                 for (y, i, d) in replacements {
                     if w.contains(&y) {
@@ -196,13 +204,13 @@ impl DFA {
         self.recreate_graph(p.iter().filter(|&it| !it.is_empty()).collect_vec());
     }
 
-    fn get_initial_partition(&self) -> LinkedList<HashSet<State>> {
+    fn get_initial_partition(&self) -> Vec<HashSet<State>> {
         let (final_states, non_final_states): (HashSet<State>, HashSet<State>) = self
             .graph
             .node_indices()
             .partition(|&state| !self.final_state_indices.contains(&state.index()));
 
-        linked_list![final_states, non_final_states]
+        vec![final_states, non_final_states]
     }
 
     fn get_parent_states(&self, a: &HashSet<State>, label: &Grapheme) -> HashSet<State> {

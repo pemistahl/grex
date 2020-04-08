@@ -31,7 +31,6 @@ keywords = ["pattern", "regex", "regexp"]
 [dependencies]
 colored = "1.9.3"
 itertools = "0.9.0"
-linked-list = "0.0.3"
 ndarray = "0.13.0"
 petgraph = {version = "0.5.0", default-features = false, features = ["stable_graph"]}
 structopt = "0.3.12"
@@ -44,7 +43,7 @@ assert_cmd = "1.0.1"
 predicates = "1.0.4"
 proptest = "0.9.5"
 regex = "1.3.6"
-rstest = "0.6.0"
+rstest = "0.6.1"
 tempfile = "3.1.0"
 
 [badges]

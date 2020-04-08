@@ -14,14 +14,6 @@
  * limitations under the License.
  */
 
-macro_rules! linked_list {
-    ( $( $value: expr ),* ) => {{
-        let mut lst = linked_list::LinkedList::new();
-        $( lst.push_back($value); )*
-        lst
-    }};
-}
-
 macro_rules! btreeset {
     ( $( $value: expr ),* ) => {{
         let mut set = std::collections::BTreeSet::new();
