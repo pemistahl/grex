@@ -48,7 +48,7 @@ proptest! {
     fn valid_regexes_with_conversion_features(
         test_cases in prop::collection::hash_set(".{1,20}", 1..=10),
         conversion_features in prop::collection::hash_set(conversion_feature_strategy(), 1..=9),
-        minimum_repetitions in 2..100u32,
+        minimum_repetitions in 1..100u32,
         minimum_substring_length in 1..100u32
     ) {
         let test_cases_vec = test_cases.iter().cloned().collect::<Vec<_>>();
@@ -65,7 +65,7 @@ proptest! {
     fn valid_regexes_with_conversion_features_and_escape_sequences(
         test_cases in prop::collection::hash_set(".{1,20}", 1..=10),
         conversion_features in prop::collection::hash_set(conversion_feature_strategy(), 1..=9),
-        minimum_repetitions in 2..100u32,
+        minimum_repetitions in 1..100u32,
         minimum_substring_length in 1..100u32
     ) {
         let test_cases_vec = test_cases.iter().cloned().collect::<Vec<_>>();
@@ -109,7 +109,7 @@ proptest! {
     fn matching_regexes_with_conversion_features(
         test_cases in prop::collection::hash_set(".{1,20}", 1..=10),
         conversion_features in prop::collection::hash_set(conversion_feature_strategy(), 1..=9),
-        minimum_repetitions in 2..100u32,
+        minimum_repetitions in 1..100u32,
         minimum_substring_length in 1..100u32
     ) {
         let test_cases_vec = test_cases.iter().cloned().collect::<Vec<_>>();
@@ -128,7 +128,7 @@ proptest! {
     fn matching_regexes_with_conversion_features_and_escape_sequences(
         test_cases in prop::collection::hash_set(".{1,20}", 1..=10),
         conversion_features in prop::collection::hash_set(conversion_feature_strategy(), 1..=9),
-        minimum_repetitions in 2..100u32,
+        minimum_repetitions in 1..100u32,
         minimum_substring_length in 1..100u32
     ) {
         let test_cases_vec = test_cases.iter().cloned().collect::<Vec<_>>();

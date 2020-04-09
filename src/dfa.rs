@@ -30,16 +30,16 @@ type State = NodeIndex<u32>;
 type StateLabel = String;
 type EdgeLabel = Grapheme;
 
-pub(crate) struct DFA {
+pub(crate) struct DFA<'a> {
     alphabet: BTreeSet<Grapheme>,
     graph: StableGraph<StateLabel, EdgeLabel>,
     initial_state: State,
     final_state_indices: HashSet<usize>,
-    config: RegExpConfig,
+    config: &'a RegExpConfig,
 }
 
-impl DFA {
-    pub(crate) fn from(grapheme_clusters: Vec<GraphemeCluster>, config: &RegExpConfig) -> Self {
+impl<'a> DFA<'a> {
+    pub(crate) fn from(grapheme_clusters: Vec<GraphemeCluster>, config: &'a RegExpConfig) -> Self {
         let mut dfa = Self::new(config);
         for cluster in grapheme_clusters {
             dfa.insert(cluster);
@@ -79,7 +79,7 @@ impl DFA {
         println!("{:?}", self.final_state_indices);
     }
 
-    fn new(config: &RegExpConfig) -> Self {
+    fn new(config: &'a RegExpConfig) -> Self {
         let mut graph = StableGraph::new();
         let initial_state = graph.add_node("".to_string());
         Self {
@@ -87,7 +87,7 @@ impl DFA {
             graph,
             initial_state,
             final_state_indices: HashSet::new(),
-            config: config.clone(),
+            config,
         }
     }
 
@@ -153,8 +153,7 @@ impl DFA {
                 let mut start_idx = 0;
 
                 while is_replacement_needed {
-                    for idx in start_idx..p.len() {
-                        let y = &p[idx];
+                    for (idx, y) in p.iter().enumerate().skip(start_idx) {
                         let i = x.intersection(y).copied().collect::<HashSet<State>>();
 
                         if i.is_empty() {
@@ -282,7 +281,8 @@ mod tests {
 
     #[test]
     fn test_state_count() {
-        let mut dfa = DFA::new(&RegExpConfig::new());
+        let config = RegExpConfig::new();
+        let mut dfa = DFA::new(&config);
         assert_eq!(dfa.state_count(), 1);
 
         dfa.insert(GraphemeCluster::from("abcd", &RegExpConfig::new()));
@@ -291,9 +291,10 @@ mod tests {
 
     #[test]
     fn test_is_final_state() {
+        let config = RegExpConfig::new();
         let dfa = DFA::from(
             vec![GraphemeCluster::from("abcd", &RegExpConfig::new())],
-            &RegExpConfig::new(),
+            &config,
         );
 
         let intermediate_state = State::new(3);
@@ -305,12 +306,13 @@ mod tests {
 
     #[test]
     fn test_outgoing_edges() {
+        let config = RegExpConfig::new();
         let dfa = DFA::from(
             vec![
                 GraphemeCluster::from("abcd", &RegExpConfig::new()),
                 GraphemeCluster::from("abxd", &RegExpConfig::new()),
             ],
-            &RegExpConfig::new(),
+            &config,
         );
         let state = State::new(2);
         let mut edges = dfa.outgoing_edges(state);
@@ -335,12 +337,13 @@ mod tests {
 
     #[test]
     fn test_states_in_depth_first_order() {
+        let config = RegExpConfig::new();
         let dfa = DFA::from(
             vec![
                 GraphemeCluster::from("abcd", &RegExpConfig::new()),
                 GraphemeCluster::from("axyz", &RegExpConfig::new()),
             ],
-            &RegExpConfig::new(),
+            &config,
         );
         let states = dfa.states_in_depth_first_order();
         assert_eq!(states.len(), 7);
@@ -404,7 +407,8 @@ mod tests {
 
     #[test]
     fn test_minimization_algorithm() {
-        let mut dfa = DFA::new(&RegExpConfig::new());
+        let config = RegExpConfig::new();
+        let mut dfa = DFA::new(&config);
         assert_eq!(dfa.graph.node_count(), 1);
         assert_eq!(dfa.graph.edge_count(), 0);
 
@@ -423,12 +427,13 @@ mod tests {
 
     #[test]
     fn test_dfa_constructor() {
+        let config = RegExpConfig::new();
         let dfa = DFA::from(
             vec![
                 GraphemeCluster::from("abcd", &RegExpConfig::new()),
                 GraphemeCluster::from("abxd", &RegExpConfig::new()),
             ],
-            &RegExpConfig::new(),
+            &config,
         );
         assert_eq!(dfa.graph.node_count(), 5);
         assert_eq!(dfa.graph.edge_count(), 5);

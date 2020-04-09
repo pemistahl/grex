@@ -218,13 +218,13 @@ impl RegExpBuilder {
     }
 }
 
-pub(crate) struct RegExp {
-    ast: Expression,
-    config: RegExpConfig,
+pub(crate) struct RegExp<'a> {
+    ast: Expression<'a>,
+    config: &'a RegExpConfig,
 }
 
-impl RegExp {
-    fn from(test_cases: &mut Vec<String>, config: &RegExpConfig) -> Self {
+impl<'a> RegExp<'a> {
+    fn from(test_cases: &mut Vec<String>, config: &'a RegExpConfig) -> Self {
         if config.is_case_insensitive_matching() {
             Self::convert_to_lowercase(test_cases);
         }
@@ -232,10 +232,7 @@ impl RegExp {
         let grapheme_clusters = Self::grapheme_clusters(&test_cases, config);
         let dfa = DFA::from(grapheme_clusters, config);
         let ast = Expression::from(dfa, config);
-        Self {
-            ast,
-            config: config.clone(),
-        }
+        Self { ast, config }
     }
 
     fn convert_to_lowercase(test_cases: &mut Vec<String>) {
@@ -276,7 +273,7 @@ impl RegExp {
     }
 }
 
-impl Display for RegExp {
+impl Display for RegExp<'_> {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         if let [case_insensitive_flag, left_anchor, right_anchor, left_non_capturing_parenthesis, left_capturing_parenthesis, right_parenthesis] =
             &colorize(

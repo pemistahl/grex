@@ -23,7 +23,7 @@ use std::collections::BTreeSet;
 use std::fmt::{Display, Error, Formatter, Result};
 use unic_char_range::CharRange;
 
-impl Display for Expression {
+impl Display for Expression<'_> {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         match self {
             Expression::Alternation(options, config) => {
