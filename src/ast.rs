@@ -30,7 +30,7 @@ pub(crate) enum Expression<'a> {
     Alternation(Vec<Expression<'a>>, &'a RegExpConfig),
     CharacterClass(BTreeSet<char>, &'a RegExpConfig),
     Concatenation(Box<Expression<'a>>, Box<Expression<'a>>, &'a RegExpConfig),
-    Literal(GraphemeCluster, &'a RegExpConfig),
+    Literal(GraphemeCluster<'a>, &'a RegExpConfig),
     Repetition(Box<Expression<'a>>, Quantifier, &'a RegExpConfig),
 }
 
@@ -64,7 +64,7 @@ impl<'a> Expression<'a> {
             for edge in dfa.outgoing_edges(*state) {
                 let grapheme = edge.weight();
                 let literal =
-                    Expression::new_literal(GraphemeCluster::new(grapheme.clone()), config);
+                    Expression::new_literal(GraphemeCluster::new(grapheme.clone(), config), config);
                 let j = states.iter().position(|&it| it == edge.target()).unwrap();
 
                 a[(i, j)] = if a[(i, j)].is_some() {
@@ -141,7 +141,7 @@ impl<'a> Expression<'a> {
         Expression::Concatenation(Box::from(expr1), Box::from(expr2), config)
     }
 
-    fn new_literal(cluster: GraphemeCluster, config: &'a RegExpConfig) -> Self {
+    fn new_literal(cluster: GraphemeCluster<'a>, config: &'a RegExpConfig) -> Self {
         Expression::Literal(cluster, config)
     }
 
@@ -268,7 +268,7 @@ impl<'a> Expression<'a> {
             (&expr1, &expr2)
         {
             return Some(Expression::new_literal(
-                GraphemeCluster::merge(graphemes_a, graphemes_b),
+                GraphemeCluster::merge(graphemes_a, graphemes_b, config),
                 config,
             ));
         }
@@ -278,7 +278,7 @@ impl<'a> Expression<'a> {
         {
             if let Expression::Literal(graphemes_first, config) = &**first {
                 let literal = Expression::new_literal(
-                    GraphemeCluster::merge(graphemes_a, graphemes_first),
+                    GraphemeCluster::merge(graphemes_a, graphemes_first, config),
                     config,
                 );
                 return Some(Expression::new_concatenation(
@@ -294,7 +294,7 @@ impl<'a> Expression<'a> {
         {
             if let Expression::Literal(graphemes_second, config) = &**second {
                 let literal = Expression::new_literal(
-                    GraphemeCluster::merge(graphemes_second, graphemes_b),
+                    GraphemeCluster::merge(graphemes_second, graphemes_b, config),
                     config,
                 );
                 return Some(Expression::new_concatenation(
@@ -384,7 +384,10 @@ impl<'a> Expression<'a> {
 
                 if let Some(prefix) = common_prefix {
                     result = Some(Expression::new_concatenation(
-                        Expression::new_literal(GraphemeCluster::from_graphemes(prefix), config),
+                        Expression::new_literal(
+                            GraphemeCluster::from_graphemes(prefix, config),
+                            config,
+                        ),
                         result.unwrap(),
                         config,
                     ));
@@ -393,7 +396,10 @@ impl<'a> Expression<'a> {
                 if let Some(suffix) = common_suffix {
                     result = Some(Expression::new_concatenation(
                         result.unwrap(),
-                        Expression::new_literal(GraphemeCluster::from_graphemes(suffix), config),
+                        Expression::new_literal(
+                            GraphemeCluster::from_graphemes(suffix, config),
+                            config,
+                        ),
                         config,
                     ));
                 }

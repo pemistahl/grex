@@ -33,13 +33,13 @@ const CHARS_TO_ESCAPE: [&str; 14] = [
 ];
 
 #[derive(Clone, Debug, Eq, PartialEq)]
-pub(crate) struct GraphemeCluster {
+pub(crate) struct GraphemeCluster<'a> {
     graphemes: Vec<Grapheme>,
-    config: RegExpConfig,
+    config: &'a RegExpConfig,
 }
 
-impl GraphemeCluster {
-    pub(crate) fn from(s: &str, config: &RegExpConfig) -> Self {
+impl<'a> GraphemeCluster<'a> {
+    pub(crate) fn from(s: &str, config: &'a RegExpConfig) -> Self {
         Self {
             graphemes: UnicodeSegmentation::graphemes(s, true)
                 .flat_map(|it| {
@@ -56,21 +56,18 @@ impl GraphemeCluster {
                     }
                 })
                 .collect_vec(),
-            config: config.clone(),
+            config,
         }
     }
 
-    pub(crate) fn from_graphemes(graphemes: Vec<Grapheme>) -> Self {
-        Self {
-            graphemes,
-            config: RegExpConfig::new(),
-        }
+    pub(crate) fn from_graphemes(graphemes: Vec<Grapheme>, config: &'a RegExpConfig) -> Self {
+        Self { graphemes, config }
     }
 
-    pub(crate) fn new(grapheme: Grapheme) -> Self {
+    pub(crate) fn new(grapheme: Grapheme, config: &'a RegExpConfig) -> Self {
         Self {
             graphemes: vec![grapheme],
-            config: RegExpConfig::new(),
+            config,
         }
     }
 
@@ -130,14 +127,15 @@ impl GraphemeCluster {
         }
     }
 
-    pub(crate) fn merge(first: &GraphemeCluster, second: &GraphemeCluster) -> Self {
+    pub(crate) fn merge(
+        first: &GraphemeCluster,
+        second: &GraphemeCluster,
+        config: &'a RegExpConfig,
+    ) -> Self {
         let mut graphemes = vec![];
         graphemes.extend_from_slice(&first.graphemes);
         graphemes.extend_from_slice(&second.graphemes);
-        Self {
-            graphemes,
-            config: RegExpConfig::new(),
-        }
+        Self { graphemes, config }
     }
 
     pub(crate) fn graphemes(&self) -> &Vec<Grapheme> {

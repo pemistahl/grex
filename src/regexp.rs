@@ -251,7 +251,10 @@ impl<'a> RegExp<'a> {
         });
     }
 
-    fn grapheme_clusters(test_cases: &[String], config: &RegExpConfig) -> Vec<GraphemeCluster> {
+    fn grapheme_clusters(
+        test_cases: &[String],
+        config: &'a RegExpConfig,
+    ) -> Vec<GraphemeCluster<'a>> {
         let mut clusters = test_cases
             .iter()
             .map(|it| GraphemeCluster::from(it, config))
