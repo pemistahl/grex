@@ -15,8 +15,8 @@
  */
 
 use crate::ast::{Expression, Quantifier};
+use crate::char::GraphemeCluster;
 use crate::color::colorize;
-use crate::grapheme::GraphemeCluster;
 use crate::regexp::RegExpConfig;
 use itertools::Itertools;
 use std::collections::BTreeSet;

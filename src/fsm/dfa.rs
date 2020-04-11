@@ -14,9 +14,7 @@
  * limitations under the License.
  */
 
-use std::collections::{BTreeSet, HashMap, HashSet};
-
-use crate::grapheme::{Grapheme, GraphemeCluster};
+use crate::char::{Grapheme, GraphemeCluster};
 use crate::regexp::RegExpConfig;
 use itertools::Itertools;
 use petgraph::dot::{Config, Dot};
@@ -25,12 +23,13 @@ use petgraph::stable_graph::{Edges, StableGraph};
 use petgraph::visit::Dfs;
 use petgraph::{Directed, Direction};
 use std::cmp::{max, min};
+use std::collections::{BTreeSet, HashMap, HashSet};
 
 type State = NodeIndex<u32>;
 type StateLabel = String;
 type EdgeLabel = Grapheme;
 
-pub(crate) struct DFA<'a> {
+pub struct DFA<'a> {
     alphabet: BTreeSet<Grapheme>,
     graph: StableGraph<StateLabel, EdgeLabel>,
     initial_state: State,

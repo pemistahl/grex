@@ -14,10 +14,11 @@
  * limitations under the License.
  */
 
-pub(crate) mod perl_decimal;
-pub(crate) mod perl_space;
-pub(crate) mod perl_word;
+pub(crate) mod expression;
+pub(crate) mod format;
+pub(crate) mod quantifier;
+pub(crate) mod substring;
 
-pub use perl_decimal::DECIMAL_NUMBER;
-pub use perl_space::WHITE_SPACE;
-pub use perl_word::WORD;
+pub use expression::Expression;
+pub use quantifier::Quantifier;
+pub use substring::Substring;

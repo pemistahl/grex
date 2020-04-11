@@ -20,7 +20,7 @@
 //
 // ucd-generate 0.2.7 is available on crates.io.
 
-pub(crate) const WHITE_SPACE: &[(char, char)] = &[
+pub const WHITE_SPACE: &[(char, char)] = &[
     ('\t', '\r'),
     (' ', ' '),
     ('\u{85}', '\u{85}'),

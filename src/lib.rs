@@ -140,10 +140,9 @@
 mod macros;
 
 mod ast;
+mod char;
 mod color;
-mod dfa;
-mod fmt;
-mod grapheme;
+mod fsm;
 mod regexp;
 mod unicode_tables;
 

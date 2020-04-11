@@ -14,10 +14,7 @@
  * limitations under the License.
  */
 
-pub(crate) mod perl_decimal;
-pub(crate) mod perl_space;
-pub(crate) mod perl_word;
-
-pub use perl_decimal::DECIMAL_NUMBER;
-pub use perl_space::WHITE_SPACE;
-pub use perl_word::WORD;
+pub enum Substring {
+    Prefix,
+    Suffix,
+}

@@ -20,7 +20,7 @@
 //
 // ucd-generate 0.2.7 is available on crates.io.
 
-pub(crate) const DECIMAL_NUMBER: &[(char, char)] = &[
+pub const DECIMAL_NUMBER: &[(char, char)] = &[
     ('0', '9'),
     ('٠', '٩'),
     ('۰', '۹'),

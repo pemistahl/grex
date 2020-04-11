@@ -14,35 +14,23 @@
  * limitations under the License.
  */
 
-use std::collections::BTreeSet;
-
+use crate::ast::{Quantifier, Substring};
+use crate::char::{Grapheme, GraphemeCluster};
+use crate::fsm::DFA;
+use crate::regexp::RegExpConfig;
 use itertools::EitherOrBoth::Both;
 use itertools::Itertools;
 use ndarray::{Array1, Array2};
 use petgraph::prelude::EdgeRef;
-
-use crate::dfa::DFA;
-use crate::grapheme::{Grapheme, GraphemeCluster};
-use crate::regexp::RegExpConfig;
+use std::collections::BTreeSet;
 
 #[derive(Clone, Debug, Eq, PartialEq)]
-pub(crate) enum Expression<'a> {
+pub enum Expression<'a> {
     Alternation(Vec<Expression<'a>>, &'a RegExpConfig),
     CharacterClass(BTreeSet<char>, &'a RegExpConfig),
     Concatenation(Box<Expression<'a>>, Box<Expression<'a>>, &'a RegExpConfig),
     Literal(GraphemeCluster<'a>, &'a RegExpConfig),
     Repetition(Box<Expression<'a>>, Quantifier, &'a RegExpConfig),
-}
-
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub(crate) enum Quantifier {
-    KleeneStar,
-    QuestionMark,
-}
-
-pub(crate) enum Substring {
-    Prefix,
-    Suffix,
 }
 
 impl<'a> Expression<'a> {

@@ -20,7 +20,7 @@
 //
 // ucd-generate 0.2.7 is available on crates.io.
 
-pub(crate) const PERL_WORD: &[(char, char)] = &[
+pub const WORD: &[(char, char)] = &[
     ('0', '9'),
     ('A', 'Z'),
     ('_', '_'),
