@@ -15,14 +15,13 @@
  */
 
 use crate::ast::Expression;
-use crate::char::GraphemeCluster;
-use crate::color::colorize;
+use crate::char::{ColorizableString, GraphemeCluster};
 use crate::fsm::DFA;
 use crate::regexp::config::RegExpConfig;
-use colored::Colorize;
+use colored::ColoredString;
 use itertools::Itertools;
 use std::cmp::Ordering;
-use std::fmt::{Display, Error, Formatter, Result};
+use std::fmt::{Display, Formatter, Result};
 
 pub struct RegExp<'a> {
     ast: Expression<'a>,
@@ -84,48 +83,69 @@ impl<'a> RegExp<'a> {
 
 impl Display for RegExp<'_> {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
-        if let [case_insensitive_flag, left_anchor, right_anchor, left_non_capturing_parenthesis, left_capturing_parenthesis, right_parenthesis] =
-            &colorize(
-                vec!["(?i)", "^", "$", "(?:", "(", ")"],
-                self.config.is_output_colorized,
-            )[..]
-        {
-            let flag = if self.config.is_case_insensitive_matching() {
-                case_insensitive_flag.clone()
-            } else {
-                "".clear()
-            };
-
-            match self.ast {
-                Expression::Alternation(_, _) => {
-                    let left_parenthesis = if self.config.is_capturing_group_enabled() {
-                        left_capturing_parenthesis
+        let (flag, left_anchor, left_parenthesis, right_parenthesis, right_anchor) =
+            to_colorized_string(
+                vec![
+                    if self.config.is_case_insensitive_matching() {
+                        ColorizableString::IgnoreCaseFlag
                     } else {
-                        left_non_capturing_parenthesis
-                    };
+                        ColorizableString::EmptyString
+                    },
+                    ColorizableString::Caret,
+                    if self.config.is_capturing_group_enabled() {
+                        ColorizableString::CapturingLeftParenthesis
+                    } else {
+                        ColorizableString::NonCapturingLeftParenthesis
+                    },
+                    ColorizableString::RightParenthesis,
+                    ColorizableString::DollarSign,
+                ],
+                self.config,
+            );
 
-                    write!(
-                        f,
-                        "{}{}{}{}{}{}",
-                        flag,
-                        left_anchor,
-                        left_parenthesis,
-                        self.ast.to_string(),
-                        right_parenthesis,
-                        right_anchor
-                    )
-                }
-                _ => write!(
-                    f,
-                    "{}{}{}{}",
-                    flag,
-                    left_anchor,
-                    self.ast.to_string(),
-                    right_anchor
-                ),
-            }
-        } else {
-            Err(Error::default())
+        match self.ast {
+            Expression::Alternation(_, _) => write!(
+                f,
+                "{}{}{}{}{}{}",
+                flag,
+                left_anchor,
+                left_parenthesis,
+                self.ast.to_string(),
+                right_parenthesis,
+                right_anchor
+            ),
+            _ => write!(
+                f,
+                "{}{}{}{}",
+                flag,
+                left_anchor,
+                self.ast.to_string(),
+                right_anchor
+            ),
         }
     }
+}
+
+fn to_colorized_string(
+    strings: Vec<ColorizableString>,
+    config: &RegExpConfig,
+) -> (
+    ColoredString,
+    ColoredString,
+    ColoredString,
+    ColoredString,
+    ColoredString,
+) {
+    let v = strings
+        .iter()
+        .map(|it| it.to_colorized_string(config.is_output_colorized))
+        .collect_vec();
+
+    (
+        v[0].clone(),
+        v[1].clone(),
+        v[2].clone(),
+        v[3].clone(),
+        v[4].clone(),
+    )
 }

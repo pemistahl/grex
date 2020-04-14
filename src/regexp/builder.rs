@@ -97,9 +97,7 @@ impl RegExpBuilder {
     /// ⚠ Panics if `quantity` is zero.
     pub fn with_minimum_repetitions(&mut self, quantity: u32) -> &mut Self {
         if quantity == 0 {
-            panic!(String::from(
-                "Quantity of minimum repetitions must not be zero"
-            ));
+            panic!("Quantity of minimum repetitions must not be zero");
         }
         self.config.minimum_repetitions = quantity;
         self

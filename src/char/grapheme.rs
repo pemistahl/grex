@@ -14,10 +14,11 @@
  * limitations under the License.
  */
 
-use crate::color::colorize;
+use crate::char::ColorizableString;
 use crate::regexp::RegExpConfig;
+use colored::ColoredString;
 use itertools::Itertools;
-use std::fmt::{Display, Error, Formatter, Result};
+use std::fmt::{Display, Formatter, Result};
 
 const CHARS_TO_ESCAPE: [&str; 14] = [
     "(", ")", "[", "]", "{", "}", "+", "*", "-", ".", "?", "|", "^", "$",
@@ -169,65 +170,92 @@ impl Display for Grapheme {
             self.repetitions.iter().map(|it| it.to_string()).join("")
         };
 
-        if let [left_non_capturing_parenthesis, left_capturing_parenthesis, right_parenthesis, left_brace, right_brace, comma, min, max, colored_value] =
-            &colorize(
-                vec![
-                    "(?:",
-                    "(",
-                    ")",
-                    "{",
-                    "}",
-                    ",",
-                    self.min.to_string().as_str(),
-                    self.max.to_string().as_str(),
-                    value.as_str(),
-                ],
-                self.config.is_output_colorized,
-            )[..]
-        {
-            let left_parenthesis = if self.config.is_capturing_group_enabled() {
-                left_capturing_parenthesis
-            } else {
-                left_non_capturing_parenthesis
-            };
+        let (
+            colored_value,
+            comma,
+            left_brace,
+            right_brace,
+            left_parenthesis,
+            right_parenthesis,
+            min,
+            max,
+        ) = to_colorized_string(
+            vec![
+                ColorizableString::from(&value),
+                ColorizableString::Comma,
+                ColorizableString::LeftBrace,
+                ColorizableString::RightBrace,
+                if self.config.is_capturing_group_enabled() {
+                    ColorizableString::CapturingLeftParenthesis
+                } else {
+                    ColorizableString::NonCapturingLeftParenthesis
+                },
+                ColorizableString::RightParenthesis,
+                ColorizableString::Number(self.min),
+                ColorizableString::Number(self.max),
+            ],
+            &self.config,
+        );
 
-            if !is_range && is_repetition && is_single_char {
-                write!(f, "{}{}{}{}", colored_value, left_brace, min, right_brace)
-            } else if !is_range && is_repetition && !is_single_char {
-                write!(
-                    f,
-                    "{}{}{}{}{}{}",
-                    left_parenthesis,
-                    colored_value,
-                    right_parenthesis,
-                    left_brace,
-                    min,
-                    right_brace
-                )
-            } else if is_range && is_single_char {
-                write!(
-                    f,
-                    "{}{}{}{}{}{}",
-                    colored_value, left_brace, min, comma, max, right_brace
-                )
-            } else if is_range && !is_single_char {
-                write!(
-                    f,
-                    "{}{}{}{}{}{}{}{}",
-                    left_parenthesis,
-                    colored_value,
-                    right_parenthesis,
-                    left_brace,
-                    min,
-                    comma,
-                    max,
-                    right_brace
-                )
-            } else {
-                write!(f, "{}", colored_value)
-            }
+        if !is_range && is_repetition && is_single_char {
+            write!(f, "{}{}{}{}", colored_value, left_brace, min, right_brace)
+        } else if !is_range && is_repetition && !is_single_char {
+            write!(
+                f,
+                "{}{}{}{}{}{}",
+                left_parenthesis, colored_value, right_parenthesis, left_brace, min, right_brace
+            )
+        } else if is_range && is_single_char {
+            write!(
+                f,
+                "{}{}{}{}{}{}",
+                colored_value, left_brace, min, comma, max, right_brace
+            )
+        } else if is_range && !is_single_char {
+            write!(
+                f,
+                "{}{}{}{}{}{}{}{}",
+                left_parenthesis,
+                colored_value,
+                right_parenthesis,
+                left_brace,
+                min,
+                comma,
+                max,
+                right_brace
+            )
         } else {
-            Err(Error::default())
+            write!(f, "{}", colored_value)
         }
     }
+}
+
+fn to_colorized_string(
+    strings: Vec<ColorizableString>,
+    config: &RegExpConfig,
+) -> (
+    ColoredString,
+    ColoredString,
+    ColoredString,
+    ColoredString,
+    ColoredString,
+    ColoredString,
+    ColoredString,
+    ColoredString,
+) {
+    let v = strings
+        .iter()
+        .map(|it| it.to_colorized_string(config.is_output_colorized))
+        .collect_vec();
+
+    (
+        v[0].clone(),
+        v[1].clone(),
+        v[2].clone(),
+        v[3].clone(),
+        v[4].clone(),
+        v[5].clone(),
+        v[6].clone(),
+        v[7].clone(),
+    )
 }

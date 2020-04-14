@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-pub(crate) mod expression;
-pub(crate) mod format;
-pub(crate) mod quantifier;
-pub(crate) mod substring;
+mod expression;
+mod format;
+mod quantifier;
+mod substring;
 
 pub use expression::Expression;
 pub use quantifier::Quantifier;

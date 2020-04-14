@@ -15,12 +15,11 @@
  */
 
 use crate::ast::{Expression, Quantifier};
-use crate::char::GraphemeCluster;
-use crate::color::colorize;
+use crate::char::{ColorizableString, GraphemeCluster};
 use crate::regexp::RegExpConfig;
 use itertools::Itertools;
 use std::collections::BTreeSet;
-use std::fmt::{Display, Error, Formatter, Result};
+use std::fmt::{Display, Formatter, Result};
 use unic_char_range::CharRange;
 
 impl Display for Expression<'_> {
@@ -43,19 +42,6 @@ impl Display for Expression<'_> {
     }
 }
 
-impl Display for Quantifier {
-    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
-        write!(
-            f,
-            "{}",
-            match self {
-                Quantifier::KleeneStar => '*',
-                Quantifier::QuestionMark => '?',
-            }
-        )
-    }
-}
-
 fn get_codepoint_position(c: char) -> usize {
     CharRange::all().iter().position(|it| it == c).unwrap()
 }
@@ -66,30 +52,32 @@ fn format_alternation(
     options: &[Expression],
     config: &RegExpConfig,
 ) -> Result {
-    if let [left_non_capturing_parenthesis, left_capturing_parenthesis, right_parenthesis, pipe] =
-        &colorize(vec!["(?:", "(", ")", "|"], config.is_output_colorized)[..]
-    {
-        let alternation_str = options
-            .iter()
-            .map(|option| {
-                if option.precedence() < expr.precedence() && !option.is_single_codepoint() {
-                    let left_parenthesis = if config.is_capturing_group_enabled() {
-                        left_capturing_parenthesis
-                    } else {
-                        left_non_capturing_parenthesis
-                    };
+    let (left_parenthesis, right_parenthesis, pipe) = vec![
+        if config.is_capturing_group_enabled() {
+            ColorizableString::CapturingLeftParenthesis
+        } else {
+            ColorizableString::NonCapturingLeftParenthesis
+        },
+        ColorizableString::RightParenthesis,
+        ColorizableString::Pipe,
+    ]
+    .iter()
+    .map(|it| it.to_colorized_string(config.is_output_colorized))
+    .collect_tuple()
+    .unwrap();
 
-                    format!("{}{}{}", left_parenthesis, option, right_parenthesis)
-                } else {
-                    format!("{}", option)
-                }
-            })
-            .join(&pipe.to_string());
+    let alternation_str = options
+        .iter()
+        .map(|option| {
+            if option.precedence() < expr.precedence() && !option.is_single_codepoint() {
+                format!("{}{}{}", left_parenthesis, option, right_parenthesis)
+            } else {
+                format!("{}", option)
+            }
+        })
+        .join(&pipe.to_string());
 
-        write!(f, "{}", alternation_str)
-    } else {
-        Err(Error::default())
-    }
+    write!(f, "{}", alternation_str)
 }
 
 fn format_character_class(
@@ -140,35 +128,38 @@ fn format_character_class(
     subsets.push(subset);
 
     let mut char_class_strs = vec![];
+    let (hyphen, left_bracket, right_bracket) = vec![
+        ColorizableString::Hyphen,
+        ColorizableString::LeftBracket,
+        ColorizableString::RightBracket,
+    ]
+    .iter()
+    .map(|it| it.to_colorized_string(config.is_output_colorized))
+    .collect_tuple()
+    .unwrap();
 
-    if let [left_bracket, right_bracket, hyphen] =
-        &colorize(vec!["[", "]", "-"], config.is_output_colorized)[..]
-    {
-        for subset in subsets.iter() {
-            if subset.len() <= 2 {
-                for c in subset.iter() {
-                    char_class_strs.push((*c).to_string());
-                }
-            } else {
-                char_class_strs.push(format!(
-                    "{}{}{}",
-                    subset.first().unwrap(),
-                    hyphen,
-                    subset.last().unwrap()
-                ));
+    for subset in subsets.iter() {
+        if subset.len() <= 2 {
+            for c in subset.iter() {
+                char_class_strs.push((*c).to_string());
             }
+        } else {
+            char_class_strs.push(format!(
+                "{}{}{}",
+                subset.first().unwrap(),
+                hyphen,
+                subset.last().unwrap()
+            ));
         }
-
-        write!(
-            f,
-            "{}{}{}",
-            left_bracket,
-            char_class_strs.join(""),
-            right_bracket
-        )
-    } else {
-        Err(Error::default())
     }
+
+    write!(
+        f,
+        "{}{}{}",
+        left_bracket,
+        char_class_strs.join(""),
+        right_bracket
+    )
 }
 
 fn format_concatenation(
@@ -178,34 +169,36 @@ fn format_concatenation(
     expr2: &Expression,
     config: &RegExpConfig,
 ) -> Result {
-    if let [left_non_capturing_parenthesis, left_capturing_parenthesis, right_parenthesis] =
-        &colorize(vec!["(?:", "(", ")"], config.is_output_colorized)[..]
-    {
-        let expr_strs = vec![expr1, expr2]
-            .iter()
-            .map(|&it| {
-                if it.precedence() < expr.precedence() && !it.is_single_codepoint() {
-                    let left_parenthesis = if config.is_capturing_group_enabled() {
-                        left_capturing_parenthesis
+    let expr_strs = vec![expr1, expr2]
+        .iter()
+        .map(|&it| {
+            if it.precedence() < expr.precedence() && !it.is_single_codepoint() {
+                let (left_parenthesis, right_parenthesis) = vec![
+                    if config.is_capturing_group_enabled() {
+                        ColorizableString::CapturingLeftParenthesis
                     } else {
-                        left_non_capturing_parenthesis
-                    };
-                    format!("{}{}{}", left_parenthesis, it, right_parenthesis)
-                } else {
-                    format!("{}", it)
-                }
-            })
-            .collect_vec();
+                        ColorizableString::NonCapturingLeftParenthesis
+                    },
+                    ColorizableString::RightParenthesis,
+                ]
+                .iter()
+                .map(|it| it.to_colorized_string(config.is_output_colorized))
+                .collect_tuple()
+                .unwrap();
 
-        write!(
-            f,
-            "{}{}",
-            expr_strs.first().unwrap(),
-            expr_strs.last().unwrap()
-        )
-    } else {
-        Err(Error::default())
-    }
+                format!("{}{}{}", left_parenthesis, it, right_parenthesis)
+            } else {
+                format!("{}", it)
+            }
+        })
+        .collect_vec();
+
+    write!(
+        f,
+        "{}{}",
+        expr_strs.first().unwrap(),
+        expr_strs.last().unwrap()
+    )
 }
 
 fn format_literal(
@@ -248,27 +241,30 @@ fn format_repetition(
     quantifier: &Quantifier,
     config: &RegExpConfig,
 ) -> Result {
-    if let [left_non_capturing_parenthesis, left_capturing_parenthesis, right_parenthesis, colored_quantifier] =
-        &colorize(
-            vec!["(?:", "(", ")", quantifier.to_string().as_str()],
-            config.is_output_colorized,
-        )[..]
-    {
-        if expr1.precedence() < expr.precedence() && !expr1.is_single_codepoint() {
-            let left_parenthesis = if config.is_capturing_group_enabled() {
-                left_capturing_parenthesis
-            } else {
-                left_non_capturing_parenthesis
-            };
-            write!(
-                f,
-                "{}{}{}{}",
-                left_parenthesis, expr1, right_parenthesis, colored_quantifier
-            )
+    let (colored_quantifier, left_parenthesis, right_parenthesis) = vec![
+        match quantifier {
+            Quantifier::KleeneStar => ColorizableString::Asterisk,
+            Quantifier::QuestionMark => ColorizableString::QuestionMark,
+        },
+        if config.is_capturing_group_enabled() {
+            ColorizableString::CapturingLeftParenthesis
         } else {
-            write!(f, "{}{}", expr1, colored_quantifier)
-        }
+            ColorizableString::NonCapturingLeftParenthesis
+        },
+        ColorizableString::RightParenthesis,
+    ]
+    .iter()
+    .map(|it| it.to_colorized_string(config.is_output_colorized))
+    .collect_tuple()
+    .unwrap();
+
+    if expr1.precedence() < expr.precedence() && !expr1.is_single_codepoint() {
+        write!(
+            f,
+            "{}{}{}{}",
+            left_parenthesis, expr1, right_parenthesis, colored_quantifier
+        )
     } else {
-        Err(Error::default())
+        write!(f, "{}{}", expr1, colored_quantifier)
     }
 }

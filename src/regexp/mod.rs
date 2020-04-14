@@ -14,15 +14,17 @@
  * limitations under the License.
  */
 
-pub(crate) mod builder;
-pub(crate) mod config;
-pub(crate) mod feature;
-pub(crate) mod repr;
+mod builder;
+mod config;
+mod feature;
+
+#[allow(clippy::module_inception)]
+mod regexp;
 
 pub use builder::RegExpBuilder;
 pub use config::RegExpConfig;
 pub use feature::Feature;
-pub use repr::RegExp;
+pub use regexp::RegExp;
 
 #[cfg(test)]
 mod tests {

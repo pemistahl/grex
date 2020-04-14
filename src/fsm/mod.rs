@@ -14,6 +14,6 @@
  * limitations under the License.
  */
 
-pub(crate) mod dfa;
+mod dfa;
 
 pub use dfa::DFA;
