@@ -285,7 +285,7 @@ let regexp = RegExpBuilder::from(&["big", "BIGGER"])
 assert_eq!(regexp, "(?i)^big(ger)?$");
 ```
 
-#### 5.2.6 Syntax highlighting
+#### 5.2.7 Syntax highlighting
 
 ⚠ The method `with_syntax_highlighting()` may only be used if the resulting regular expression is meant to
 be printed to the console. The regex string representation returned from enabling
