@@ -25,16 +25,16 @@ use petgraph::prelude::EdgeRef;
 use std::collections::BTreeSet;
 
 #[derive(Clone, Debug, Eq, PartialEq)]
-pub enum Expression<'a> {
-    Alternation(Vec<Expression<'a>>, &'a RegExpConfig),
-    CharacterClass(BTreeSet<char>, &'a RegExpConfig),
-    Concatenation(Box<Expression<'a>>, Box<Expression<'a>>, &'a RegExpConfig),
-    Literal(GraphemeCluster<'a>, &'a RegExpConfig),
-    Repetition(Box<Expression<'a>>, Quantifier, &'a RegExpConfig),
+pub enum Expression {
+    Alternation(Vec<Expression>, RegExpConfig),
+    CharacterClass(BTreeSet<char>, RegExpConfig),
+    Concatenation(Box<Expression>, Box<Expression>, RegExpConfig),
+    Literal(GraphemeCluster, RegExpConfig),
+    Repetition(Box<Expression>, Quantifier, RegExpConfig),
 }
 
-impl<'a> Expression<'a> {
-    pub(crate) fn from(dfa: DFA, config: &'a RegExpConfig) -> Self {
+impl Expression {
+    pub(crate) fn from(dfa: DFA, config: &RegExpConfig) -> Self {
         let states = dfa.states_in_depth_first_order();
         let state_count = dfa.state_count();
 
@@ -50,9 +50,10 @@ impl<'a> Expression<'a> {
             }
 
             for edge in dfa.outgoing_edges(*state) {
-                let grapheme = edge.weight();
-                let literal =
-                    Expression::new_literal(GraphemeCluster::new(grapheme.clone(), config), config);
+                let literal = Expression::new_literal(
+                    GraphemeCluster::new(edge.weight().clone(), config),
+                    config,
+                );
                 let j = states.iter().position(|&it| it == edge.target()).unwrap();
 
                 a[(i, j)] = if a[(i, j)].is_some() {
@@ -101,44 +102,32 @@ impl<'a> Expression<'a> {
         }
     }
 
-    fn new_alternation(
-        expr1: Expression<'a>,
-        expr2: Expression<'a>,
-        config: &'a RegExpConfig,
-    ) -> Self {
+    fn new_alternation(expr1: Expression, expr2: Expression, config: &RegExpConfig) -> Self {
         let mut options: Vec<Expression> = vec![];
         Self::flatten_alternations(&mut options, vec![expr1, expr2]);
         options.sort_by(|a, b| b.len().cmp(&a.len()));
-        Expression::Alternation(options, config)
+        Expression::Alternation(options, config.clone())
     }
 
     fn new_character_class(
         first_char_set: BTreeSet<char>,
         second_char_set: BTreeSet<char>,
-        config: &'a RegExpConfig,
+        config: &RegExpConfig,
     ) -> Self {
         let union_set = first_char_set.union(&second_char_set).copied().collect();
-        Expression::CharacterClass(union_set, config)
+        Expression::CharacterClass(union_set, config.clone())
     }
 
-    fn new_concatenation(
-        expr1: Expression<'a>,
-        expr2: Expression<'a>,
-        config: &'a RegExpConfig,
-    ) -> Self {
-        Expression::Concatenation(Box::from(expr1), Box::from(expr2), config)
+    fn new_concatenation(expr1: Expression, expr2: Expression, config: &RegExpConfig) -> Self {
+        Expression::Concatenation(Box::from(expr1), Box::from(expr2), config.clone())
     }
 
-    fn new_literal(cluster: GraphemeCluster<'a>, config: &'a RegExpConfig) -> Self {
-        Expression::Literal(cluster, config)
+    fn new_literal(cluster: GraphemeCluster, config: &RegExpConfig) -> Self {
+        Expression::Literal(cluster, config.clone())
     }
 
-    fn new_repetition(
-        expr: Expression<'a>,
-        quantifier: Quantifier,
-        config: &'a RegExpConfig,
-    ) -> Self {
-        Expression::Repetition(Box::from(expr), quantifier, config)
+    fn new_repetition(expr: Expression, quantifier: Quantifier, config: &RegExpConfig) -> Self {
+        Expression::Repetition(Box::from(expr), quantifier, config.clone())
     }
 
     fn is_empty(&self) -> bool {
@@ -219,9 +208,9 @@ impl<'a> Expression<'a> {
     }
 
     fn repeat_zero_or_more_times(
-        expr: &Option<Expression<'a>>,
-        config: &'a RegExpConfig,
-    ) -> Option<Expression<'a>> {
+        expr: &Option<Expression>,
+        config: &RegExpConfig,
+    ) -> Option<Expression> {
         if let Some(value) = expr {
             Some(Expression::new_repetition(
                 value.clone(),
@@ -234,10 +223,10 @@ impl<'a> Expression<'a> {
     }
 
     fn concatenate(
-        a: &Option<Expression<'a>>,
-        b: &Option<Expression<'a>>,
-        config: &'a RegExpConfig,
-    ) -> Option<Expression<'a>> {
+        a: &Option<Expression>,
+        b: &Option<Expression>,
+        config: &RegExpConfig,
+    ) -> Option<Expression> {
         if a.is_none() || b.is_none() {
             return None;
         }
@@ -301,10 +290,10 @@ impl<'a> Expression<'a> {
     }
 
     fn union(
-        a: &Option<Expression<'a>>,
-        b: &Option<Expression<'a>>,
-        config: &'a RegExpConfig,
-    ) -> Option<Expression<'a>> {
+        a: &Option<Expression>,
+        b: &Option<Expression>,
+        config: &RegExpConfig,
+    ) -> Option<Expression> {
         if let (Some(mut expr1), Some(mut expr2)) = (a.clone(), b.clone()) {
             if expr1 != expr2 {
                 let common_prefix =
@@ -329,10 +318,10 @@ impl<'a> Expression<'a> {
                 };
 
                 if result.is_none() {
-                    if let Expression::Repetition(expr, quantifier, _) = expr1.clone() {
-                        if quantifier == Quantifier::QuestionMark {
+                    if let Expression::Repetition(expr, quantifier, _) = &expr1 {
+                        if quantifier == &Quantifier::QuestionMark {
                             let alternation =
-                                Expression::new_alternation(*expr, expr2.clone(), config);
+                                Expression::new_alternation(*expr.clone(), expr2.clone(), config);
                             result = Some(Expression::new_repetition(
                                 alternation,
                                 Quantifier::QuestionMark,
@@ -343,10 +332,10 @@ impl<'a> Expression<'a> {
                 }
 
                 if result.is_none() {
-                    if let Expression::Repetition(expr, quantifier, _) = expr2.clone() {
-                        if quantifier == Quantifier::QuestionMark {
+                    if let Expression::Repetition(expr, quantifier, _) = &expr2 {
+                        if quantifier == &Quantifier::QuestionMark {
                             let alternation =
-                                Expression::new_alternation(expr1.clone(), *expr, config);
+                                Expression::new_alternation(expr1.clone(), *expr.clone(), config);
                             result = Some(Expression::new_repetition(
                                 alternation,
                                 Quantifier::QuestionMark,
@@ -410,8 +399,8 @@ impl<'a> Expression<'a> {
     }
 
     fn flatten_alternations(
-        flattened_options: &mut Vec<Expression<'a>>,
-        current_options: Vec<Expression<'a>>,
+        flattened_options: &mut Vec<Expression>,
+        current_options: Vec<Expression>,
     ) {
         for option in current_options {
             if let Expression::Alternation(expr_options, _) = option {

@@ -23,13 +23,13 @@ use itertools::Itertools;
 use std::cmp::Ordering;
 use std::fmt::{Display, Formatter, Result};
 
-pub struct RegExp<'a> {
-    ast: Expression<'a>,
-    config: &'a RegExpConfig,
+pub struct RegExp {
+    ast: Expression,
+    config: RegExpConfig,
 }
 
-impl<'a> RegExp<'a> {
-    pub(crate) fn from(test_cases: &mut Vec<String>, config: &'a RegExpConfig) -> Self {
+impl RegExp {
+    pub(crate) fn from(test_cases: &mut Vec<String>, config: &RegExpConfig) -> Self {
         if config.is_case_insensitive_matching() {
             Self::convert_to_lowercase(test_cases);
         }
@@ -37,7 +37,10 @@ impl<'a> RegExp<'a> {
         let grapheme_clusters = Self::grapheme_clusters(&test_cases, config);
         let dfa = DFA::from(grapheme_clusters, config);
         let ast = Expression::from(dfa, config);
-        Self { ast, config }
+        Self {
+            ast,
+            config: config.clone(),
+        }
     }
 
     fn convert_to_lowercase(test_cases: &mut Vec<String>) {
@@ -56,10 +59,7 @@ impl<'a> RegExp<'a> {
         });
     }
 
-    fn grapheme_clusters(
-        test_cases: &[String],
-        config: &'a RegExpConfig,
-    ) -> Vec<GraphemeCluster<'a>> {
+    fn grapheme_clusters(test_cases: &[String], config: &RegExpConfig) -> Vec<GraphemeCluster> {
         let mut clusters = test_cases
             .iter()
             .map(|it| GraphemeCluster::from(it, config))
@@ -81,7 +81,7 @@ impl<'a> RegExp<'a> {
     }
 }
 
-impl Display for RegExp<'_> {
+impl Display for RegExp {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         let (flag, left_anchor, left_parenthesis, right_parenthesis, right_anchor) =
             to_colorized_string(
@@ -100,7 +100,7 @@ impl Display for RegExp<'_> {
                     ColorizableString::RightParenthesis,
                     ColorizableString::DollarSign,
                 ],
-                self.config,
+                &self.config,
             );
 
         match self.ast {

@@ -29,16 +29,16 @@ type State = NodeIndex<u32>;
 type StateLabel = String;
 type EdgeLabel = Grapheme;
 
-pub struct DFA<'a> {
+pub struct DFA {
     alphabet: BTreeSet<Grapheme>,
     graph: StableGraph<StateLabel, EdgeLabel>,
     initial_state: State,
     final_state_indices: HashSet<usize>,
-    config: &'a RegExpConfig,
+    config: RegExpConfig,
 }
 
-impl<'a> DFA<'a> {
-    pub(crate) fn from(grapheme_clusters: Vec<GraphemeCluster>, config: &'a RegExpConfig) -> Self {
+impl DFA {
+    pub(crate) fn from(grapheme_clusters: Vec<GraphemeCluster>, config: &RegExpConfig) -> Self {
         let mut dfa = Self::new(config);
         for cluster in grapheme_clusters {
             dfa.insert(cluster);
@@ -78,7 +78,7 @@ impl<'a> DFA<'a> {
         println!("{:?}", self.final_state_indices);
     }
 
-    fn new(config: &'a RegExpConfig) -> Self {
+    fn new(config: &RegExpConfig) -> Self {
         let mut graph = StableGraph::new();
         let initial_state = graph.add_node("".to_string());
         Self {
@@ -86,7 +86,7 @@ impl<'a> DFA<'a> {
             graph,
             initial_state,
             final_state_indices: HashSet::new(),
-            config,
+            config: config.clone(),
         }
     }
 
@@ -153,24 +153,18 @@ impl<'a> DFA<'a> {
 
                 while is_replacement_needed {
                     for (idx, y) in p.iter().enumerate().skip(start_idx) {
+                        if x.intersection(y).count() == 0 || y.difference(&x).count() == 0 {
+                            is_replacement_needed = false;
+                            continue;
+                        }
+
                         let i = x.intersection(y).copied().collect::<HashSet<State>>();
-
-                        if i.is_empty() {
-                            is_replacement_needed = false;
-                            continue;
-                        }
-
                         let d = y.difference(&x).copied().collect::<HashSet<State>>();
-
-                        if d.is_empty() {
-                            is_replacement_needed = false;
-                            continue;
-                        }
 
                         is_replacement_needed = true;
                         start_idx = idx;
 
-                        replacements.push((y.clone(), i.clone(), d.clone()));
+                        replacements.push((y.clone(), i, d));
 
                         break;
                     }

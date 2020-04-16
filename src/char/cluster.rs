@@ -26,13 +26,13 @@ use unic_ucd_category::GeneralCategory;
 use unicode_segmentation::UnicodeSegmentation;
 
 #[derive(Clone, Debug, Eq, PartialEq)]
-pub struct GraphemeCluster<'a> {
+pub struct GraphemeCluster {
     graphemes: Vec<Grapheme>,
-    config: &'a RegExpConfig,
+    config: RegExpConfig,
 }
 
-impl<'a> GraphemeCluster<'a> {
-    pub(crate) fn from(s: &str, config: &'a RegExpConfig) -> Self {
+impl GraphemeCluster {
+    pub(crate) fn from(s: &str, config: &RegExpConfig) -> Self {
         Self {
             graphemes: UnicodeSegmentation::graphemes(s, true)
                 .flat_map(|it| {
@@ -49,18 +49,21 @@ impl<'a> GraphemeCluster<'a> {
                     }
                 })
                 .collect_vec(),
-            config,
+            config: config.clone(),
         }
     }
 
-    pub(crate) fn from_graphemes(graphemes: Vec<Grapheme>, config: &'a RegExpConfig) -> Self {
-        Self { graphemes, config }
+    pub(crate) fn from_graphemes(graphemes: Vec<Grapheme>, config: &RegExpConfig) -> Self {
+        Self {
+            graphemes,
+            config: config.clone(),
+        }
     }
 
-    pub(crate) fn new(grapheme: Grapheme, config: &'a RegExpConfig) -> Self {
+    pub(crate) fn new(grapheme: Grapheme, config: &RegExpConfig) -> Self {
         Self {
             graphemes: vec![grapheme],
-            config,
+            config: config.clone(),
         }
     }
 
@@ -123,12 +126,15 @@ impl<'a> GraphemeCluster<'a> {
     pub(crate) fn merge(
         first: &GraphemeCluster,
         second: &GraphemeCluster,
-        config: &'a RegExpConfig,
+        config: &RegExpConfig,
     ) -> Self {
         let mut graphemes = vec![];
         graphemes.extend_from_slice(&first.graphemes);
         graphemes.extend_from_slice(&second.graphemes);
-        Self { graphemes, config }
+        Self {
+            graphemes,
+            config: config.clone(),
+        }
     }
 
     pub(crate) fn graphemes(&self) -> &Vec<Grapheme> {
