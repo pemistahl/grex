@@ -397,7 +397,7 @@ $ grex -Dr <INPUT>
 ^\D{6}36\D{5}٣\D{8}$
 
 $ grex -rS <INPUT>
-^\S \S(\S{2} ){2}\S{3} \S \S{3} \S{3}$
+^\S \S(?:\S{2} ){2}\S{3} \S \S{3} \S{3}$
 
 $ grex -rW <INPUT>
 ^I\W{5}36\Wand\W٣\Wand\W{4}$
