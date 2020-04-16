@@ -191,6 +191,42 @@ mod no_conversion {
                 "^I   ♥♥♥ 36 and ٣ and (?:y̆){2} and 💩💩\\.$\n",
             ));
         }
+
+        #[test]
+        fn fails_with_minimum_repetitions_equal_to_zero() {
+            let mut grex = init_command();
+            grex.args(&["--min-repetitions", "0", TEST_CASE]);
+            grex.assert()
+                .failure()
+                .stderr(predicate::str::contains("Value must not be zero"));
+        }
+
+        #[test]
+        fn fails_with_minimum_repetitions_equal_to_invalid_value() {
+            let mut grex = init_command();
+            grex.args(&["--min-repetitions", "§!$", TEST_CASE]);
+            grex.assert().failure().stderr(predicate::str::contains(
+                "Value is not a valid unsigned integer",
+            ));
+        }
+
+        #[test]
+        fn fails_with_minimum_substring_length_equal_to_zero() {
+            let mut grex = init_command();
+            grex.args(&["--min-substring-length", "0", TEST_CASE]);
+            grex.assert()
+                .failure()
+                .stderr(predicate::str::contains("Value must not be zero"));
+        }
+
+        #[test]
+        fn fails_with_minimum_substring_length_equal_to_invalid_value() {
+            let mut grex = init_command();
+            grex.args(&["--min-substring-length", "§!$", TEST_CASE]);
+            grex.assert().failure().stderr(predicate::str::contains(
+                "Value is not a valid unsigned integer",
+            ));
+        }
     }
 }
 
