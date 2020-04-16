@@ -4,39 +4,39 @@
 
 [![Build Status](https://travis-ci.org/pemistahl/grex.svg?branch=master)](https://travis-ci.org/pemistahl/grex)
 [![codecov](https://codecov.io/gh/pemistahl/grex/branch/master/graph/badge.svg)](https://codecov.io/gh/pemistahl/grex)
-[![Crates.io](https://img.shields.io/crates/v/grex.svg)](https://crates.io/crates/grex)
-[![Docs.rs](https://docs.rs/grex/badge.svg)](https://docs.rs/grex)
 [![Downloads](https://img.shields.io/crates/d/grex.svg)](https://crates.io/crates/grex)
 [![license](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0)
 
-[![Linux Download](https://img.shields.io/badge/Linux%20Download-v1.0.0-blue?logo=Linux)](https://github.com/pemistahl/grex/releases/download/v1.0.0/grex-v1.0.0-x86_64-unknown-linux-musl.tar.gz)
-[![MacOS Download](https://img.shields.io/badge/macOS%20Download-v1.0.0-blue?logo=Apple)](https://github.com/pemistahl/grex/releases/download/v1.0.0/grex-v1.0.0-x86_64-apple-darwin.tar.gz)
-[![Windows Download](https://img.shields.io/badge/Windows%20Download-v1.0.0-blue?logo=Windows)](https://github.com/pemistahl/grex/releases/download/v1.0.0/grex-v1.0.0-x86_64-pc-windows-msvc.zip)
+[![Docs.rs](https://docs.rs/grex/badge.svg)](https://docs.rs/grex)
+[![Crates.io](https://img.shields.io/crates/v/grex.svg)](https://crates.io/crates/grex)
+[![Lib.rs](https://img.shields.io/badge/lib.rs-v1.1.0-blue)](https://lib.rs/crates/grex)
+
+[![Linux Download](https://img.shields.io/badge/Linux%20Download-v1.1.0-blue?logo=Linux)](https://github.com/pemistahl/grex/releases/download/v1.1.0/grex-v1.1.0-x86_64-unknown-linux-musl.tar.gz)
+[![MacOS Download](https://img.shields.io/badge/macOS%20Download-v1.1.0-blue?logo=Apple)](https://github.com/pemistahl/grex/releases/download/v1.1.0/grex-v1.1.0-x86_64-apple-darwin.tar.gz)
+[![Windows Download](https://img.shields.io/badge/Windows%20Download-v1.1.0-blue?logo=Windows)](https://github.com/pemistahl/grex/releases/download/v1.1.0/grex-v1.1.0-x86_64-pc-windows-msvc.zip)
 
 ## <a name="table-of-contents"></a> Table of Contents
 1. [What does this tool do?](#what-does-tool-do)
-2. [Current features](#current-features)
-3. [How to install?](#how-to-install)  
-  3.1 [The command-line tool](#how-to-install-cli)  
-  3.2 [The library](#how-to-install-library)
-4. [How to use?](#how-to-use)  
-  4.1 [The command-line tool](#how-to-use-cli)  
-  4.2 [The library](#how-to-use-library)  
-  4.3 [Examples](#examples)
-5. [How to build?](#how-to-build)
-6. [How does it work?](#how-does-it-work)
-7. [Do you want to contribute?](#contribution)
+2. [Do I still need to learn to write regexes then?](#learn-regex)
+3. [Current features](#current-features)
+4. [How to install?](#how-to-install)  
+  4.1 [The command-line tool](#how-to-install-cli)  
+  4.2 [The library](#how-to-install-library)
+5. [How to use?](#how-to-use)  
+  5.1 [The command-line tool](#how-to-use-cli)  
+  5.2 [The library](#how-to-use-library)  
+  5.3 [Examples](#examples)
+6. [How to build?](#how-to-build)
+7. [How does it work?](#how-does-it-work)
+8. [Do you want to contribute?](#contribution)
  
 
 ## 1. <a name="what-does-tool-do"></a> What does this tool do? <sup>[Top ▲](#table-of-contents)</sup>
 
 *grex* is a library as well as a command-line utility that is meant to simplify the often 
 complicated and tedious task of creating regular expressions. It does so by automatically 
-generating regular expressions from user-provided test cases. The produced expressions
-are Perl-compatible regular expressions (PCRE) which are also compatible with the
-regular expression parser in the [*regex*](https://crates.io/crates/regex) crate.
-Other regular expression parsers or respective libraries from other programming languages 
-have not been tested so far. 
+generating a single regular expression from user-provided test cases. The resulting
+expression is guaranteed to match the test cases which it was generated from.
 
 This project has started as a Rust port of the JavaScript tool 
 [*regexgen*](https://github.com/devongovett/regexgen) written by 
@@ -50,7 +50,30 @@ possible by default which exactly matches the given input only and nothing else.
 With the use of command-line flags (in the CLI tool) or preprocessing methods 
 (in the library), more generalized expressions can be created.
 
-## 2. <a name="current-features"></a> Current Features <sup>[Top ▲](#table-of-contents)</sup>
+The produced expressions are [Perl-compatible regular expressions](https://www.pcre.org) which are also 
+compatible with the regular expression parser in Rust's [*regex crate*](https://lib.rs/crates/regex).
+Other regular expression parsers or respective libraries from other programming languages 
+have not been tested so far, but they ought to be mostly compatible as well.
+
+## 2. <a name="learn-regex"></a> Do I still need to learn to write regexes then? <sup>[Top ▲](#table-of-contents)</sup>
+
+**Definitely, yes!** Using the standard settings, *grex* produces a regular expression that is guaranteed
+to match only the test cases given as input and nothing else. 
+This has been verified by [property tests](https://github.com/pemistahl/grex/blob/master/tests/property_tests.rs).
+However, if the conversion to shorthand character classes such as `\w` is enabled, the resulting regex matches
+a much wider scope of test cases. Knowledge about the consequences of this conversion is essential for finding
+a correct regular expression for your business domain.
+
+*grex* uses an algorithm that tries to find the shortest possible regex for the given test cases.
+Very often though, the resulting expression is still longer or more complex than it needs to be.
+In such cases, a more compact or elegant regex can be created only by hand.
+Also, every regular expression engine has different built-in optimizations. *grex* does not know anything
+about those and therefore cannot optimize its regexes for a specific engine.
+
+**So, please learn how to write regular expressions!** The currently best use case for *grex* is to find
+an initial correct regex which should be inspected by hand if further optimizations are possible.  
+
+## 3. <a name="current-features"></a> Current Features <sup>[Top ▲](#table-of-contents)</sup>
 - literals
 - character classes
 - detection of common prefixes and suffixes
@@ -58,55 +81,52 @@ With the use of command-line flags (in the CLI tool) or preprocessing methods
 - alternation using `|` operator
 - optionality using `?` quantifier
 - escaping of non-ascii characters, with optional conversion of astral code points to surrogate pairs
-- fully Unicode-aware, correctly handles graphemes consisting of multiple Unicode symbols
-- reading input strings from the command-line or from a file
+- case-sensitive or case-insensitive matching
+- capturing or non-capturing groups
+- fully compliant to newest [Unicode Standard 13.0](https://unicode.org/versions/Unicode13.0.0)
+- fully compatible with [*regex* crate 1.3.5+](https://lib.rs/crates/regex)
+- correctly handles graphemes consisting of multiple Unicode symbols
+- reads input strings from the command-line or from a file
 - optional syntax highlighting for nicer output in supported terminals
 
-## 3. <a name="how-to-install"></a> How to install? <sup>[Top ▲](#table-of-contents)</sup>
+## 4. <a name="how-to-install"></a> How to install? <sup>[Top ▲](#table-of-contents)</sup>
 
-### 3.1 <a name="how-to-install-cli"></a> The command-line tool <sup>[Top ▲](#table-of-contents)</sup>
+### 4.1 <a name="how-to-install-cli"></a> The command-line tool <sup>[Top ▲](#table-of-contents)</sup>
 
-Pre-compiled 64-Bit binaries are available within the package managers [Scoop](https://scoop.sh) 
-(for Windows) and [Homebrew](https://brew.sh) (for macOS).
+You can download the self-contained executable for your platform above and put it in a place of your choice. 
+Alternatively, pre-compiled 64-Bit binaries are available within the package managers [Scoop](https://scoop.sh) 
+(for Windows) and [Homebrew](https://brew.sh) (for macOS and Linux).
 
-#### Scoop
-```
-scoop install grex
-```
-
-#### Homebrew
-```
-brew tap pemistahl/formulas
-brew install grex
-```
-
-Alternatively, you can download the self-contained executable for your platform above and put it 
-in a place of your choice. *grex* is also hosted on [crates.io](https://crates.io/crates/grex), 
+*grex* is also hosted on [crates.io](https://crates.io/crates/grex), 
 the official Rust package registry. If you are a Rust developer and already have the Rust 
 toolchain installed, you can install by compiling from source using 
-[*cargo*](https://doc.rust-lang.org/cargo/), the Rust package manager:
+[*cargo*](https://doc.rust-lang.org/cargo/), the Rust package manager.
+So the summary of your installation options is:
 
 ```
-cargo install grex
+( scoop | brew | cargo ) install grex
 ```
 
-### 3.2 <a name="how-to-install-library"></a> The library <sup>[Top ▲](#table-of-contents)</sup>
+### 4.2 <a name="how-to-install-library"></a> The library <sup>[Top ▲](#table-of-contents)</sup>
 
 In order to use *grex* as a library, simply add it as a dependency to your `Cargo.toml` file:
 
 ```toml
 [dependencies]
-grex = "1.0.0"
+grex = "1.1.0"
 ```
 
-## 4. <a name="how-to-use"></a> How to use? <sup>[Top ▲](#table-of-contents)</sup>
+## 5. <a name="how-to-use"></a> How to use? <sup>[Top ▲](#table-of-contents)</sup>
 
-### 4.1 <a name="how-to-use-cli"></a> The command-line tool <sup>[Top ▲](#table-of-contents)</sup>
+Detailed explanations of the available settings are provided in the [library section](#how-to-install-library).
+All settings can be freely combined with each other.
+
+### 5.1 <a name="how-to-use-cli"></a> The command-line tool <sup>[Top ▲](#table-of-contents)</sup>
 
 ```
 $ grex -h
 
-grex 1.0.0
+grex 1.1.0
 © 2019-2020 Peter M. Stahl <pemistahl@gmail.com>
 Licensed under the Apache License, Version 2.0
 Downloadable from https://crates.io/crates/grex
@@ -115,7 +135,7 @@ Source code at https://github.com/pemistahl/grex
 grex generates regular expressions from user-provided test cases.
 
 USAGE:
-    grex [FLAGS] <INPUT>... --file <FILE>
+    grex [FLAGS] [OPTIONS] <INPUT>... --file <FILE>
 
 FLAGS:
     -d, --digits             Converts any Unicode decimal digit to \d
@@ -128,41 +148,40 @@ FLAGS:
                              converts them to {min,max} quantifier notation
     -e, --escape             Replaces all non-ASCII characters with unicode escape sequences
         --with-surrogates    Converts astral code points to surrogate pairs if --escape is set
+    -i, --ignore-case        Performs case-insensitive matching, letters match both upper and lower case
+    -g, --capture-groups     Replaces non-capturing groups by capturing ones
     -c, --colorize           Provides syntax highlighting for the resulting regular expression
     -h, --help               Prints help information
     -v, --version            Prints version information
 
 OPTIONS:
-    -f, --file <FILE>    Reads test cases separated by newline characters from a file
+    -f, --file <FILE>                      Reads test cases on separate lines from a file
+        --min-repetitions <QUANTITY>       Specifies the minimum quantity of substring repetitions
+                                           to be converted if --repetitions is set [default: 1]
+        --min-substring-length <LENGTH>    Specifies the minimum length a repeated substring must have
+                                           in order to be converted if --repetitions is set [default: 1]
 
 ARGS:
-    <INPUT>...    One or more test cases separated by blank space
- 
+    <INPUT>...    One or more test cases separated by blank space 
 ```
 
-### 4.2 <a name="how-to-use-library"></a> The library <sup>[Top ▲](#table-of-contents)</sup>
+### 5.2 <a name="how-to-use-library"></a> The library <sup>[Top ▲](#table-of-contents)</sup>
 
-#### 4.2.1 Default settings
+#### 5.2.1 Default settings
+
+Test cases are passed either from a collection via [`RegExpBuilder::from()`](https://docs.rs/grex/1.1.0/grex/struct.RegExpBuilder.html#method.from) 
+or from a file via [`RegExpBuilder::from_file()`](https://docs.rs/grex/1.1.0/grex/struct.RegExpBuilder.html#method.from_file).
+If read from a file, each test case must be on a separate line. Lines may be ended with either a newline `\n` or a carriage
+return with a line feed `\r\n`.
 
 ```rust
 use grex::RegExpBuilder;
 
 let regexp = RegExpBuilder::from(&["a", "aa", "aaa"]).build();
-assert_eq!(regexp, "^a(aa?)?$");
+assert_eq!(regexp, "^a(?:aa?)?$");
 ```
 
-#### 4.2.2 Convert repeated substrings
-
-```rust
-use grex::{Feature, RegExpBuilder};
-
-let regexp = RegExpBuilder::from(&["a", "aa", "aaa"])
-    .with_conversion_of(&[Feature::Repetition])
-    .build();
-assert_eq!(regexp, "^a{1,3}$");
-```
-
-#### 4.2.3 Convert to character classes
+#### 5.2.2 Convert to character classes
 
 ```rust
 use grex::{Feature, RegExpBuilder};
@@ -170,10 +189,50 @@ use grex::{Feature, RegExpBuilder};
 let regexp = RegExpBuilder::from(&["a", "aa", "123"])
     .with_conversion_of(&[Feature::Digit, Feature::Word])
     .build();
-assert_eq!(regexp, "^(\\d\\d\\d|\\w\\w|\\w)$");
+assert_eq!(regexp, "^(\\d\\d\\d|\\w(?:\\w)?)$");
 ```
 
-#### 4.2.4 Escape non-ascii characters
+#### 5.2.3 Convert repeated substrings
+
+```rust
+use grex::{Feature, RegExpBuilder};
+
+let regexp = RegExpBuilder::from(&["aa", "bcbc", "defdefdef"])
+    .with_conversion_of(&[Feature::Repetition])
+    .build();
+assert_eq!(regexp, "^(?:a{2}|(?:bc){2}|(?:def){3})$");
+```
+
+By default, *grex* converts each substring this way which is at least a single character long 
+and which is subsequently repeated at least once. You can customize these two parameters if you like.
+
+In the following example, the test case `aa` is not converted to `a{2}` because the repeated substring 
+`a` has a length of 1, but the minimum substring length has been set to 2.
+
+```rust
+use grex::{Feature, RegExpBuilder};
+
+let regexp = RegExpBuilder::from(&["aa", "bcbc", "defdefdef"])
+    .with_conversion_of(&[Feature::Repetition])
+    .with_minimum_substring_length(2)
+    .build();
+assert_eq!(regexp, "^(?:aa|(?:bc){2}|(?:def){3})$");
+```
+
+Setting a minimum number of 2 repetitions in the next example, only the test case `defdefdef` will be
+converted because it is the only one that is repeated twice.
+
+```rust
+use grex::{Feature, RegExpBuilder};
+
+let regexp = RegExpBuilder::from(&["aa", "bcbc", "defdefdef"])
+    .with_conversion_of(&[Feature::Repetition])
+    .with_minimum_repetitions(2)
+    .build();
+assert_eq!(regexp, "^(?:bcbc|aa|(?:def){3})$");
+```
+
+#### 5.2.4 Escape non-ascii characters
 
 ```rust
 use grex::RegExpBuilder;
@@ -183,8 +242,6 @@ let regexp = RegExpBuilder::from(&["You smell like 💩."])
     .build();
 assert_eq!(regexp, "^You smell like \\u{1f4a9}\\.$");
 ```
-
-#### 4.2.5 Escape astral code points using surrogate pairs
 
 Old versions of JavaScript do not support unicode escape sequences for the astral code planes 
 (range `U+010000` to `U+10FFFF`). In order to support these symbols in JavaScript regular 
@@ -200,32 +257,39 @@ let regexp = RegExpBuilder::from(&["You smell like 💩."])
 assert_eq!(regexp, "^You smell like \\u{d83d}\\u{dca9}\\.$");
 ```
 
-#### 4.2.6 Combine multiple features
+#### 5.2.5 Case-insensitive matching
+
+The regular expressions that *grex* generates are case-sensitive by default.
+Case-insensitive matching can be enabled like so:
 
 ```rust
 use grex::{Feature, RegExpBuilder};
 
-let regexp = RegExpBuilder::from(&["You smell like 💩💩💩."])
-    .with_conversion_of(&[Feature::Repetition])
-    .with_escaped_non_ascii_chars(false)
+let regexp = RegExpBuilder::from(&["big", "BIGGER"])
+    .with_conversion_of(&[Feature::CaseInsensitivity])
     .build();
-assert_eq!(regexp, "^You smel{2} like \\u{1f4a9}{3}\\.$");
+assert_eq!(regexp, "(?i)^big(?:ger)?$");
 ```
+
+#### 5.2.6 Capturing Groups
+
+Non-capturing groups are used by default. 
+Extending the previous example, you can switch to capturing groups instead.
 
 ```rust
 use grex::{Feature, RegExpBuilder};
 
-let regexp = RegExpBuilder::from(&["a", "aa", "123"])
-    .with_conversion_of(&[Feature::Repetition, Feature::Digit, Feature::Word])
+let regexp = RegExpBuilder::from(&["big", "BIGGER"])
+    .with_conversion_of(&[Feature::CaseInsensitivity, Feature::CapturingGroup])
     .build();
-assert_eq!(regexp, "^(\\w{1,2}|\\d{3})$");
+assert_eq!(regexp, "(?i)^big(ger)?$");
 ```
 
-#### 4.2.7 Syntax highlighting
+#### 5.2.6 Syntax highlighting
 
 ⚠ The method `with_syntax_highlighting()` may only be used if the resulting regular expression is meant to
 be printed to the console. The regex string representation returned from enabling
-this setting cannot be fed into the [*regex*](https://crates.io/crates/regex) crate.
+this setting cannot be fed into the [*regex* crate](https://crates.io/crates/regex).
 
 ```rust
 use grex::RegExpBuilder;
@@ -235,7 +299,7 @@ let regexp = RegExpBuilder::from(&["a", "aa", "123"])
     .build();
 ```
 
-### 4.3 <a name="examples"></a> Examples <sup>[Top ▲](#table-of-contents)</sup>
+### 5.3 <a name="examples"></a> Examples <sup>[Top ▲](#table-of-contents)</sup>
 
 The following examples show the various supported regex syntax features:
 
@@ -247,29 +311,32 @@ $ grex a c d e f
 ^[ac-f]$
 
 $ grex a b x de
-^(de|[abx])$
+^(?:de|[abx])$
+
+$ grex abc bc
+^a?bc$
 
 $ grex a b bc
-^(bc?|a)$
+^(?:bc?|a)$
 
 $ grex [a-z]
 ^\[a\-z\]$
 
 $ grex -r b ba baa baaa
-^b(a{1,3})?$
+^b(?:a{1,3})?$
 
 $ grex -r b ba baa baaaa
-^b(a{1,2}|a{4})?$
+^b(?:a{1,2}|a{4})?$
 
 $ grex y̆ a z
-^(y̆|[az])$
+^(?:y̆|[az])$
 Note: 
 Grapheme y̆ consists of two Unicode symbols:
 U+0079 (Latin Small Letter Y)
-U+0306 (Combining Breve).
+U+0306 (Combining Breve)
 
 $ grex "I ♥ cake" "I ♥ cookies"
-^I ♥ c(ookies|ake)$
+^I ♥ c(?:ookies|ake)$
 Note:
 Input containing blank space must be 
 surrounded by quotation marks.
@@ -315,16 +382,16 @@ $ grex -er <INPUT>
 ^I \u{2665}{3} 36 and \u{663} and \u{1f4a9}{2}\.$
 
 $ grex -er --with-surrogates <INPUT>
-^I \u{2665}{3} 36 and \u{663} and (\u{d83d}\u{dca9}){2}\.$
+^I \u{2665}{3} 36 and \u{663} and (?:\u{d83d}\u{dca9}){2}\.$
 
-$ grex -dr <INPUT>
+$ grex -dgr <INPUT>
 ^I ♥{3} \d(\d and ){2}💩{2}\.$
 
 $ grex -rs <INPUT>
 ^I\s♥{3}\s36\sand\s٣\sand\s💩{2}\.$
 
 $ grex -rw <INPUT>
-^\w ♥{3} \w(\w \w{3} ){2}💩{2}\.$
+^\w ♥{3} \w(?:\w \w{3} ){2}💩{2}\.$
 
 $ grex -Dr <INPUT>
 ^\D{6}36\D{5}٣\D{8}$
@@ -336,13 +403,13 @@ $ grex -rW <INPUT>
 ^I\W{5}36\Wand\W٣\Wand\W{4}$
 
 $ grex -drsw <INPUT>
-^\w\s♥{3}\s\d(\d\s\w{3}\s){2}💩{2}\.$
+^\w\s♥{3}\s\d(?:\d\s\w{3}\s){2}💩{2}\.$
 
 $ grex -drswW <INPUT>
-^\w\s\W{3}\s\d(\d\s\w{3}\s){2}\W{3}$
+^\w\s\W{3}\s\d(?:\d\s\w{3}\s){2}\W{3}$
 ```                                                                                                                            
 
-## 5. <a name="how-to-build"></a> How to build? <sup>[Top ▲](#table-of-contents)</sup>
+## 6. <a name="how-to-build"></a> How to build? <sup>[Top ▲](#table-of-contents)</sup>
 
 In order to build the source code yourself, you need the 
 [stable Rust toolchain](https://www.rust-lang.org/tools/install) installed on your machine 
@@ -371,14 +438,20 @@ This is a very useful tool for finding bugs. If you want to run these tests, say
 cargo test -- --ignored
 ```
 
-## 6. <a name="how-does-it-work"></a> How does it work? <sup>[Top ▲](#table-of-contents)</sup>
+## 7. <a name="how-does-it-work"></a> How does it work? <sup>[Top ▲](#table-of-contents)</sup>
 
-1. A [deterministic finite automaton](https://en.wikipedia.org/wiki/Deterministic_finite_automaton) (DFA) is created from the input strings.
+1. A [deterministic finite automaton](https://en.wikipedia.org/wiki/Deterministic_finite_automaton) (DFA) 
+is created from the input strings.
 
-2. The number of states and transitions between states in the DFA is reduced by applying [Hopcroft's DFA minimization algorithm](https://en.wikipedia.org/wiki/DFA_minimization#Hopcroft.27s_algorithm).
+2. The number of states and transitions between states in the DFA is reduced by applying 
+[Hopcroft's DFA minimization algorithm](https://en.wikipedia.org/wiki/DFA_minimization#Hopcroft.27s_algorithm).
 
-3. The minimized DFA is expressed as a system of linear equations which are solved with [Brzozowski's algebraic method](http://cs.stackexchange.com/questions/2016/how-to-convert-finite-automata-to-regular-expressions#2392), resulting in the final regular expression.
+3. The minimized DFA is expressed as a system of linear equations which are solved with 
+[Brzozowski's algebraic method](http://cs.stackexchange.com/questions/2016/how-to-convert-finite-automata-to-regular-expressions#2392), 
+resulting in the final regular expression.
 
-## 7. <a name="contribution"></a> Do you want to contribute? <sup>[Top ▲](#table-of-contents)</sup>
+## 8. <a name="contribution"></a> Do you want to contribute? <sup>[Top ▲](#table-of-contents)</sup>
 
-In case you want to contribute something to *grex* even though it's in a very early stage of development, then I encourage you to do so nevertheless. Do you have ideas for cool features? Or have you found any bugs so far? Feel free to open an issue or send a pull request. It's very much appreciated. :-)
+In case you want to contribute something to *grex* even though it's in a very early stage of development, 
+then I encourage you to do so nevertheless. Do you have ideas for cool features? Or have you found any bugs so far? 
+Feel free to open an issue or send a pull request. It's very much appreciated. :-)
