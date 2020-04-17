@@ -47,11 +47,15 @@ proptest! {
     #[ignore]
     fn valid_regexes_with_conversion_features(
         test_cases in prop::collection::hash_set(".{1,20}", 1..=10),
-        conversion_features in prop::collection::hash_set(conversion_feature_strategy(), 1..=7)
+        conversion_features in prop::collection::hash_set(conversion_feature_strategy(), 1..=9),
+        minimum_repetitions in 1..100u32,
+        minimum_substring_length in 1..100u32
     ) {
         let test_cases_vec = test_cases.iter().cloned().collect::<Vec<_>>();
         let regexp = RegExpBuilder::from(&test_cases_vec)
             .with_conversion_of(&conversion_features.into_iter().collect::<Vec<_>>())
+            .with_minimum_repetitions(minimum_repetitions)
+            .with_minimum_substring_length(minimum_substring_length)
             .build();
         prop_assert!(compile_regexp(&regexp).is_ok());
     }
@@ -60,11 +64,15 @@ proptest! {
     #[ignore]
     fn valid_regexes_with_conversion_features_and_escape_sequences(
         test_cases in prop::collection::hash_set(".{1,20}", 1..=10),
-        conversion_features in prop::collection::hash_set(conversion_feature_strategy(), 1..=7)
+        conversion_features in prop::collection::hash_set(conversion_feature_strategy(), 1..=9),
+        minimum_repetitions in 1..100u32,
+        minimum_substring_length in 1..100u32
     ) {
         let test_cases_vec = test_cases.iter().cloned().collect::<Vec<_>>();
         let regexp = RegExpBuilder::from(&test_cases_vec)
             .with_conversion_of(&conversion_features.into_iter().collect::<Vec<_>>())
+            .with_minimum_repetitions(minimum_repetitions)
+            .with_minimum_substring_length(minimum_substring_length)
             .with_escaping_of_non_ascii_chars(false)
             .build();
         prop_assert!(compile_regexp(&regexp).is_ok());
@@ -100,11 +108,15 @@ proptest! {
     #[ignore]
     fn matching_regexes_with_conversion_features(
         test_cases in prop::collection::hash_set(".{1,20}", 1..=10),
-        conversion_features in prop::collection::hash_set(conversion_feature_strategy(), 1..=7)
+        conversion_features in prop::collection::hash_set(conversion_feature_strategy(), 1..=9),
+        minimum_repetitions in 1..100u32,
+        minimum_substring_length in 1..100u32
     ) {
         let test_cases_vec = test_cases.iter().cloned().collect::<Vec<_>>();
         let regexp = RegExpBuilder::from(&test_cases_vec)
             .with_conversion_of(&conversion_features.into_iter().collect::<Vec<_>>())
+            .with_minimum_repetitions(minimum_repetitions)
+            .with_minimum_substring_length(minimum_substring_length)
             .build();
         if let Ok(compiled_regexp) = compile_regexp(&regexp) {
             prop_assert!(test_cases.iter().all(|test_case| compiled_regexp.is_match(&test_case)));
@@ -115,11 +127,15 @@ proptest! {
     #[ignore]
     fn matching_regexes_with_conversion_features_and_escape_sequences(
         test_cases in prop::collection::hash_set(".{1,20}", 1..=10),
-        conversion_features in prop::collection::hash_set(conversion_feature_strategy(), 1..=7)
+        conversion_features in prop::collection::hash_set(conversion_feature_strategy(), 1..=9),
+        minimum_repetitions in 1..100u32,
+        minimum_substring_length in 1..100u32
     ) {
         let test_cases_vec = test_cases.iter().cloned().collect::<Vec<_>>();
         let regexp = RegExpBuilder::from(&test_cases_vec)
             .with_conversion_of(&conversion_features.into_iter().collect::<Vec<_>>())
+            .with_minimum_repetitions(minimum_repetitions)
+            .with_minimum_substring_length(minimum_substring_length)
             .with_escaping_of_non_ascii_chars(false)
             .build();
         if let Ok(compiled_regexp) = compile_regexp(&regexp) {
@@ -168,7 +184,9 @@ fn conversion_feature_strategy() -> impl Strategy<Value = Feature> {
         Just(Feature::NonSpace),
         Just(Feature::Word),
         Just(Feature::NonWord),
-        Just(Feature::Repetition)
+        Just(Feature::Repetition),
+        Just(Feature::CaseInsensitivity),
+        Just(Feature::CapturingGroup)
     ]
 }
 

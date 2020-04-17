@@ -14,6 +14,10 @@
  * limitations under the License.
  */
 
-pub(crate) mod perl_decimal;
-pub(crate) mod perl_space;
-pub(crate) mod perl_word;
+mod decimal;
+mod space;
+mod word;
+
+pub use decimal::DECIMAL_NUMBER;
+pub use space::WHITE_SPACE;
+pub use word::WORD;

@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-macro_rules! btreeset {
-    ( $( $value: expr ),* ) => {{
-        let mut set = std::collections::BTreeSet::new();
-        $( set.insert($value); )*
-        set
-    }};
-}
+mod cluster;
+mod color;
+mod grapheme;
+
+pub use cluster::GraphemeCluster;
+pub use color::ColorizableString;
+pub use grapheme::Grapheme;

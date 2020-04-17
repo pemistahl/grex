@@ -14,10 +14,11 @@
  * limitations under the License.
  */
 
-macro_rules! btreeset {
-    ( $( $value: expr ),* ) => {{
-        let mut set = std::collections::BTreeSet::new();
-        $( set.insert($value); )*
-        set
-    }};
-}
+mod expression;
+mod format;
+mod quantifier;
+mod substring;
+
+pub use expression::Expression;
+pub use quantifier::Quantifier;
+pub use substring::Substring;

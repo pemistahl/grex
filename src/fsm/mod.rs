@@ -14,10 +14,6 @@
  * limitations under the License.
  */
 
-macro_rules! btreeset {
-    ( $( $value: expr ),* ) => {{
-        let mut set = std::collections::BTreeSet::new();
-        $( set.insert($value); )*
-        set
-    }};
-}
+mod dfa;
+
+pub use dfa::DFA;

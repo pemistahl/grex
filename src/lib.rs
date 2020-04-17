@@ -18,11 +18,8 @@
 //!
 //! *grex* is a library as well as a command-line utility that is meant to simplify the often
 //! complicated and tedious task of creating regular expressions. It does so by automatically
-//! generating regular expressions from user-provided test cases. The produced expressions
-//! are Perl-compatible regular expressions (PCRE) which are also compatible with the
-//! regular expression parser in the [*regex*](https://crates.io/crates/regex) crate.
-//! Other regular expression parsers or respective libraries from other programming languages
-//! have not been tested so far.
+//! generating a single regular expression from user-provided test cases. The resulting
+//! expression is guaranteed to match the test cases which it was generated from.
 //!
 //! This project has started as a Rust port of the JavaScript tool
 //! [*regexgen*](https://github.com/devongovett/regexgen) written by
@@ -36,7 +33,33 @@
 //! With the use of command-line flags (in the CLI tool) or preprocessing methods
 //! (in the library), more generalized expressions can be created.
 //!
-//! ## 2. Current features
+//! The produced expressions are [Perl-compatible regular expressions](https://www.pcre.org)
+//! which are also compatible with the regular expression parser in Rust's
+//! [*regex crate*](https://lib.rs/crates/regex).
+//! Other regular expression parsers or respective libraries from other programming languages
+//! have not been tested so far, but they ought to be mostly compatible as well.
+//!
+//! ## 2. Do I still need to learn to write regexes then?
+//!
+//! **Definitely, yes!** Using the standard settings, *grex* produces a regular expression that
+//! is guaranteed to match only the test cases given as input and nothing else. This has been
+//! verified by [property tests](https://github.com/pemistahl/grex/blob/master/tests/property_tests.rs).
+//! However, if the conversion to shorthand character classes such as `\w` is enabled, the
+//! resulting regex matches a much wider scope of test cases. Knowledge about the consequences of
+//! this conversion is essential for finding a correct regular expression for your business domain.
+//!
+//! *grex* uses an algorithm that tries to find the shortest possible regex for the given test cases.
+//! Very often though, the resulting expression is still longer or more complex than it needs to be.
+//! In such cases, a more compact or elegant regex can be created only by hand.
+//! Also, every regular expression engine has different built-in optimizations.
+//! *grex* does not know anything about those and therefore cannot optimize its regexes
+//! for a specific engine.
+//!
+//! **So, please learn how to write regular expressions!** The currently best use case for *grex*
+//! is to find an initial correct regex which should be inspected by hand if further optimizations
+//! are possible.
+//!
+//! ## 3. Current features
 //!
 //! - literals
 //! - character classes
@@ -45,38 +68,34 @@
 //! - alternation using `|` operator
 //! - optionality using `?` quantifier
 //! - escaping of non-ascii characters, with optional conversion of astral code points to surrogate pairs
-//! - fully Unicode-aware, correctly handles graphemes consisting of multiple Unicode symbols
-//! - reading input strings from the command-line or from a file
+//! - case-sensitive or case-insensitive matching
+//! - capturing or non-capturing groups
+//! - fully compliant to newest [Unicode Standard 13.0](https://unicode.org/versions/Unicode13.0.0)
+//! - fully compatible with [*regex* crate 1.3.5+](https://lib.rs/crates/regex)
+//! - correctly handles graphemes consisting of multiple Unicode symbols
+//! - reads input strings from the command-line or from a file
 //! - optional syntax highlighting for nicer output in supported terminals
 //!
-//! ## 3. How to use?
+//! ## 4. How to use?
 //!
 //! The code snippets below show how to use the public api.
 //!
 //! For [more detailed examples](https://github.com/pemistahl/grex/tree/master#examples), please
 //! take a look at the project's readme file on GitHub.
 //!
-//! ### 3.1 Default settings
+//! ### 4.1 Default settings
+//!
+//! Test cases are passed either from a collection via [`RegExpBuilder::from()`](./struct.RegExpBuilder.html#method.from)
+//! or from a file via [`RegExpBuilder::from_file()`](./struct.RegExpBuilder.html#method.from_file).
 //!
 //! ```
 //! use grex::RegExpBuilder;
 //!
 //! let regexp = RegExpBuilder::from(&["a", "aa", "aaa"]).build();
-//! assert_eq!(regexp, "^a(aa?)?$");
+//! assert_eq!(regexp, "^a(?:aa?)?$");
 //! ```
 //!
-//! ### 3.2 Convert repeated substrings
-//!
-//! ```
-//! use grex::{Feature, RegExpBuilder};
-//!
-//! let regexp = RegExpBuilder::from(&["a", "aa", "aaa"])
-//!     .with_conversion_of(&[Feature::Repetition])
-//!     .build();
-//! assert_eq!(regexp, "^a{1,3}$");
-//! ```
-//!
-//! ### 3.3 Convert to character classes
+//! ### 4.2 Convert to character classes
 //!
 //! ```
 //! use grex::{Feature, RegExpBuilder};
@@ -84,10 +103,51 @@
 //! let regexp = RegExpBuilder::from(&["a", "aa", "123"])
 //!     .with_conversion_of(&[Feature::Digit, Feature::Word])
 //!     .build();
-//! assert_eq!(regexp, "^(\\d\\d\\d|\\w\\w|\\w)$");
+//! assert_eq!(regexp, "^(?:\\d\\d\\d|\\w(?:\\w)?)$");
 //! ```
 //!
-//! ### 3.4 Escape non-ascii characters
+//! ### 4.3 Convert repeated substrings
+//!
+//! ```
+//! use grex::{Feature, RegExpBuilder};
+//!
+//! let regexp = RegExpBuilder::from(&["aa", "bcbc", "defdefdef"])
+//!     .with_conversion_of(&[Feature::Repetition])
+//!     .build();
+//! assert_eq!(regexp, "^(?:a{2}|(?:bc){2}|(?:def){3})$");
+//! ```
+//!
+//! By default, *grex* converts each substring this way which is at least a single character long
+//! and which is subsequently repeated at least once. You can customize these two parameters
+//! if you like.
+//!
+//! In the following example, the test case `aa` is not converted to `a{2}` because the repeated
+//! substring `a` has a length of 1, but the minimum substring length has been set to 2.
+//!
+//! ```
+//! use grex::{Feature, RegExpBuilder};
+//!
+//! let regexp = RegExpBuilder::from(&["aa", "bcbc", "defdefdef"])
+//!     .with_conversion_of(&[Feature::Repetition])
+//!     .with_minimum_substring_length(2)
+//!     .build();
+//! assert_eq!(regexp, "^(?:aa|(?:bc){2}|(?:def){3})$");
+//! ```
+//!
+//! Setting a minimum number of 2 repetitions in the next example, only the test case `defdefdef`
+//! will be converted because it is the only one that is repeated twice.
+//!
+//! ```
+//! use grex::{Feature, RegExpBuilder};
+//!
+//! let regexp = RegExpBuilder::from(&["aa", "bcbc", "defdefdef"])
+//!     .with_conversion_of(&[Feature::Repetition])
+//!     .with_minimum_repetitions(2)
+//!     .build();
+//! assert_eq!(regexp, "^(?:bcbc|aa|(?:def){3})$");
+//! ```
+//!
+//! ### 4.4 Escape non-ascii characters
 //!
 //! ```
 //! use grex::RegExpBuilder;
@@ -97,8 +157,6 @@
 //!     .build();
 //! assert_eq!(regexp, "^You smell like \\u{1f4a9}\\.$");
 //! ```
-//!
-//! ### 3.5 Escape astral code points using surrogate pairs
 //!
 //! Old versions of JavaScript do not support unicode escape sequences for
 //! the astral code planes (range `U+010000` to `U+10FFFF`). In order to
@@ -115,34 +173,52 @@
 //! assert_eq!(regexp, "^You smell like \\u{d83d}\\u{dca9}\\.$");
 //! ```
 //!
-//! ### 3.5 Combine multiple features
+//! ### 4.5 Case-insensitive matching
+//!
+//! The regular expressions that *grex* generates are case-sensitive by default.
+//! Case-insensitive matching can be enabled like so:
 //!
 //! ```
 //! use grex::{Feature, RegExpBuilder};
 //!
-//! let regexp = RegExpBuilder::from(&["You smell like 💩💩💩."])
-//!     .with_conversion_of(&[Feature::Repetition])
-//!     .with_escaping_of_non_ascii_chars(false)
+//! let regexp = RegExpBuilder::from(&["big", "BIGGER"])
+//!     .with_conversion_of(&[Feature::CaseInsensitivity])
 //!     .build();
-//! assert_eq!(regexp, "^You smel{2} like \\u{1f4a9}{3}\\.$");
+//! assert_eq!(regexp, "(?i)^big(?:ger)?$");
 //! ```
 //!
-//! ```rust
+//! ### 4.6 Capturing Groups
+//!
+//! Non-capturing groups are used by default.
+//! Extending the previous example, you can switch to capturing groups instead.
+//!
+//! ```
 //! use grex::{Feature, RegExpBuilder};
 //!
-//! let regexp = RegExpBuilder::from(&["a", "aa", "123"])
-//!     .with_conversion_of(&[Feature::Repetition, Feature::Digit, Feature::Word])
+//! let regexp = RegExpBuilder::from(&["big", "BIGGER"])
+//!     .with_conversion_of(&[Feature::CaseInsensitivity, Feature::CapturingGroup])
 //!     .build();
-//! assert_eq!(regexp, "^(\\w{1,2}|\\d{3})$");
+//! assert_eq!(regexp, "(?i)^big(ger)?$");
 //! ```
+//!
+//! ### 5. How does it work?
+//!
+//! 1. A [deterministic finite automaton](https://en.wikipedia.org/wiki/Deterministic_finite_automaton) (DFA)
+//! is created from the input strings.
+//!
+//! 2. The number of states and transitions between states in the DFA is reduced by applying
+//! [Hopcroft's DFA minimization algorithm](https://en.wikipedia.org/wiki/DFA_minimization#Hopcroft.27s_algorithm).
+//!
+//! 3. The minimized DFA is expressed as a system of linear equations which are solved with
+//! [Brzozowski's algebraic method](http://cs.stackexchange.com/questions/2016/how-to-convert-finite-automata-to-regular-expressions#2392),
+//! resulting in the final regular expression.
 
 #[macro_use]
 mod macros;
 
 mod ast;
-mod dfa;
-mod fmt;
-mod grapheme;
+mod char;
+mod fsm;
 mod regexp;
 mod unicode_tables;
 

@@ -15,8 +15,8 @@
  */
 
 use crate::ast::{Expression, Quantifier};
-use crate::grapheme::GraphemeCluster;
-use colored::Colorize;
+use crate::char::{ColorizableString, GraphemeCluster};
+use crate::regexp::RegExpConfig;
 use itertools::Itertools;
 use std::collections::BTreeSet;
 use std::fmt::{Display, Formatter, Result};
@@ -25,42 +25,20 @@ use unic_char_range::CharRange;
 impl Display for Expression {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         match self {
-            Expression::Alternation(options, is_output_colorized) => {
-                format_alternation(f, &self, options, *is_output_colorized)
+            Expression::Alternation(options, config) => {
+                format_alternation(f, &self, options, config)
             }
-            Expression::CharacterClass(char_set, is_output_colorized) => {
-                format_character_class(f, char_set, *is_output_colorized)
+            Expression::CharacterClass(char_set, config) => {
+                format_character_class(f, char_set, config)
             }
-            Expression::Concatenation(expr1, expr2, is_output_colorized) => {
-                format_concatenation(f, &self, expr1, expr2, *is_output_colorized)
+            Expression::Concatenation(expr1, expr2, config) => {
+                format_concatenation(f, &self, expr1, expr2, config)
             }
-            Expression::Literal(
-                cluster,
-                is_non_ascii_char_escaped,
-                is_astral_code_point_converted_to_surrogate,
-            ) => format_literal(
-                f,
-                cluster,
-                *is_non_ascii_char_escaped,
-                *is_astral_code_point_converted_to_surrogate,
-            ),
-            Expression::Repetition(expr, quantifier, is_output_colorized) => {
-                format_repetition(f, &self, expr, quantifier, *is_output_colorized)
+            Expression::Literal(cluster, config) => format_literal(f, cluster, config),
+            Expression::Repetition(expr, quantifier, config) => {
+                format_repetition(f, &self, expr, quantifier, config)
             }
         }
-    }
-}
-
-impl Display for Quantifier {
-    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
-        write!(
-            f,
-            "{}",
-            match self {
-                Quantifier::KleeneStar => '*',
-                Quantifier::QuestionMark => '?',
-            }
-        )
     }
 }
 
@@ -72,25 +50,21 @@ fn format_alternation(
     f: &mut Formatter<'_>,
     expr: &Expression,
     options: &[Expression],
-    is_output_colorized: bool,
+    config: &RegExpConfig,
 ) -> Result {
-    let (left_parenthesis, right_parenthesis) = ["(", ")"]
-        .iter()
-        .map(|&it| {
-            if is_output_colorized {
-                it.green().bold()
-            } else {
-                it.clear()
-            }
-        })
-        .collect_tuple()
-        .unwrap();
-
-    let pipe = if is_output_colorized {
-        "|".red().bold()
-    } else {
-        "|".clear()
-    };
+    let (left_parenthesis, right_parenthesis, pipe) = vec![
+        if config.is_capturing_group_enabled() {
+            ColorizableString::CapturingLeftParenthesis
+        } else {
+            ColorizableString::NonCapturingLeftParenthesis
+        },
+        ColorizableString::RightParenthesis,
+        ColorizableString::Pipe,
+    ]
+    .iter()
+    .map(|it| it.to_colorized_string(config.is_output_colorized))
+    .collect_tuple()
+    .unwrap();
 
     let alternation_str = options
         .iter()
@@ -109,7 +83,7 @@ fn format_alternation(
 fn format_character_class(
     f: &mut Formatter<'_>,
     char_set: &BTreeSet<char>,
-    is_output_colorized: bool,
+    config: &RegExpConfig,
 ) -> Result {
     let chars_to_escape = ['[', ']', '\\', '-', '^'];
     let escaped_char_set = char_set
@@ -154,17 +128,15 @@ fn format_character_class(
     subsets.push(subset);
 
     let mut char_class_strs = vec![];
-    let (left_bracket, right_bracket, hyphen) = ["[", "]", "-"]
-        .iter()
-        .map(|&it| {
-            if is_output_colorized {
-                it.cyan().bold()
-            } else {
-                it.clear()
-            }
-        })
-        .collect_tuple()
-        .unwrap();
+    let (hyphen, left_bracket, right_bracket) = vec![
+        ColorizableString::Hyphen,
+        ColorizableString::LeftBracket,
+        ColorizableString::RightBracket,
+    ]
+    .iter()
+    .map(|it| it.to_colorized_string(config.is_output_colorized))
+    .collect_tuple()
+    .unwrap();
 
     for subset in subsets.iter() {
         if subset.len() <= 2 {
@@ -195,24 +167,25 @@ fn format_concatenation(
     expr: &Expression,
     expr1: &Expression,
     expr2: &Expression,
-    is_output_colorized: bool,
+    config: &RegExpConfig,
 ) -> Result {
-    let (left_parenthesis, right_parenthesis) = ["(", ")"]
-        .iter()
-        .map(|&it| {
-            if is_output_colorized {
-                it.green().bold()
-            } else {
-                it.clear()
-            }
-        })
-        .collect_tuple()
-        .unwrap();
-
     let expr_strs = vec![expr1, expr2]
         .iter()
         .map(|&it| {
             if it.precedence() < expr.precedence() && !it.is_single_codepoint() {
+                let (left_parenthesis, right_parenthesis) = vec![
+                    if config.is_capturing_group_enabled() {
+                        ColorizableString::CapturingLeftParenthesis
+                    } else {
+                        ColorizableString::NonCapturingLeftParenthesis
+                    },
+                    ColorizableString::RightParenthesis,
+                ]
+                .iter()
+                .map(|it| it.to_colorized_string(config.is_output_colorized))
+                .collect_tuple()
+                .unwrap();
+
                 format!("{}{}{}", left_parenthesis, it, right_parenthesis)
             } else {
                 format!("{}", it)
@@ -231,8 +204,7 @@ fn format_concatenation(
 fn format_literal(
     f: &mut Formatter<'_>,
     cluster: &GraphemeCluster,
-    is_non_ascii_char_escaped: bool,
-    is_astral_code_point_converted_to_surrogate: bool,
+    config: &RegExpConfig,
 ) -> Result {
     let literal_str = cluster
         .graphemes()
@@ -245,14 +217,14 @@ fn format_literal(
                     .iter_mut()
                     .for_each(|repeated_grapheme| {
                         repeated_grapheme.escape_regexp_symbols(
-                            is_non_ascii_char_escaped,
-                            is_astral_code_point_converted_to_surrogate,
+                            config.is_non_ascii_char_escaped,
+                            config.is_astral_code_point_converted_to_surrogate,
                         );
                     });
             } else {
                 grapheme.escape_regexp_symbols(
-                    is_non_ascii_char_escaped,
-                    is_astral_code_point_converted_to_surrogate,
+                    config.is_non_ascii_char_escaped,
+                    config.is_astral_code_point_converted_to_surrogate,
                 );
             }
             grapheme.to_string()
@@ -267,25 +239,24 @@ fn format_repetition(
     expr: &Expression,
     expr1: &Expression,
     quantifier: &Quantifier,
-    is_output_colorized: bool,
+    config: &RegExpConfig,
 ) -> Result {
-    let (left_parenthesis, right_parenthesis) = ["(", ")"]
-        .iter()
-        .map(|&it| {
-            if is_output_colorized {
-                it.green().bold()
-            } else {
-                it.clear()
-            }
-        })
-        .collect_tuple()
-        .unwrap();
-
-    let colored_quantifier = if is_output_colorized {
-        quantifier.to_string().as_str().purple().bold()
-    } else {
-        quantifier.to_string().as_str().clear()
-    };
+    let (colored_quantifier, left_parenthesis, right_parenthesis) = vec![
+        match quantifier {
+            Quantifier::KleeneStar => ColorizableString::Asterisk,
+            Quantifier::QuestionMark => ColorizableString::QuestionMark,
+        },
+        if config.is_capturing_group_enabled() {
+            ColorizableString::CapturingLeftParenthesis
+        } else {
+            ColorizableString::NonCapturingLeftParenthesis
+        },
+        ColorizableString::RightParenthesis,
+    ]
+    .iter()
+    .map(|it| it.to_colorized_string(config.is_output_colorized))
+    .collect_tuple()
+    .unwrap();
 
     if expr1.precedence() < expr.precedence() && !expr1.is_single_codepoint() {
         write!(

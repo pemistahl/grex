@@ -14,31 +14,25 @@
  * limitations under the License.
  */
 
-use crate::regexp::Feature;
-use crate::unicode_tables::perl_decimal::DECIMAL_NUMBER;
-use crate::unicode_tables::perl_space::WHITE_SPACE;
-use crate::unicode_tables::perl_word::PERL_WORD;
-use colored::Colorize;
+use crate::char::Grapheme;
+use crate::regexp::RegExpConfig;
+use crate::unicode_tables::{DECIMAL_NUMBER, WHITE_SPACE, WORD};
 use itertools::Itertools;
 use std::cmp::Ordering;
 use std::collections::HashMap;
-use std::fmt::{Display, Formatter, Result};
 use std::ops::Range;
 use unic_char_range::CharRange;
 use unic_ucd_category::GeneralCategory;
 use unicode_segmentation::UnicodeSegmentation;
 
-const CHARS_TO_ESCAPE: [&str; 14] = [
-    "(", ")", "[", "]", "{", "}", "+", "*", "-", ".", "?", "|", "^", "$",
-];
-
 #[derive(Clone, Debug, Eq, PartialEq)]
-pub(crate) struct GraphemeCluster {
+pub struct GraphemeCluster {
     graphemes: Vec<Grapheme>,
+    config: RegExpConfig,
 }
 
 impl GraphemeCluster {
-    pub(crate) fn from(s: &str, is_output_colorized: bool) -> Self {
+    pub(crate) fn from(s: &str, config: &RegExpConfig) -> Self {
         Self {
             graphemes: UnicodeSegmentation::graphemes(s, true)
                 .flat_map(|it| {
@@ -48,36 +42,41 @@ impl GraphemeCluster {
 
                     if starts_with_backslash || contains_combining_mark {
                         it.chars()
-                            .map(|c| Grapheme::from(&c.to_string(), is_output_colorized))
+                            .map(|c| Grapheme::from(&c.to_string(), config))
                             .collect_vec()
                     } else {
-                        vec![Grapheme::from(it, is_output_colorized)]
+                        vec![Grapheme::from(it, config)]
                     }
                 })
                 .collect_vec(),
+            config: config.clone(),
         }
     }
 
-    pub(crate) fn from_graphemes(graphemes: Vec<Grapheme>) -> Self {
-        Self { graphemes }
+    pub(crate) fn from_graphemes(graphemes: Vec<Grapheme>, config: &RegExpConfig) -> Self {
+        Self {
+            graphemes,
+            config: config.clone(),
+        }
     }
 
-    pub(crate) fn new(grapheme: Grapheme) -> Self {
+    pub(crate) fn new(grapheme: Grapheme, config: &RegExpConfig) -> Self {
         Self {
             graphemes: vec![grapheme],
+            config: config.clone(),
         }
     }
 
-    pub(crate) fn convert_to_char_classes(&mut self, conversion_features: &[Feature]) {
-        let is_digit_converted = conversion_features.contains(&Feature::Digit);
-        let is_non_digit_converted = conversion_features.contains(&Feature::NonDigit);
-        let is_space_converted = conversion_features.contains(&Feature::Space);
-        let is_non_space_converted = conversion_features.contains(&Feature::NonSpace);
-        let is_word_converted = conversion_features.contains(&Feature::Word);
-        let is_non_word_converted = conversion_features.contains(&Feature::NonWord);
+    pub(crate) fn convert_to_char_classes(&mut self) {
+        let is_digit_converted = self.config.is_digit_converted();
+        let is_non_digit_converted = self.config.is_non_digit_converted();
+        let is_space_converted = self.config.is_space_converted();
+        let is_non_space_converted = self.config.is_non_space_converted();
+        let is_word_converted = self.config.is_word_converted();
+        let is_non_word_converted = self.config.is_non_word_converted();
 
         let valid_numeric_chars = convert_chars_to_range(DECIMAL_NUMBER);
-        let valid_alphanumeric_chars = convert_chars_to_range(PERL_WORD);
+        let valid_alphanumeric_chars = convert_chars_to_range(WORD);
         let valid_space_chars = convert_chars_to_range(WHITE_SPACE);
 
         for grapheme in self.graphemes.iter_mut() {
@@ -116,19 +115,26 @@ impl GraphemeCluster {
         }
     }
 
-    pub(crate) fn convert_repetitions(&mut self, is_output_colorized: bool) {
+    pub(crate) fn convert_repetitions(&mut self) {
         let mut repetitions = vec![];
-        convert_repetitions(self.graphemes(), repetitions.as_mut(), is_output_colorized);
+        convert_repetitions(self.graphemes(), repetitions.as_mut(), &self.config);
         if !repetitions.is_empty() {
             self.graphemes = repetitions;
         }
     }
 
-    pub(crate) fn merge(first: &GraphemeCluster, second: &GraphemeCluster) -> Self {
+    pub(crate) fn merge(
+        first: &GraphemeCluster,
+        second: &GraphemeCluster,
+        config: &RegExpConfig,
+    ) -> Self {
         let mut graphemes = vec![];
         graphemes.extend_from_slice(&first.graphemes);
         graphemes.extend_from_slice(&second.graphemes);
-        Self { graphemes }
+        Self {
+            graphemes,
+            config: config.clone(),
+        }
     }
 
     pub(crate) fn graphemes(&self) -> &Vec<Grapheme> {
@@ -155,249 +161,15 @@ impl GraphemeCluster {
     }
 }
 
-#[derive(Clone, Debug, Hash, Ord, PartialOrd, Eq, PartialEq)]
-pub(crate) struct Grapheme {
-    chars: Vec<String>,
-    repetitions: Vec<Grapheme>,
-    min: u32,
-    max: u32,
-    is_output_colorized: bool,
-}
-
-impl Grapheme {
-    pub(crate) fn from(s: &str, is_output_colorized: bool) -> Self {
-        Self {
-            chars: vec![s.to_string()],
-            repetitions: vec![],
-            min: 1,
-            max: 1,
-            is_output_colorized,
-        }
-    }
-
-    pub(crate) fn new(chars: Vec<String>, min: u32, max: u32, is_output_colorized: bool) -> Self {
-        Self {
-            chars,
-            repetitions: vec![],
-            min,
-            max,
-            is_output_colorized,
-        }
-    }
-
-    pub(crate) fn value(&self) -> String {
-        self.chars.join("")
-    }
-
-    pub(crate) fn chars(&self) -> &Vec<String> {
-        &self.chars
-    }
-
-    pub(crate) fn chars_mut(&mut self) -> &mut Vec<String> {
-        &mut self.chars
-    }
-
-    pub(crate) fn has_repetitions(&self) -> bool {
-        !self.repetitions.is_empty()
-    }
-
-    pub(crate) fn repetitions_mut(&mut self) -> &mut Vec<Grapheme> {
-        &mut self.repetitions
-    }
-
-    pub(crate) fn minimum(&self) -> u32 {
-        self.min
-    }
-
-    pub(crate) fn maximum(&self) -> u32 {
-        self.max
-    }
-
-    fn char_count(&self, is_non_ascii_char_escaped: bool) -> usize {
-        if is_non_ascii_char_escaped {
-            self.chars
-                .iter()
-                .map(|it| it.chars().map(|c| self.escape(c, false)).join(""))
-                .join("")
-                .chars()
-                .count()
-        } else {
-            self.chars.iter().map(|it| it.chars().count()).sum()
-        }
-    }
-
-    pub(crate) fn escape_non_ascii_chars(&mut self, use_surrogate_pairs: bool) {
-        self.chars = self
-            .chars
-            .iter()
-            .map(|it| {
-                it.chars()
-                    .map(|c| self.escape(c, use_surrogate_pairs))
-                    .join("")
-            })
-            .collect_vec();
-    }
-
-    pub(crate) fn escape_regexp_symbols(
-        &mut self,
-        is_non_ascii_char_escaped: bool,
-        is_astral_code_point_converted_to_surrogate: bool,
-    ) {
-        let characters = self.chars_mut();
-
-        #[allow(clippy::needless_range_loop)]
-        for i in 0..characters.len() {
-            let mut character = characters[i].clone();
-
-            for char_to_escape in CHARS_TO_ESCAPE.iter() {
-                character =
-                    character.replace(char_to_escape, &format!("{}{}", "\\", char_to_escape));
-            }
-
-            character = character
-                .replace("\n", "\\n")
-                .replace("\r", "\\r")
-                .replace("\t", "\\t");
-
-            if character == "\\" {
-                character = "\\\\".to_string();
-            }
-
-            characters[i] = character;
-        }
-
-        if is_non_ascii_char_escaped {
-            self.escape_non_ascii_chars(is_astral_code_point_converted_to_surrogate);
-        }
-    }
-
-    fn escape(&self, c: char, use_surrogate_pairs: bool) -> String {
-        if c.is_ascii() {
-            c.to_string()
-        } else if use_surrogate_pairs && ('\u{10000}'..'\u{10ffff}').contains(&c) {
-            self.convert_to_surrogate_pair(c)
-        } else {
-            c.escape_unicode().to_string()
-        }
-    }
-
-    fn convert_to_surrogate_pair(&self, c: char) -> String {
-        c.encode_utf16(&mut [0; 2])
-            .iter()
-            .map(|it| format!("\\u{{{:x}}}", it))
-            .join("")
-    }
-}
-
-impl Display for Grapheme {
-    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
-        let is_single_char = self.char_count(false) == 1
-            || (self.chars.len() == 1 && self.chars[0].matches('\\').count() == 1);
-        let is_range = self.min < self.max;
-        let is_repetition = self.min > 1;
-        let value = if self.repetitions.is_empty() {
-            self.value()
-        } else {
-            self.repetitions.iter().map(|it| it.to_string()).join("")
-        };
-
-        let (left_parenthesis, right_parenthesis) = ["(", ")"]
-            .iter()
-            .map(|&it| {
-                if self.is_output_colorized {
-                    it.green().bold()
-                } else {
-                    it.clear()
-                }
-            })
-            .collect_tuple()
-            .unwrap();
-
-        let (left_brace, right_brace) = ["{", "}"]
-            .iter()
-            .map(|&it| {
-                if self.is_output_colorized {
-                    it.white().on_bright_blue()
-                } else {
-                    it.clear()
-                }
-            })
-            .collect_tuple()
-            .unwrap();
-
-        let (min, comma, max) = [
-            self.min.to_string().as_str(),
-            ",",
-            self.max.to_string().as_str(),
-        ]
-        .iter()
-        .map(|&it| {
-            if self.is_output_colorized {
-                it.white().on_bright_blue()
-            } else {
-                it.clear()
-            }
-        })
-        .collect_tuple()
-        .unwrap();
-
-        let colored_value = if self.is_output_colorized {
-            match value.as_str() {
-                "\\d" | "\\w" | "\\s" | "\\D" | "\\W" | "\\S" => {
-                    value.as_str().black().on_bright_yellow()
-                }
-                _ => value.as_str().clear(),
-            }
-        } else {
-            value.as_str().clear()
-        };
-
-        if !is_range && is_repetition && is_single_char {
-            write!(f, "{}{}{}{}", colored_value, left_brace, min, right_brace)
-        } else if !is_range && is_repetition && !is_single_char {
-            write!(
-                f,
-                "{}{}{}{}{}{}",
-                left_parenthesis, colored_value, right_parenthesis, left_brace, min, right_brace
-            )
-        } else if is_range && is_single_char {
-            write!(
-                f,
-                "{}{}{}{}{}{}",
-                colored_value, left_brace, min, comma, max, right_brace
-            )
-        } else if is_range && !is_single_char {
-            write!(
-                f,
-                "{}{}{}{}{}{}{}{}",
-                left_parenthesis,
-                colored_value,
-                right_parenthesis,
-                left_brace,
-                min,
-                comma,
-                max,
-                right_brace
-            )
-        } else {
-            write!(f, "{}", colored_value)
-        }
-    }
-}
 fn convert_repetitions(
     graphemes: &[Grapheme],
     repetitions: &mut Vec<Grapheme>,
-    is_output_colorized: bool,
+    config: &RegExpConfig,
 ) {
     let repeated_substrings = collect_repeated_substrings(graphemes);
     let ranges_of_repetitions = create_ranges_of_repetitions(repeated_substrings);
     let coalesced_repetitions = coalesce_repetitions(ranges_of_repetitions);
-    replace_graphemes_with_repetitions(
-        coalesced_repetitions,
-        graphemes,
-        repetitions,
-        is_output_colorized,
-    )
+    replace_graphemes_with_repetitions(coalesced_repetitions, graphemes, repetitions, config)
 }
 
 fn collect_repeated_substrings(graphemes: &[Grapheme]) -> HashMap<Vec<String>, Vec<usize>> {
@@ -492,7 +264,7 @@ fn replace_graphemes_with_repetitions(
     coalesced_repetitions: Vec<(Range<usize>, Vec<String>)>,
     graphemes: &[Grapheme],
     repetitions: &mut Vec<Grapheme>,
-    is_output_colorized: bool,
+    config: &RegExpConfig,
 ) {
     if coalesced_repetitions.is_empty() {
         return;
@@ -508,6 +280,13 @@ fn replace_graphemes_with_repetitions(
         }
 
         let count = ((range.end - range.start) / substr.len()) as u32;
+
+        if count <= config.minimum_repetitions
+            || substr.len() < config.minimum_substring_length as usize
+        {
+            continue;
+        }
+
         let joined_substr = substr.iter().join("").repeat(count as usize);
         let graphemes_slice = repetitions[range.clone()]
             .iter()
@@ -520,14 +299,9 @@ fn replace_graphemes_with_repetitions(
 
         repetitions.splice(
             range.clone(),
-            [Grapheme::new(
-                substr.clone(),
-                count,
-                count,
-                is_output_colorized,
-            )]
-            .iter()
-            .cloned(),
+            [Grapheme::new(substr.clone(), count, count, config)]
+                .iter()
+                .cloned(),
         );
     }
 
@@ -536,10 +310,10 @@ fn replace_graphemes_with_repetitions(
             &new_grapheme
                 .chars
                 .iter()
-                .map(|it| Grapheme::from(it, is_output_colorized))
+                .map(|it| Grapheme::from(it, config))
                 .collect_vec(),
             new_grapheme.repetitions.as_mut(),
-            is_output_colorized,
+            config,
         );
     }
 }

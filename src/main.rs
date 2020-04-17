@@ -18,6 +18,7 @@ use grex::{Feature, RegExpBuilder};
 use itertools::Itertools;
 use std::io::{Error, ErrorKind};
 use std::path::PathBuf;
+use structopt::clap::AppSettings;
 use structopt::StructOpt;
 
 #[derive(StructOpt)]
@@ -27,9 +28,13 @@ use structopt::StructOpt;
              Downloadable from https://crates.io/crates/grex\n\
              Source code at https://github.com/pemistahl/grex\n\n\
              grex generates regular expressions from user-provided test cases.",
-    version_short = "v"
+    version_short = "v",
+    global_setting = AppSettings::AllowLeadingHyphen
 )]
 struct CLI {
+    // --------------------
+    // ARGS
+    // --------------------
     #[structopt(
         value_name = "INPUT",
         required_unless = "file",
@@ -38,17 +43,9 @@ struct CLI {
     )]
     input: Vec<String>,
 
-    #[structopt(
-        name = "file",
-        value_name = "FILE",
-        short,
-        long,
-        parse(from_os_str),
-        required_unless = "input",
-        help = "Reads test cases separated by newline characters from a file"
-    )]
-    file_path: Option<PathBuf>,
-
+    // --------------------
+    // FLAGS
+    // --------------------
     #[structopt(
         name = "digits",
         short,
@@ -155,13 +152,71 @@ struct CLI {
     is_astral_code_point_converted_to_surrogate: bool,
 
     #[structopt(
+        name = "ignore-case",
+        short,
+        long,
+        help = "Performs case-insensitive matching, letters match both upper and lower case",
+        display_order = 10
+    )]
+    is_case_ignored: bool,
+
+    #[structopt(
+        name = "capture-groups",
+        short = "g",
+        long,
+        help = "Replaces non-capturing groups by capturing ones",
+        display_order = 11
+    )]
+    is_group_captured: bool,
+
+    #[structopt(
         name = "colorize",
         short,
         long,
         help = "Provides syntax highlighting for the resulting regular expression",
-        display_order = 10
+        display_order = 12
     )]
     is_output_colorized: bool,
+
+    // --------------------
+    // OPTIONS
+    // --------------------
+    #[structopt(
+        name = "file",
+        value_name = "FILE",
+        short,
+        long,
+        parse(from_os_str),
+        required_unless = "input",
+        help = "Reads test cases on separate lines from a file",
+        long_help = "Reads test cases on separate lines from a file.\n\n\
+                     Lines may be ended with either a newline (`\\n`) or\n\
+                     a carriage return with a line feed (`\\r\\n`).\n\
+                     The final line ending is optional."
+    )]
+    file_path: Option<PathBuf>,
+
+    #[structopt(
+        name = "min-repetitions",
+        value_name = "QUANTITY",
+        long,
+        default_value = "1",
+        validator = repetition_options_validator,
+        help = "Specifies the minimum quantity of substring repetitions\n\
+                to be converted if --repetitions is set"
+    )]
+    minimum_repetitions: u32,
+
+    #[structopt(
+        name = "min-substring-length",
+        value_name = "LENGTH",
+        long,
+        default_value = "1",
+        validator = repetition_options_validator,
+        help = "Specifies the minimum length a repeated substring must have\n\
+                in order to be converted if --repetitions is set"
+    )]
+    minimum_substring_length: u32,
 }
 
 fn main() {
@@ -219,6 +274,14 @@ fn handle_input(cli: &CLI, input: Result<Vec<String>, Error>) {
                 conversion_features.push(Feature::Repetition);
             }
 
+            if cli.is_case_ignored {
+                conversion_features.push(Feature::CaseInsensitivity);
+            }
+
+            if cli.is_group_captured {
+                conversion_features.push(Feature::CapturingGroup);
+            }
+
             if !conversion_features.is_empty() {
                 builder.with_conversion_of(&conversion_features);
             }
@@ -232,6 +295,10 @@ fn handle_input(cli: &CLI, input: Result<Vec<String>, Error>) {
             if cli.is_output_colorized {
                 builder.with_syntax_highlighting();
             }
+
+            builder
+                .with_minimum_repetitions(cli.minimum_repetitions)
+                .with_minimum_substring_length(cli.minimum_substring_length);
 
             let regexp = builder.build();
 
@@ -247,5 +314,18 @@ fn handle_input(cli: &CLI, input: Result<Vec<String>, Error>) {
             }
             _ => eprintln!("error: {}", error),
         },
+    }
+}
+
+fn repetition_options_validator(value: String) -> Result<(), String> {
+    match value.parse::<u32>() {
+        Ok(parsed_value) => {
+            if parsed_value > 0 {
+                Ok(())
+            } else {
+                Err(String::from("Value must not be zero"))
+            }
+        }
+        Err(_) => Err(String::from("Value is not a valid unsigned integer")),
     }
 }

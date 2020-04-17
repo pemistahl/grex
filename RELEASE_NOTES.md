@@ -1,3 +1,24 @@
+## grex 1.1.0 (released on 17 Apr 2020)
+
+### Features
+- case-insensitive matching regexes are now supported with the `--ignore-case` command-line flag or with `Feature::CaseInsensitivity` in the library (#23)
+- non-capturing groups are now the default; capturing groups can be enabled with the `--capture-groups` command-line flag or with `Feature::CapturingGroup` in the library (#15)
+- a lower bound for the conversion of repeated substrings can now be set by specifying `--min-repetitions` and `--min-substring-length` or using the library methods `RegExpBuilder.with_minimum_repetitions()` and `RegExpBuilder.with_minimum_substring_length()` (#10)
+- test cases can now be passed from a file within the library as well using `RegExpBuilder::from_file()` (#13)
+
+### Changes
+
+- the rules for the conversion of test cases to shorthand character classes have been updated to be compliant to the newest Unicode Standard 13.0 (#21)
+- the dependency on the unmaintained linked-list crate has been removed (#24)
+
+### Bug Fixes
+
+- test cases starting with a hyphen are now correctly parsed on the command-line (#12)
+- the common substring detection algorithm now uses optionality expressions where possible instead of redundant union operations (#22)
+
+### Test Coverage
+- new unit tests, integration tests and property tests have been added
+
 ## grex 1.0.0 (released on 02 Feb 2020)
 
 ### Features
