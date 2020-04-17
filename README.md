@@ -3,13 +3,15 @@
 <br>
 
 [![Build Status](https://travis-ci.org/pemistahl/grex.svg?branch=master)](https://travis-ci.org/pemistahl/grex)
+[![dependency status](https://deps.rs/crate/grex/1.1.0/status.svg)](https://deps.rs/crate/grex/1.1.0)
 [![codecov](https://codecov.io/gh/pemistahl/grex/branch/master/graph/badge.svg)](https://codecov.io/gh/pemistahl/grex)
+[![lines of code](https://tokei.rs/b1/github/pemistahl/grex?category=code)](https://github.com/XAMPPRocky/tokei)
 [![Downloads](https://img.shields.io/crates/d/grex.svg)](https://crates.io/crates/grex)
-[![license](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0)
 
 [![Docs.rs](https://docs.rs/grex/badge.svg)](https://docs.rs/grex)
 [![Crates.io](https://img.shields.io/crates/v/grex.svg)](https://crates.io/crates/grex)
 [![Lib.rs](https://img.shields.io/badge/lib.rs-v1.1.0-blue)](https://lib.rs/crates/grex)
+[![license](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0)
 
 [![Linux Download](https://img.shields.io/badge/Linux%20Download-v1.1.0-blue?logo=Linux)](https://github.com/pemistahl/grex/releases/download/v1.1.0/grex-v1.1.0-x86_64-unknown-linux-musl.tar.gz)
 [![MacOS Download](https://img.shields.io/badge/macOS%20Download-v1.1.0-blue?logo=Apple)](https://github.com/pemistahl/grex/releases/download/v1.1.0/grex-v1.1.0-x86_64-apple-darwin.tar.gz)
@@ -51,7 +53,7 @@ With the use of command-line flags (in the CLI tool) or preprocessing methods
 (in the library), more generalized expressions can be created.
 
 The produced expressions are [Perl-compatible regular expressions](https://www.pcre.org) which are also 
-compatible with the regular expression parser in Rust's [*regex crate*](https://lib.rs/crates/regex).
+compatible with the regular expression parser in Rust's [*regex* crate](https://lib.rs/crates/regex).
 Other regular expression parsers or respective libraries from other programming languages 
 have not been tested so far, but they ought to be mostly compatible as well.
 
