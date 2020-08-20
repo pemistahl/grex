@@ -21,3 +21,4 @@ mod grapheme;
 pub use cluster::GraphemeCluster;
 pub use color::ColorizableString;
 pub use grapheme::Grapheme;
+pub(crate) use grapheme::GraphemeOverlapState;

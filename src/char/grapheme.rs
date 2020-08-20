@@ -18,11 +18,19 @@ use crate::char::ColorizableString;
 use crate::regexp::RegExpConfig;
 use colored::ColoredString;
 use itertools::Itertools;
+use std::cmp::{max, min, Ordering};
 use std::fmt::{Display, Formatter, Result};
 
 const CHARS_TO_ESCAPE: [&str; 14] = [
     "(", ")", "[", "]", "{", "}", "+", "*", "-", ".", "?", "|", "^", "$",
 ];
+
+#[derive(PartialEq, Eq, Debug)]
+pub(crate) enum GraphemeOverlapState {
+    Left,
+    Right,
+    Overlap,
+}
 
 #[derive(Clone, Debug, Hash, Ord, PartialOrd, Eq, PartialEq)]
 pub struct Grapheme {
@@ -156,6 +164,81 @@ impl Grapheme {
             .map(|it| format!("\\u{{{:x}}}", it))
             .join("")
     }
+
+    pub(crate) fn overlap_with(&self, other: &Self) -> Option<Vec<(Self, GraphemeOverlapState)>> {
+        if self.chars != other.chars {
+            return None;
+        }
+
+        if self.min > other.min || (self.min == other.min && self.max > other.max) {
+            return Some(
+                other
+                    .overlap_with(self)?
+                    .iter()
+                    .map(|(g, state)| (g.clone(), state.flip()))
+                    .collect_vec(),
+            );
+        }
+
+        let mut result = Vec::new();
+        if self.min < other.min {
+            result.push((
+                Self::new(
+                    self.chars.clone(),
+                    self.min,
+                    min(self.max, other.min - 1),
+                    &self.config,
+                ),
+                GraphemeOverlapState::Left,
+            ));
+        }
+
+        if self.max >= other.min {
+            result.push((
+                Self::new(
+                    self.chars.clone(),
+                    other.min,
+                    min(self.max, other.max),
+                    &self.config,
+                ),
+                GraphemeOverlapState::Overlap,
+            ));
+        }
+
+        match self.max.cmp(&other.max) {
+            Ordering::Less => result.push((
+                Self::new(
+                    self.chars.clone(),
+                    max(self.max + 1, other.min),
+                    other.max,
+                    &self.config,
+                ),
+                GraphemeOverlapState::Right,
+            )),
+            Ordering::Equal => (),
+            Ordering::Greater => result.push((
+                Self::new(
+                    self.chars.clone(),
+                    max(other.max + 1, self.min),
+                    self.max,
+                    &self.config,
+                ),
+                GraphemeOverlapState::Left,
+            )),
+        }
+
+        Some(result)
+    }
+}
+
+impl GraphemeOverlapState {
+    fn flip(&self) -> Self {
+        match self {
+            Self::Left => Self::Right,
+            Self::Right => Self::Left,
+            Self::Overlap => Self::Overlap,
+        }
+    }
 }
 
 impl Display for Grapheme {
@@ -258,4 +341,113 @@ fn to_colorized_string(
         v[6].clone(),
         v[7].clone(),
     )
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_overlap_same() {
+        let config = RegExpConfig::new();
+        let chars = vec![String::from("a")];
+
+        let grapheme1 = Grapheme::new(chars, 0, 0, &config);
+
+        assert_eq!(
+            grapheme1.overlap_with(&grapheme1),
+            Some(vec![(grapheme1, GraphemeOverlapState::Overlap),])
+        );
+    }
+
+    #[test]
+    fn test_overlap_disjoint() {
+        let config = RegExpConfig::new();
+        let chars = vec![String::from("a")];
+
+        let grapheme1 = Grapheme::new(chars.clone(), 0, 0, &config);
+        let grapheme2 = Grapheme::new(chars, 10, 10, &config);
+
+        assert_eq!(
+            grapheme2.overlap_with(&grapheme1),
+            Some(vec![
+                (grapheme1, GraphemeOverlapState::Right),
+                (grapheme2, GraphemeOverlapState::Left)
+            ])
+        );
+    }
+
+    #[test]
+    fn test_overlap_initial_match() {
+        let config = RegExpConfig::new();
+        let chars = vec![String::from("a")];
+
+        let grapheme1 = Grapheme::new(chars.clone(), 0, 0, &config);
+        let grapheme2 = Grapheme::new(chars.clone(), 0, 1, &config);
+
+        assert_eq!(
+            grapheme1.overlap_with(&grapheme2),
+            Some(vec![
+                (grapheme1, GraphemeOverlapState::Overlap),
+                (
+                    Grapheme::new(chars, 1, 1, &config),
+                    GraphemeOverlapState::Right
+                )
+            ])
+        );
+    }
+
+    #[test]
+    fn test_overlap_initial_non_match() {
+        let config = RegExpConfig::new();
+        let chars = vec![String::from("a")];
+
+        let grapheme1 = Grapheme::new(chars.clone(), 0, 10, &config);
+        let grapheme2 = Grapheme::new(chars.clone(), 5, 15, &config);
+
+        assert_eq!(
+            grapheme1.overlap_with(&grapheme2),
+            Some(vec![
+                (
+                    Grapheme::new(chars.clone(), 0, 4, &config),
+                    GraphemeOverlapState::Left
+                ),
+                (
+                    Grapheme::new(chars.clone(), 5, 10, &config),
+                    GraphemeOverlapState::Overlap
+                ),
+                (
+                    Grapheme::new(chars, 11, 15, &config),
+                    GraphemeOverlapState::Right
+                ),
+            ])
+        );
+    }
+
+    #[test]
+    fn test_overlap_fully_contained() {
+        let config = RegExpConfig::new();
+        let chars = vec![String::from("a")];
+
+        let grapheme1 = Grapheme::new(chars.clone(), 0, 15, &config);
+        let grapheme2 = Grapheme::new(chars.clone(), 5, 10, &config);
+
+        assert_eq!(
+            grapheme1.overlap_with(&grapheme2),
+            Some(vec![
+                (
+                    Grapheme::new(chars.clone(), 0, 4, &config),
+                    GraphemeOverlapState::Left
+                ),
+                (
+                    Grapheme::new(chars.clone(), 5, 10, &config),
+                    GraphemeOverlapState::Overlap
+                ),
+                (
+                    Grapheme::new(chars, 11, 15, &config),
+                    GraphemeOverlapState::Left
+                ),
+            ])
+        );
+    }
 }

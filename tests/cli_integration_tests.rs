@@ -83,7 +83,7 @@ mod no_conversion {
             grex.args(&["-f", file.path().to_str().unwrap()]);
             grex.assert()
                 .success()
-                .stdout(predicate::eq("^(?:b\\\\n|äöü|[ac♥])$\n"));
+                .stdout(predicate::eq("^(?:b\\\\n|äöü|[ac♥])?$\n"));
         }
 
         #[test]
@@ -120,7 +120,7 @@ mod no_conversion {
                 .success()
                 .stdout(predicate::str::is_empty())
                 .stderr(predicate::eq(
-                    "error: the specified file could not be found\n",
+                    "error: the specified input file could not be found\n",
                 ));
         }
 

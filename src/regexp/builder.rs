@@ -22,7 +22,8 @@ use std::path::PathBuf;
 
 /// This struct builds regular expressions from user-provided test cases.
 pub struct RegExpBuilder {
-    test_cases: Vec<String>,
+    positive_test_cases: Vec<String>,
+    negative_test_cases: Vec<String>,
     config: RegExpConfig,
 }
 
@@ -37,7 +38,8 @@ impl RegExpBuilder {
             panic!("No test cases have been provided for regular expression generation");
         }
         Self {
-            test_cases: test_cases.iter().cloned().map(|it| it.into()).collect_vec(),
+            positive_test_cases: test_cases.iter().cloned().map(|it| it.into()).collect_vec(),
+            negative_test_cases: Vec::new(),
             config: RegExpConfig::new(),
         }
     }
@@ -57,10 +59,9 @@ impl RegExpBuilder {
     /// - the file cannot be opened because of conflicting permissions
     pub fn from_file<T: Into<PathBuf>>(file_path: T) -> Self {
         match std::fs::read_to_string(file_path.into()) {
-            Ok(file_content) => Self {
-                test_cases: file_content.lines().map(|it| it.to_string()).collect_vec(),
-                config: RegExpConfig::new(),
-            },
+            Ok(file_content) => {
+                Self::from(&file_content.lines().map(|it| it.to_string()).collect_vec())
+            }
             Err(error) => match error.kind() {
                 ErrorKind::NotFound => panic!("The specified file could not be found"),
                 ErrorKind::InvalidData => {
@@ -138,10 +139,23 @@ impl RegExpBuilder {
         self
     }
 
+    pub fn with_negative_matches<T: Clone + Into<String>>(
+        &mut self,
+        test_cases: &[T],
+    ) -> &mut Self {
+        self.negative_test_cases = test_cases.iter().cloned().map(|it| it.into()).collect_vec();
+        self
+    }
+
     /// Builds the actual regular expression using the previously given settings.
     /// Every generated regular expression is surrounded by the anchors `^` and `$`
     /// so that substrings not being part of the test cases are not matched accidentally.
     pub fn build(&mut self) -> String {
-        RegExp::from(&mut self.test_cases, &self.config).to_string()
+        RegExp::from(
+            &mut self.positive_test_cases,
+            &mut self.negative_test_cases,
+            &self.config,
+        )
+        .to_string()
     }
 }

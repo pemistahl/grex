@@ -29,13 +29,16 @@ pub struct RegExp {
 }
 
 impl RegExp {
-    pub(crate) fn from(test_cases: &mut Vec<String>, config: &RegExpConfig) -> Self {
-        if config.is_case_insensitive_matching() {
-            Self::convert_to_lowercase(test_cases);
+    pub(crate) fn from(
+        positive_test_cases: &mut Vec<String>,
+        negative_test_cases: &mut Vec<String>,
+        config: &RegExpConfig,
+    ) -> Self {
+        let mut dfa = Self::build_dfa(positive_test_cases, config);
+        if !negative_test_cases.is_empty() {
+            let negative_dfa = Self::build_dfa(negative_test_cases, config);
+            dfa = dfa.subtract(&negative_dfa).unwrap();
         }
-        Self::sort(test_cases);
-        let grapheme_clusters = Self::grapheme_clusters(&test_cases, config);
-        let dfa = DFA::from(grapheme_clusters, config);
         let ast = Expression::from(dfa, config);
         Self {
             ast,
@@ -43,11 +46,17 @@ impl RegExp {
         }
     }
 
+    fn build_dfa(test_cases: &mut Vec<String>, config: &RegExpConfig) -> DFA {
+        if config.is_case_insensitive_matching() {
+            Self::convert_to_lowercase(test_cases);
+        }
+        Self::sort(test_cases);
+        let grapheme_clusters = Self::grapheme_clusters(&test_cases, config);
+        DFA::from(grapheme_clusters, config)
+    }
+
     fn convert_to_lowercase(test_cases: &mut Vec<String>) {
-        std::mem::replace(
-            test_cases,
-            test_cases.iter().map(|it| it.to_lowercase()).collect_vec(),
-        );
+        *test_cases = test_cases.iter().map(|it| it.to_lowercase()).collect_vec();
     }
 
     fn sort(test_cases: &mut Vec<String>) {

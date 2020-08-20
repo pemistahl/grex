@@ -15,6 +15,7 @@
  */
 
 use grex::{Feature, RegExpBuilder};
+use itertools::Itertools;
 use regex::Regex;
 use rstest::rstest;
 use std::io::Write;
@@ -180,7 +181,7 @@ mod no_conversion {
             case(vec!["a", "aa"], "^a{1,2}$"),
             case(vec!["aaa", "a", "aa"], "^a{1,3}$"),
             case(vec!["aaaa", "a", "aa"], "^(?:a{1,2}|a{4})$"),
-            case(vec!["a", "aa", "aaa", "aaaa", "aaab"], "^(?:a{3}b|a{1,4})$"),
+            case(vec!["a", "aa", "aaa", "aaaa", "aaab"], "^(?:a{3}b?|a{1,2}|a{4})$"),
             case(vec!["baabaaaaaabb"], "^ba{2}ba{6}b{2}$"),
             case(vec!["aabbaabbaaa"], "^(?:a{2}b{2}){2}a{3}$"),
             case(vec!["aabbaa"], "^a{2}b{2}a{2}$"),
@@ -298,7 +299,7 @@ mod no_conversion {
             case(vec!["xy̆y̆z", "xy̆y̆y̆y̆z"], "^x(?:y̆y̆|(?:y̆){4})z$"),
             case(vec!["aaa", "a", "aa"], "^a(?:aa?)?$"),
             case(vec!["a", "aa", "aaa", "aaaa"], "^(?:aaa|aa?|a{4})$"),
-            case(vec!["a", "aa", "aaa", "aaaa", "aaaaa", "aaaaaa"], "^(?:aaa|aa?|a{4,6})$")
+            case(vec!["a", "aa", "aaa", "aaaa", "aaaaa", "aaaaaa"], "^(?:a(?:aa?)?|a{4,6})$")
         )]
         fn succeeds_with_increased_minimum_repetitions(
             test_cases: Vec<&str>,
@@ -1663,6 +1664,101 @@ mod word_non_word_conversion {
     }
 }
 
+mod negative_testcases {
+    use super::*;
+
+    mod no_repetition {
+        use super::*;
+
+        #[rstest(positive_test_cases, negative_test_cases, expected_output,
+            case(vec!["a"], vec!["b"], "^a$"),
+            case(vec!["a"], vec!["a"], "^$"),
+            case(vec!["ab"], vec!["bc"], "^ab$"),
+            case(vec!["ab"], vec!["aa"], "^ab$"),
+            case(vec!["a", "b"], vec![], "^[ab]$"),
+            case(vec!["a", "b"], vec!["a"], "^b$"),
+            case(vec!["a", "b"], vec!["a","b"], "^$"),
+            case(vec!["a", "b"], vec!["c"], "^[ab]$"),
+            case(vec!["abcdef"], vec!["012345"], "^abcdef$"),
+            case(vec!["aa"], vec!["aaa"], "^aa$"),
+            case(vec!["aaa"], vec!["aa"], "^aaa$"),
+            case(vec!["aaa"], vec!["aab"], "^aaa$"),
+            case(vec!["a", "aa", "aaa"], vec!["aa"], "^a(?:aa)?$"),
+            case(vec!["a", "aaaaaaaaa"], vec!["aa", "aaaa"], "^a(?:aaaaaaaa)?$"),
+            case(vec!["a", "aaaaaaaaa", "aaaaaab"], vec!["aaaaa"], "^a(?:aaaaa(?:aaa|b))?$"),
+        )]
+        fn succeeds(
+            positive_test_cases: Vec<&str>,
+            negative_test_cases: Vec<&str>,
+            expected_output: &str,
+        ) {
+            let regexp = RegExpBuilder::from(&positive_test_cases)
+                .with_negative_matches(&negative_test_cases)
+                .build();
+            assert_eq!(
+                regexp, expected_output,
+                "\n\npositive cases: {:?}\nnegative cases: {:?}\nexpected: {}\nactual: {}\n\n",
+                positive_test_cases, negative_test_cases, expected_output, regexp
+            );
+            test_if_regexp_matches_test_cases(
+                expected_output,
+                positive_test_cases
+                    .iter()
+                    .filter(|case| !negative_test_cases.contains(case))
+                    .copied()
+                    .collect_vec(),
+            );
+            test_if_regexp_doesnt_match_test_cases(expected_output, negative_test_cases.clone());
+        }
+    }
+
+    mod repetition {
+        use super::*;
+
+        #[rstest(positive_test_cases, negative_test_cases, expected_output,
+            case(vec!["a"], vec!["b"], "^a$"),
+            case(vec!["a"], vec!["a"], "^$"),
+            case(vec!["ab"], vec!["bc"], "^ab$"),
+            case(vec!["ab"], vec!["aa"], "^ab$"),
+            case(vec!["a", "b"], vec![], "^[ab]$"),
+            case(vec!["a", "b"], vec!["a"], "^b$"),
+            case(vec!["a", "b"], vec!["a","b"], "^$"),
+            case(vec!["a", "b"], vec!["c"], "^[ab]$"),
+            case(vec!["abcdef"], vec!["012345"], "^abcdef$"),
+            case(vec!["aa"], vec!["aaa"], "^a{2}$"),
+            case(vec!["aaa"], vec!["aa"], "^a{3}$"),
+            case(vec!["aaa"], vec!["aab"], "^a{3}$"),
+            case(vec!["a", "aa", "aaa"], vec!["aa"], "^(?:a|a{3})$"),
+            case(vec!["a", "aaaaaaaaa"], vec!["aa", "aaaa"], "^(?:a|a{9})$"),
+            case(vec!["a", "aaaaaaaaa", "aaaaaab"], vec!["aaaaa"], "^(?:a{6}b|a|a{9})$"),
+        )]
+        fn succeeds(
+            positive_test_cases: Vec<&str>,
+            negative_test_cases: Vec<&str>,
+            expected_output: &str,
+        ) {
+            let regexp = RegExpBuilder::from(&positive_test_cases)
+                .with_negative_matches(&negative_test_cases)
+                .with_conversion_of(&[Feature::Repetition])
+                .build();
+            assert_eq!(
+                regexp, expected_output,
+                "\n\npositive cases: {:?}\nnegative cases: {:?}\nexpected: {}\nactual: {}\n\n",
+                positive_test_cases, negative_test_cases, expected_output, regexp
+            );
+            test_if_regexp_matches_test_cases(
+                expected_output,
+                positive_test_cases
+                    .iter()
+                    .filter(|case| !negative_test_cases.contains(case))
+                    .copied()
+                    .collect_vec(),
+            );
+            test_if_regexp_doesnt_match_test_cases(expected_output, negative_test_cases.clone());
+        }
+    }
+}
+
 fn test_if_regexp_is_correct(regexp: String, expected_output: &str, test_cases: &[&str]) {
     assert_eq!(
         regexp, expected_output,
@@ -1676,7 +1772,19 @@ fn test_if_regexp_matches_test_cases(expected_output: &str, test_cases: Vec<&str
     for test_case in test_cases {
         assert!(
             re.is_match(test_case),
-            "\n\n\"{}\" does not match regex {}\n\n",
+            "\n\n\"{}\" does not match regex \"{}\"\n\n",
+            test_case,
+            expected_output
+        );
+    }
+}
+
+fn test_if_regexp_doesnt_match_test_cases(expected_output: &str, test_cases: Vec<&str>) {
+    let re = Regex::new(expected_output).unwrap();
+    for test_case in test_cases {
+        assert!(
+            !re.is_match(test_case),
+            "\n\n\"{}\" does match regex \"{}\"\n\n",
             test_case,
             expected_output
         );

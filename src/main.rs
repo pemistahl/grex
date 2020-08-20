@@ -197,6 +197,28 @@ struct CLI {
     file_path: Option<PathBuf>,
 
     #[structopt(
+        name = "exclusions",
+        value_name = "INPUT",
+        long,
+        conflicts_with = "exclusions-file",
+        help = "One or more negative test cases separated by blank space"
+    )]
+    exclusions: Option<Vec<String>>,
+
+    #[structopt(
+        name = "exclusions-file",
+        value_name = "FILE",
+        long,
+        parse(from_os_str),
+        help = "Reads negative test cases on separate lines from a file",
+        long_help = "Reads negative test cases on separate lines from a file.\n\n\
+                     Lines may be ended with either a newline (`\\n`) or\n\
+                     a carriage return with a line feed (`\\r\\n`).\n\
+                     The final line ending is optional."
+    )]
+    exclusions_file_path: Option<PathBuf>,
+
+    #[structopt(
         name = "min-repetitions",
         value_name = "QUANTITY",
         long,
@@ -224,14 +246,17 @@ fn main() {
     handle_input(&cli, obtain_input(&cli));
 }
 
+fn read_input_file(file_path: &PathBuf) -> Result<Vec<String>, Error> {
+    let file_content = std::fs::read_to_string(&file_path)?;
+
+    Ok(file_content.lines().map(|it| it.to_string()).collect_vec())
+}
+
 fn obtain_input(cli: &CLI) -> Result<Vec<String>, Error> {
     if !cli.input.is_empty() {
         Ok(cli.input.clone())
     } else if let Some(file_path) = &cli.file_path {
-        match std::fs::read_to_string(&file_path) {
-            Ok(file_content) => Ok(file_content.lines().map(|it| it.to_string()).collect_vec()),
-            Err(error) => Err(error),
-        }
+        read_input_file(file_path)
     } else {
         Err(Error::new(
             ErrorKind::InvalidInput,
@@ -240,80 +265,105 @@ fn obtain_input(cli: &CLI) -> Result<Vec<String>, Error> {
     }
 }
 
+fn file_error(source: &str, error: Error) {
+    match error.kind() {
+        ErrorKind::NotFound => eprintln!("error: the specified {} file could not be found", source),
+        ErrorKind::InvalidData => eprintln!(
+            "error: the specified {} file's encoding is not valid UTF-8",
+            source
+        ),
+        ErrorKind::PermissionDenied => eprintln!(
+            "permission denied: the {} specified file could not be opened",
+            source
+        ),
+        _ => eprintln!("error on {} file: {}", source, error),
+    }
+}
+
+fn build_builder(cli: &CLI, test_cases: &[String]) -> RegExpBuilder {
+    let mut builder = RegExpBuilder::from(&test_cases);
+
+    if let Some(exclusions) = &cli.exclusions {
+        builder.with_negative_matches(&exclusions);
+    } else if let Some(exclusions_file_path) = &cli.exclusions_file_path {
+        match read_input_file(exclusions_file_path) {
+            Ok(lines) => {
+                builder.with_negative_matches(&lines);
+            }
+            Err(error) => {
+                file_error("negative match", error);
+                panic!();
+            }
+        }
+    }
+
+    let mut conversion_features = vec![];
+
+    if cli.is_digit_converted {
+        conversion_features.push(Feature::Digit);
+    }
+
+    if cli.is_non_digit_converted {
+        conversion_features.push(Feature::NonDigit);
+    }
+
+    if cli.is_space_converted {
+        conversion_features.push(Feature::Space);
+    }
+
+    if cli.is_non_space_converted {
+        conversion_features.push(Feature::NonSpace);
+    }
+
+    if cli.is_word_converted {
+        conversion_features.push(Feature::Word);
+    }
+
+    if cli.is_non_word_converted {
+        conversion_features.push(Feature::NonWord);
+    }
+
+    if cli.is_repetition_converted {
+        conversion_features.push(Feature::Repetition);
+    }
+
+    if cli.is_case_ignored {
+        conversion_features.push(Feature::CaseInsensitivity);
+    }
+
+    if cli.is_group_captured {
+        conversion_features.push(Feature::CapturingGroup);
+    }
+
+    if !conversion_features.is_empty() {
+        builder.with_conversion_of(&conversion_features);
+    }
+
+    if cli.is_non_ascii_char_escaped {
+        builder.with_escaping_of_non_ascii_chars(cli.is_astral_code_point_converted_to_surrogate);
+    }
+
+    if cli.is_output_colorized {
+        builder.with_syntax_highlighting();
+    }
+
+    builder
+        .with_minimum_repetitions(cli.minimum_repetitions)
+        .with_minimum_substring_length(cli.minimum_substring_length);
+
+    builder
+}
+
 fn handle_input(cli: &CLI, input: Result<Vec<String>, Error>) {
     match input {
         Ok(test_cases) => {
-            let mut builder = RegExpBuilder::from(&test_cases);
-            let mut conversion_features = vec![];
-
-            if cli.is_digit_converted {
-                conversion_features.push(Feature::Digit);
-            }
-
-            if cli.is_non_digit_converted {
-                conversion_features.push(Feature::NonDigit);
-            }
-
-            if cli.is_space_converted {
-                conversion_features.push(Feature::Space);
-            }
-
-            if cli.is_non_space_converted {
-                conversion_features.push(Feature::NonSpace);
-            }
-
-            if cli.is_word_converted {
-                conversion_features.push(Feature::Word);
-            }
-
-            if cli.is_non_word_converted {
-                conversion_features.push(Feature::NonWord);
-            }
-
-            if cli.is_repetition_converted {
-                conversion_features.push(Feature::Repetition);
-            }
-
-            if cli.is_case_ignored {
-                conversion_features.push(Feature::CaseInsensitivity);
-            }
-
-            if cli.is_group_captured {
-                conversion_features.push(Feature::CapturingGroup);
-            }
-
-            if !conversion_features.is_empty() {
-                builder.with_conversion_of(&conversion_features);
-            }
-
-            if cli.is_non_ascii_char_escaped {
-                builder.with_escaping_of_non_ascii_chars(
-                    cli.is_astral_code_point_converted_to_surrogate,
-                );
-            }
-
-            if cli.is_output_colorized {
-                builder.with_syntax_highlighting();
-            }
-
-            builder
-                .with_minimum_repetitions(cli.minimum_repetitions)
-                .with_minimum_substring_length(cli.minimum_substring_length);
+            let mut builder = build_builder(cli, &test_cases);
 
             let regexp = builder.build();
 
             println!("{}", regexp);
         }
-        Err(error) => match error.kind() {
-            ErrorKind::NotFound => eprintln!("error: the specified file could not be found"),
-            ErrorKind::InvalidData => {
-                eprintln!("error: the specified file's encoding is not valid UTF-8")
-            }
-            ErrorKind::PermissionDenied => {
-                eprintln!("permission denied: the specified file could not be opened")
-            }
-            _ => eprintln!("error: {}", error),
-        },
+        Err(error) => file_error("input", error),
     }
 }
 
