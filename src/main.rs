@@ -18,7 +18,7 @@ use grex::{Feature, RegExpBuilder};
 use itertools::Itertools;
 use std::io::{Error, ErrorKind};
 use std::path::PathBuf;
-use structopt::clap::AppSettings;
+use structopt::clap::AppSettings::{AllowLeadingHyphen, ColoredHelp};
 use structopt::StructOpt;
 
 #[derive(StructOpt)]
@@ -29,7 +29,7 @@ use structopt::StructOpt;
              Source code at https://github.com/pemistahl/grex\n\n\
              grex generates regular expressions from user-provided test cases.",
     version_short = "v",
-    global_setting = AppSettings::AllowLeadingHyphen
+    global_settings = &[AllowLeadingHyphen, ColoredHelp]
 )]
 struct CLI {
     // --------------------
