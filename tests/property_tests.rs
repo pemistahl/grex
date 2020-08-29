@@ -241,6 +241,31 @@ proptest! {
             }
         }
     }
+
+
+    #[test]
+    #[ignore]
+    fn regexes_not_matching_negative_test_cases_with_conversion_features_ascii_printable(
+        test_cases in prop::collection::hash_set("[ -~]{1,20}", 1..=10),
+        negative_test_cases in prop::collection::hash_set("[ -~]{1,20}", 1..=10),
+        conversion_features in prop::collection::hash_set(conversion_feature_strategy(), 1..=9),
+        minimum_repetitions in 1..100u32,
+        minimum_substring_length in 1..100u32
+    ) {
+        let test_cases_vec = test_cases.iter().cloned().collect::<Vec<_>>();
+        let negative_test_cases_vec = negative_test_cases.iter().cloned().collect::<Vec<_>>();
+        let regexp = RegExpBuilder::from(&test_cases_vec)
+            .with_negative_matches(&negative_test_cases_vec)
+            .with_conversion_of(&conversion_features.into_iter().collect::<Vec<_>>())
+            .with_minimum_repetitions(minimum_repetitions)
+            .with_minimum_substring_length(minimum_substring_length)
+            .build();
+        if let Ok(compiled_regexp) = compile_regexp(&regexp) {
+            for test_case in negative_test_cases {
+                prop_assert_eq!(compiled_regexp.is_match(&test_case), false, "Negative test case \"{}\" matched regex \"{}\"", test_case, regexp);
+            }
+        }
+    }
 }
 
 fn conversion_feature_strategy() -> impl Strategy<Value = Feature> {
