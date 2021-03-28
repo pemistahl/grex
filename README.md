@@ -4,7 +4,7 @@
 
 [![build](https://github.com/pemistahl/grex/actions/workflows/build.yml/badge.svg)](https://github.com/pemistahl/grex/actions/workflows/build.yml)
 [![dependency status](https://deps.rs/crate/grex/1.2.0/status.svg)](https://deps.rs/crate/grex/1.2.0)
-[![codecov](https://codecov.io/gh/pemistahl/grex/branch/master/graph/badge.svg)](https://codecov.io/gh/pemistahl/grex)
+[![codecov](https://codecov.io/gh/pemistahl/grex/branch/main/graph/badge.svg)](https://codecov.io/gh/pemistahl/grex)
 [![lines of code](https://tokei.rs/b1/github/pemistahl/grex?category=code)](https://github.com/XAMPPRocky/tokei)
 [![Downloads](https://img.shields.io/crates/d/grex.svg)](https://crates.io/crates/grex)
 
@@ -67,7 +67,7 @@ have not been tested so far, but they ought to be mostly compatible as well.
 
 **Definitely, yes!** Using the standard settings, *grex* produces a regular expression that is guaranteed
 to match only the test cases given as input and nothing else. 
-This has been verified by [property tests](https://github.com/pemistahl/grex/blob/master/tests/property_tests.rs).
+This has been verified by [property tests](https://github.com/pemistahl/grex/blob/main/tests/property_tests.rs).
 However, if the conversion to shorthand character classes such as `\w` is enabled, the resulting regex matches
 a much wider scope of test cases. Knowledge about the consequences of this conversion is essential for finding
 a correct regular expression for your business domain.

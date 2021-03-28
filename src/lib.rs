@@ -43,7 +43,7 @@
 //!
 //! **Definitely, yes!** Using the standard settings, *grex* produces a regular expression that
 //! is guaranteed to match only the test cases given as input and nothing else. This has been
-//! verified by [property tests](https://github.com/pemistahl/grex/blob/master/tests/property_tests.rs).
+//! verified by [property tests](https://github.com/pemistahl/grex/blob/main/tests/property_tests.rs).
 //! However, if the conversion to shorthand character classes such as `\w` is enabled, the
 //! resulting regex matches a much wider scope of test cases. Knowledge about the consequences of
 //! this conversion is essential for finding a correct regular expression for your business domain.
@@ -81,7 +81,7 @@
 //!
 //! The code snippets below show how to use the public api.
 //!
-//! For [more detailed examples](https://github.com/pemistahl/grex/tree/master#examples), please
+//! For [more detailed examples](https://github.com/pemistahl/grex/tree/main#examples), please
 //! take a look at the project's readme file on GitHub.
 //!
 //! ### 4.1 Default settings
