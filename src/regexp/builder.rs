@@ -1,5 +1,5 @@
 /*
- * Copyright © 2019-2020 Peter M. Stahl pemistahl@gmail.com
+ * Copyright © 2019-today Peter M. Stahl pemistahl@gmail.com
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -69,7 +69,7 @@ impl RegExpBuilder {
                 ErrorKind::PermissionDenied => {
                     panic!("Permission denied: The specified file could not be opened")
                 }
-                _ => panic!(error),
+                _ => panic!("{}", error),
             },
         }
     }
@@ -125,6 +125,11 @@ impl RegExpBuilder {
     pub fn with_escaping_of_non_ascii_chars(&mut self, use_surrogate_pairs: bool) -> &mut Self {
         self.config.is_non_ascii_char_escaped = true;
         self.config.is_astral_code_point_converted_to_surrogate = use_surrogate_pairs;
+        self
+    }
+
+    pub fn with_verbose_mode(&mut self) -> &mut Self {
+        self.config.is_verbose_mode_enabled = true;
         self
     }
 

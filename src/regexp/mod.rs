@@ -1,5 +1,5 @@
 /*
- * Copyright © 2019-2020 Peter M. Stahl pemistahl@gmail.com
+ * Copyright © 2019-today Peter M. Stahl pemistahl@gmail.com
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
  */
 
 mod builder;
+mod component;
 mod config;
 mod feature;
 
@@ -22,6 +23,7 @@ mod feature;
 mod regexp;
 
 pub use builder::RegExpBuilder;
+pub use component::Component;
 pub use config::RegExpConfig;
 pub use feature::Feature;
 pub use regexp::RegExp;

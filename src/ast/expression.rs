@@ -1,5 +1,5 @@
 /*
- * Copyright © 2019-2020 Peter M. Stahl pemistahl@gmail.com
+ * Copyright © 2019-today Peter M. Stahl pemistahl@gmail.com
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,12 +16,13 @@
 
 use crate::ast::{Quantifier, Substring};
 use crate::char::{Grapheme, GraphemeCluster};
-use crate::fsm::DFA;
+use crate::fsm::Dfa;
 use crate::regexp::RegExpConfig;
 use itertools::EitherOrBoth::Both;
 use itertools::Itertools;
 use ndarray::{Array1, Array2};
 use petgraph::prelude::EdgeRef;
+use std::cmp::Reverse;
 use std::collections::BTreeSet;
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -34,7 +35,7 @@ pub enum Expression {
 }
 
 impl Expression {
-    pub(crate) fn from(dfa: DFA, config: &RegExpConfig) -> Self {
+    pub(crate) fn from(dfa: Dfa, config: &RegExpConfig) -> Self {
         let states = dfa.states_in_depth_first_order();
         let state_count = dfa.state_count();
 
@@ -105,7 +106,7 @@ impl Expression {
     fn new_alternation(expr1: Expression, expr2: Expression, config: &RegExpConfig) -> Self {
         let mut options: Vec<Expression> = vec![];
         Self::flatten_alternations(&mut options, vec![expr1, expr2]);
-        options.sort_by(|a, b| b.len().cmp(&a.len()));
+        options.sort_by_key(|option| Reverse(option.len()));
         Expression::Alternation(options, config.clone())
     }
 
@@ -447,8 +448,8 @@ impl Expression {
         b: &Expression,
         substring: &Substring,
     ) -> Option<Vec<Grapheme>> {
-        let mut graphemes_a = a.value(Some(substring)).unwrap_or_else(|| vec![]);
-        let mut graphemes_b = b.value(Some(substring)).unwrap_or_else(|| vec![]);
+        let mut graphemes_a = a.value(Some(substring)).unwrap_or_else(Vec::new);
+        let mut graphemes_b = b.value(Some(substring)).unwrap_or_else(Vec::new);
         let mut common_graphemes = vec![];
 
         if let Substring::Suffix = substring {

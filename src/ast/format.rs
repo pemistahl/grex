@@ -1,5 +1,5 @@
 /*
- * Copyright © 2019-2020 Peter M. Stahl pemistahl@gmail.com
+ * Copyright © 2019-today Peter M. Stahl pemistahl@gmail.com
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,8 +15,8 @@
  */
 
 use crate::ast::{Expression, Quantifier};
-use crate::char::{ColorizableString, GraphemeCluster};
-use crate::regexp::RegExpConfig;
+use crate::char::GraphemeCluster;
+use crate::regexp::{Component, RegExpConfig};
 use itertools::Itertools;
 use std::collections::BTreeSet;
 use std::fmt::{Display, Formatter, Result};
@@ -52,30 +52,22 @@ fn format_alternation(
     options: &[Expression],
     config: &RegExpConfig,
 ) -> Result {
-    let (left_parenthesis, right_parenthesis, pipe) = vec![
-        if config.is_capturing_group_enabled() {
-            ColorizableString::CapturingLeftParenthesis
-        } else {
-            ColorizableString::NonCapturingLeftParenthesis
-        },
-        ColorizableString::RightParenthesis,
-        ColorizableString::Pipe,
-    ]
-    .iter()
-    .map(|it| it.to_colorized_string(config.is_output_colorized))
-    .collect_tuple()
-    .unwrap();
-
     let alternation_str = options
         .iter()
         .map(|option| {
             if option.precedence() < expr.precedence() && !option.is_single_codepoint() {
-                format!("{}{}{}", left_parenthesis, option, right_parenthesis)
+                if config.is_capturing_group_enabled() {
+                    Component::CapturedParenthesizedExpression(option.to_string())
+                        .to_repr(config.is_output_colorized)
+                } else {
+                    Component::UncapturedParenthesizedExpression(option.to_string())
+                        .to_repr(config.is_output_colorized)
+                }
             } else {
                 format!("{}", option)
             }
         })
-        .join(&pipe.to_string());
+        .join(&Component::Pipe.to_repr(config.is_output_colorized));
 
     write!(f, "{}", alternation_str)
 }
@@ -120,23 +112,13 @@ fn format_character_class(
             subset.push(second_c);
         } else {
             subsets.push(subset);
-            subset = vec![];
-            subset.push(second_c);
+            subset = vec![second_c];
         }
     }
 
     subsets.push(subset);
 
     let mut char_class_strs = vec![];
-    let (hyphen, left_bracket, right_bracket) = vec![
-        ColorizableString::Hyphen,
-        ColorizableString::LeftBracket,
-        ColorizableString::RightBracket,
-    ]
-    .iter()
-    .map(|it| it.to_colorized_string(config.is_output_colorized))
-    .collect_tuple()
-    .unwrap();
 
     for subset in subsets.iter() {
         if subset.len() <= 2 {
@@ -147,7 +129,7 @@ fn format_character_class(
             char_class_strs.push(format!(
                 "{}{}{}",
                 subset.first().unwrap(),
-                hyphen,
+                Component::Hyphen.to_repr(config.is_output_colorized),
                 subset.last().unwrap()
             ));
         }
@@ -156,9 +138,9 @@ fn format_character_class(
     write!(
         f,
         "{}{}{}",
-        left_bracket,
+        Component::LeftBracket.to_repr(config.is_output_colorized),
         char_class_strs.join(""),
-        right_bracket
+        Component::RightBracket.to_repr(config.is_output_colorized)
     )
 }
 
@@ -173,20 +155,13 @@ fn format_concatenation(
         .iter()
         .map(|&it| {
             if it.precedence() < expr.precedence() && !it.is_single_codepoint() {
-                let (left_parenthesis, right_parenthesis) = vec![
-                    if config.is_capturing_group_enabled() {
-                        ColorizableString::CapturingLeftParenthesis
-                    } else {
-                        ColorizableString::NonCapturingLeftParenthesis
-                    },
-                    ColorizableString::RightParenthesis,
-                ]
-                .iter()
-                .map(|it| it.to_colorized_string(config.is_output_colorized))
-                .collect_tuple()
-                .unwrap();
-
-                format!("{}{}{}", left_parenthesis, it, right_parenthesis)
+                if config.is_capturing_group_enabled() {
+                    Component::CapturedParenthesizedExpression(it.to_string())
+                        .to_repr(config.is_output_colorized)
+                } else {
+                    Component::UncapturedParenthesizedExpression(it.to_string())
+                        .to_repr(config.is_output_colorized)
+                }
             } else {
                 format!("{}", it)
             }
@@ -241,30 +216,30 @@ fn format_repetition(
     quantifier: &Quantifier,
     config: &RegExpConfig,
 ) -> Result {
-    let (colored_quantifier, left_parenthesis, right_parenthesis) = vec![
-        match quantifier {
-            Quantifier::KleeneStar => ColorizableString::Asterisk,
-            Quantifier::QuestionMark => ColorizableString::QuestionMark,
-        },
-        if config.is_capturing_group_enabled() {
-            ColorizableString::CapturingLeftParenthesis
-        } else {
-            ColorizableString::NonCapturingLeftParenthesis
-        },
-        ColorizableString::RightParenthesis,
-    ]
-    .iter()
-    .map(|it| it.to_colorized_string(config.is_output_colorized))
-    .collect_tuple()
-    .unwrap();
-
     if expr1.precedence() < expr.precedence() && !expr1.is_single_codepoint() {
+        if config.is_capturing_group_enabled() {
+            write!(
+                f,
+                "{}{}",
+                Component::CapturedParenthesizedExpression(expr1.to_string())
+                    .to_repr(config.is_output_colorized),
+                Component::Quantifier(quantifier.clone()).to_repr(config.is_output_colorized)
+            )
+        } else {
+            write!(
+                f,
+                "{}{}",
+                Component::UncapturedParenthesizedExpression(expr1.to_string())
+                    .to_repr(config.is_output_colorized),
+                Component::Quantifier(quantifier.clone()).to_repr(config.is_output_colorized)
+            )
+        }
+    } else {
         write!(
             f,
-            "{}{}{}{}",
-            left_parenthesis, expr1, right_parenthesis, colored_quantifier
+            "{}{}",
+            expr1,
+            Component::Quantifier(quantifier.clone()).to_repr(config.is_output_colorized)
         )
-    } else {
-        write!(f, "{}{}", expr1, colored_quantifier)
     }
 }

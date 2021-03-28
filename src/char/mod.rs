@@ -1,5 +1,5 @@
 /*
- * Copyright © 2019-2020 Peter M. Stahl pemistahl@gmail.com
+ * Copyright © 2019-today Peter M. Stahl pemistahl@gmail.com
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,9 +15,7 @@
  */
 
 mod cluster;
-mod color;
 mod grapheme;
 
 pub use cluster::GraphemeCluster;
-pub use color::ColorizableString;
 pub use grapheme::Grapheme;

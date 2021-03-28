@@ -1,5 +1,5 @@
 /*
- * Copyright © 2019-2020 Peter M. Stahl pemistahl@gmail.com
+ * Copyright © 2019-today Peter M. Stahl pemistahl@gmail.com
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -89,9 +89,6 @@ pub enum Feature {
 
 impl Feature {
     pub(crate) fn is_char_class(&self) -> bool {
-        match self {
-            Feature::Repetition => false,
-            _ => true,
-        }
+        !matches!(self, Feature::Repetition)
     }
 }

@@ -1,3 +1,8 @@
+## grex 1.2.0 (released on 28 Mar 2021)
+
+### Features
+- verbose mode is now supported with the `--verbose` flag to produce regular expressions which are easier to read (#17)
+
 ## grex 1.1.0 (released on 17 Apr 2020)
 
 ### Features

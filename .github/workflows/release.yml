@@ -1,0 +1,90 @@
+#
+# Copyright © 2019-today Peter M. Stahl pemistahl@gmail.com
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either expressed or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+name: release
+
+on:
+  push:
+    tags:
+      - v1.*
+
+env:
+  CRATE_NAME: grex
+
+jobs:
+  create-release:
+    name: ${{ matrix.name }}
+
+    runs-on: ${{ matrix.os }}
+
+    env:
+      TARGET: ${{ matrix.target }}
+      RELEASE_VERSION: ${{ steps.get_release_version.outputs.version }}
+
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        include:
+          - os: ubuntu-latest
+            name: Linux Binary 64-Bit
+            target: x86_64-unknown-linux-musl
+
+          - os: macos-latest
+            name: MacOS Binary 64-Bit
+            target: x86_64-apple-darwin
+            env:
+              MACOSX_DEPLOYMENT_TARGET: 10.7
+
+          - os: windows-latest
+            name: Windows Binary 64-Bit
+            target: x86_64-pc-windows-msvc
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v2
+
+      - name: Add rustup target
+        run: rustup target add $TARGET
+
+      - name: Build in release mode
+        run: cargo build --release --target $TARGET --locked
+
+      - name: Get latest release version number
+        id: get_release_version
+        uses: battila7/get-version-action@v2
+
+      - name: Create zip file on Windows
+        if: ${{ matrix.os == 'windows-latest' }}
+        run: zip $CRATE_NAME-$RELEASE_VERSION-$TARGET.zip target/$TARGET/release/$CRATE_NAME.exe
+
+      - name: Create tar.gz file on macOS and Linux
+        if: ${{ matrix.os != 'windows-latest' }}
+        run: |
+          chmod +x target/$TARGET/release/$CRATE_NAME
+          tar -zcf target/$TARGET/release/$CRATE_NAME-$RELEASE_VERSION-$TARGET.tar.gz -C target/$TARGET/release $CRATE_NAME
+
+      - name: Upload release and assets to GitHub
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          tag: ${{ github.ref }}
+          release_name: grex $RELEASE_VERSION
+          file_glob: true
+          file: target/$TARGET/release/$CRATE_NAME-$RELEASE_VERSION-$TARGET.{zip,tar.gz}
+
+      - name: Upload release to crates.io
+        uses: katyo/publish-crates@v1
+        with:
+          registry-token: ${{ secrets.CARGO_REGISTRY_TOKEN }}

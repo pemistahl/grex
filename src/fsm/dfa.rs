@@ -1,5 +1,5 @@
 /*
- * Copyright © 2019-2020 Peter M. Stahl pemistahl@gmail.com
+ * Copyright © 2019-today Peter M. Stahl pemistahl@gmail.com
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,6 @@
 use crate::char::{Grapheme, GraphemeCluster};
 use crate::regexp::RegExpConfig;
 use itertools::Itertools;
-use petgraph::dot::{Config, Dot};
 use petgraph::graph::NodeIndex;
 use petgraph::stable_graph::{Edges, StableGraph};
 use petgraph::visit::Dfs;
@@ -29,7 +28,7 @@ type State = NodeIndex<u32>;
 type StateLabel = String;
 type EdgeLabel = Grapheme;
 
-pub struct DFA {
+pub struct Dfa {
     alphabet: BTreeSet<Grapheme>,
     graph: StableGraph<StateLabel, EdgeLabel>,
     initial_state: State,
@@ -37,7 +36,7 @@ pub struct DFA {
     config: RegExpConfig,
 }
 
-impl DFA {
+impl Dfa {
     pub(crate) fn from(grapheme_clusters: Vec<GraphemeCluster>, config: &RegExpConfig) -> Self {
         let mut dfa = Self::new(config);
         for cluster in grapheme_clusters {
@@ -66,16 +65,6 @@ impl DFA {
 
     pub(crate) fn is_final_state(&self, state: State) -> bool {
         self.final_state_indices.contains(&state.index())
-    }
-
-    #[allow(dead_code)]
-    fn println(&self, comment: &str) {
-        println!(
-            "{}: {}",
-            comment,
-            Dot::with_config(&self.graph, &[Config::NodeIndexLabel])
-        );
-        println!("{:?}", self.final_state_indices);
     }
 
     fn new(config: &RegExpConfig) -> Self {
@@ -275,7 +264,7 @@ mod tests {
     #[test]
     fn test_state_count() {
         let config = RegExpConfig::new();
-        let mut dfa = DFA::new(&config);
+        let mut dfa = Dfa::new(&config);
         assert_eq!(dfa.state_count(), 1);
 
         dfa.insert(GraphemeCluster::from("abcd", &RegExpConfig::new()));
@@ -285,7 +274,7 @@ mod tests {
     #[test]
     fn test_is_final_state() {
         let config = RegExpConfig::new();
-        let dfa = DFA::from(
+        let dfa = Dfa::from(
             vec![GraphemeCluster::from("abcd", &RegExpConfig::new())],
             &config,
         );
@@ -300,7 +289,7 @@ mod tests {
     #[test]
     fn test_outgoing_edges() {
         let config = RegExpConfig::new();
-        let dfa = DFA::from(
+        let dfa = Dfa::from(
             vec![
                 GraphemeCluster::from("abcd", &RegExpConfig::new()),
                 GraphemeCluster::from("abxd", &RegExpConfig::new()),
@@ -331,7 +320,7 @@ mod tests {
     #[test]
     fn test_states_in_depth_first_order() {
         let config = RegExpConfig::new();
-        let dfa = DFA::from(
+        let dfa = Dfa::from(
             vec![
                 GraphemeCluster::from("abcd", &RegExpConfig::new()),
                 GraphemeCluster::from("axyz", &RegExpConfig::new()),
@@ -401,7 +390,7 @@ mod tests {
     #[test]
     fn test_minimization_algorithm() {
         let config = RegExpConfig::new();
-        let mut dfa = DFA::new(&config);
+        let mut dfa = Dfa::new(&config);
         assert_eq!(dfa.graph.node_count(), 1);
         assert_eq!(dfa.graph.edge_count(), 0);
 
@@ -421,7 +410,7 @@ mod tests {
     #[test]
     fn test_dfa_constructor() {
         let config = RegExpConfig::new();
-        let dfa = DFA::from(
+        let dfa = Dfa::from(
             vec![
                 GraphemeCluster::from("abcd", &RegExpConfig::new()),
                 GraphemeCluster::from("abxd", &RegExpConfig::new()),

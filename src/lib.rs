@@ -1,5 +1,5 @@
 /*
- * Copyright © 2019-2020 Peter M. Stahl pemistahl@gmail.com
+ * Copyright © 2019-today Peter M. Stahl pemistahl@gmail.com
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -74,6 +74,7 @@
 //! - fully compatible with [*regex* crate 1.3.5+](https://lib.rs/crates/regex)
 //! - correctly handles graphemes consisting of multiple Unicode symbols
 //! - reads input strings from the command-line or from a file
+//! - produces more readable expressions indented on multiple using optional verbose mode
 //! - optional syntax highlighting for nicer output in supported terminals
 //!
 //! ## 4. How to use?
@@ -199,6 +200,35 @@
 //!     .with_conversion_of(&[Feature::CaseInsensitivity, Feature::CapturingGroup])
 //!     .build();
 //! assert_eq!(regexp, "(?i)^big(ger)?$");
+//! ```
+//!
+//! ### 4.7 Verbose mode
+//!
+//! If you find the generated regular expression hard to read, you can enable verbose mode.
+//! The expression is then put on multiple lines and indented to make it more pleasant to the eyes.
+//!
+//! ```
+//! use grex::RegExpBuilder;
+//! use indoc::indoc;
+//!
+//! let regexp = RegExpBuilder::from(&["a", "b", "bcd"])
+//!     .with_verbose_mode()
+//!     .build();
+//!
+//! assert_eq!(regexp, indoc!(
+//!     r#"
+//!     (?x)
+//!     ^
+//!       (?:
+//!         b
+//!         (?:
+//!           cd
+//!         )?
+//!         |
+//!         a
+//!       )
+//!     $"#
+//! ));
 //! ```
 //!
 //! ### 5. How does it work?

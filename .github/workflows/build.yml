@@ -1,0 +1,85 @@
+#
+# Copyright © 2019-today Peter M. Stahl pemistahl@gmail.com
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either expressed or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+name: build
+
+on: [push, pull_request]
+
+jobs:
+  build-and-test:
+    name: ${{ matrix.name }}
+
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        include:
+          - os: ubuntu-latest
+            name: Linux Binary 64-Bit
+            target: x86_64-unknown-linux-musl
+
+          - os: macos-latest
+            name: MacOS Binary 64-Bit
+            target: x86_64-apple-darwin
+            env:
+              MACOSX_DEPLOYMENT_TARGET: 10.7
+
+          - os: windows-latest
+            name: Windows Binary 64-Bit
+            target: x86_64-pc-windows-msvc
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v2
+
+      - name: Add rustup target
+        run: rustup target add ${{ matrix.target }}
+
+      - name: Install apt packages
+        if: ${{ matrix.os == 'ubuntu-latest' }}
+        run: sudo apt-get install musl-tools libssl-dev
+
+      # needed to fix file corruption of cache
+      # https://github.com/actions/cache/issues/403
+      - name: Install GNU tar
+        if: ${{ matrix.os == 'macos-latest' }}
+        run: |
+          brew install gnu-tar
+          echo "/usr/local/opt/gnu-tar/libexec/gnubin" >> $GITHUB_PATH
+
+      - name: Store or retrieve cargo caches
+        uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-rust-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Build in debug mode
+        run: cargo build --target ${{ matrix.target }} --locked
+
+      - name: Test in debug mode
+        run: cargo test --target ${{ matrix.target }}
+
+      - name: Create code coverage report
+        if: ${{ matrix.os == 'ubuntu-latest' && github.event_name == 'push' }}
+        uses: actions-rs/tarpaulin@v0.1
+
+      - name: Upload code coverage report to Codecov
+        if: ${{ matrix.os == 'ubuntu-latest' && github.event_name == 'push' }}
+        uses: codecov/codecov-action@v1

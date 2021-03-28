@@ -1,5 +1,5 @@
 /*
- * Copyright © 2019-2020 Peter M. Stahl pemistahl@gmail.com
+ * Copyright © 2019-today Peter M. Stahl pemistahl@gmail.com
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,20 +18,20 @@ use grex::{Feature, RegExpBuilder};
 use itertools::Itertools;
 use std::io::{Error, ErrorKind};
 use std::path::PathBuf;
-use structopt::clap::AppSettings;
+use structopt::clap::AppSettings::{AllowLeadingHyphen, ColoredHelp};
 use structopt::StructOpt;
 
 #[derive(StructOpt)]
 #[structopt(
-    author = "© 2019-2020 Peter M. Stahl <pemistahl@gmail.com>",
+    author = "© 2019-today Peter M. Stahl <pemistahl@gmail.com>",
     about = "Licensed under the Apache License, Version 2.0\n\
              Downloadable from https://crates.io/crates/grex\n\
              Source code at https://github.com/pemistahl/grex\n\n\
              grex generates regular expressions from user-provided test cases.",
     version_short = "v",
-    global_setting = AppSettings::AllowLeadingHyphen
+    global_settings = &[AllowLeadingHyphen, ColoredHelp]
 )]
-struct CLI {
+struct Cli {
     // --------------------
     // ARGS
     // --------------------
@@ -170,11 +170,20 @@ struct CLI {
     is_group_captured: bool,
 
     #[structopt(
+        name = "verbose",
+        short = "x",
+        long,
+        help = "Produces a nicer looking regular expression in verbose mode",
+        display_order = 12
+    )]
+    is_verbose_mode_enabled: bool,
+
+    #[structopt(
         name = "colorize",
         short,
         long,
         help = "Provides syntax highlighting for the resulting regular expression",
-        display_order = 12
+        display_order = 13
     )]
     is_output_colorized: bool,
 
@@ -220,11 +229,11 @@ struct CLI {
 }
 
 fn main() {
-    let cli = CLI::from_args();
+    let cli = Cli::from_args();
     handle_input(&cli, obtain_input(&cli));
 }
 
-fn obtain_input(cli: &CLI) -> Result<Vec<String>, Error> {
+fn obtain_input(cli: &Cli) -> Result<Vec<String>, Error> {
     if !cli.input.is_empty() {
         Ok(cli.input.clone())
     } else if let Some(file_path) = &cli.file_path {
@@ -240,7 +249,7 @@ fn obtain_input(cli: &CLI) -> Result<Vec<String>, Error> {
     }
 }
 
-fn handle_input(cli: &CLI, input: Result<Vec<String>, Error>) {
+fn handle_input(cli: &Cli, input: Result<Vec<String>, Error>) {
     match input {
         Ok(test_cases) => {
             let mut builder = RegExpBuilder::from(&test_cases);
@@ -290,6 +299,10 @@ fn handle_input(cli: &CLI, input: Result<Vec<String>, Error>) {
                 builder.with_escaping_of_non_ascii_chars(
                     cli.is_astral_code_point_converted_to_surrogate,
                 );
+            }
+
+            if cli.is_verbose_mode_enabled {
+                builder.with_verbose_mode();
             }
 
             if cli.is_output_colorized {
