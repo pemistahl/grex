@@ -20,18 +20,11 @@ on:
     tags:
       - v1.*
 
-env:
-  CRATE_NAME: grex
-
 jobs:
   create-release:
     name: ${{ matrix.name }}
 
     runs-on: ${{ matrix.os }}
-
-    env:
-      TARGET: ${{ matrix.target }}
-      RELEASE_VERSION: ${{ steps.get_release_version.outputs.version }}
 
     strategy:
       matrix:
@@ -56,35 +49,39 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Add rustup target
-        run: rustup target add $TARGET
+        run: rustup target add ${{ matrix.target }}
 
       - name: Build in release mode
-        run: cargo build --release --target $TARGET --locked
+        run: cargo build --release --target ${{ matrix.target }} --locked
 
       - name: Get latest release version number
-        id: get_release_version
+        id: get_version
         uses: battila7/get-version-action@v2
 
       - name: Create zip file on Windows
         if: ${{ matrix.os == 'windows-latest' }}
-        run: zip $CRATE_NAME-$RELEASE_VERSION-$TARGET.zip target/$TARGET/release/$CRATE_NAME.exe
+        run: |
+          choco install zip
+          zip target/${{ matrix.target }}/release/grex-${{ steps.get_version.outputs.version }}-${{ matrix.target }}.zip target/${{ matrix.target }}/release/grex.exe
 
       - name: Create tar.gz file on macOS and Linux
         if: ${{ matrix.os != 'windows-latest' }}
         run: |
-          chmod +x target/$TARGET/release/$CRATE_NAME
-          tar -zcf target/$TARGET/release/$CRATE_NAME-$RELEASE_VERSION-$TARGET.tar.gz -C target/$TARGET/release $CRATE_NAME
+          chmod +x target/${{ matrix.target }}/release/grex
+          tar -zcf target/${{ matrix.target }}/release/grex-${{ steps.get_version.outputs.version }}-${{ matrix.target }}.tar.gz -C target/${{ matrix.target }}/release grex
 
       - name: Upload release and assets to GitHub
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           tag: ${{ github.ref }}
-          release_name: grex $RELEASE_VERSION
+          release_name: grex ${{ steps.get_version.outputs.version }}
           file_glob: true
-          file: target/$TARGET/release/$CRATE_NAME-$RELEASE_VERSION-$TARGET.{zip,tar.gz}
+          file: target/${{ matrix.target }}/release/grex-${{ steps.get_version.outputs.version }}-${{ matrix.target }}.{zip,tar.gz}
 
-      - name: Upload release to crates.io
-        uses: katyo/publish-crates@v1
-        with:
-          registry-token: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+      # ENABLE AGAIN FOR NEXT RELEASE 1.3
+      #- name: Upload release to crates.io
+      #  uses: katyo/publish-crates@v1
+      #  if: ${{ matrix.os == 'ubuntu-latest' }}
+      #  with:
+      #    registry-token: ${{ secrets.CARGO_REGISTRY_TOKEN }}
