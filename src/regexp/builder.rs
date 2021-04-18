@@ -154,17 +154,6 @@ impl RegExpBuilder {
     /// Every generated regular expression is surrounded by the anchors `^` and `$`
     /// so that substrings not being part of the test cases are not matched accidentally.
     pub fn build(&mut self) -> String {
-        let mut s = RegExp::from(&mut self.test_cases, &self.config).to_string();
-        if !self.config.is_match_begin {
-            if let Some(p) = s.find("^") {
-                s.remove(p);
-            }
-        }
-        if !self.config.is_match_end {
-            if let Some(p) = s.rfind("$") {
-                s.remove(p);
-            }
-        }
-        s
+        RegExp::from(&mut self.test_cases, &self.config).to_string()
     }
 }

@@ -87,8 +87,16 @@ impl Display for RegExp {
         } else {
             String::new()
         };
-        let caret = Component::Caret.to_repr(self.config.is_output_colorized);
-        let dollar_sign = Component::DollarSign.to_repr(self.config.is_output_colorized);
+        let caret = if self.config.is_match_begin {
+            Component::Caret.to_repr(self.config.is_output_colorized)
+        } else {
+            "".to_string()
+        };
+        let dollar_sign = if self.config.is_match_end {
+            Component::DollarSign.to_repr(self.config.is_output_colorized)
+        } else {
+            "".to_string()
+        };
         let mut regexp = match self.ast {
             Expression::Alternation(_, _) => {
                 format!(
