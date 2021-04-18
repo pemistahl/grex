@@ -93,7 +93,7 @@
 //! use grex::RegExpBuilder;
 //!
 //! let regexp = RegExpBuilder::from(&["a", "aa", "aaa"]).build();
-//! assert_eq!(regexp, "^a(?:aa?)?$");
+//! assert_eq!(regexp, "a(?:aa?)?");
 //! ```
 //!
 //! ### 4.2 Convert to character classes
@@ -104,7 +104,7 @@
 //! let regexp = RegExpBuilder::from(&["a", "aa", "123"])
 //!     .with_conversion_of(&[Feature::Digit, Feature::Word])
 //!     .build();
-//! assert_eq!(regexp, "^(?:\\d\\d\\d|\\w(?:\\w)?)$");
+//! assert_eq!(regexp, "(?:\\d\\d\\d|\\w(?:\\w)?)");
 //! ```
 //!
 //! ### 4.3 Convert repeated substrings
@@ -115,7 +115,7 @@
 //! let regexp = RegExpBuilder::from(&["aa", "bcbc", "defdefdef"])
 //!     .with_conversion_of(&[Feature::Repetition])
 //!     .build();
-//! assert_eq!(regexp, "^(?:a{2}|(?:bc){2}|(?:def){3})$");
+//! assert_eq!(regexp, "(?:a{2}|(?:bc){2}|(?:def){3})");
 //! ```
 //!
 //! By default, *grex* converts each substring this way which is at least a single character long
@@ -132,7 +132,7 @@
 //!     .with_conversion_of(&[Feature::Repetition])
 //!     .with_minimum_substring_length(2)
 //!     .build();
-//! assert_eq!(regexp, "^(?:aa|(?:bc){2}|(?:def){3})$");
+//! assert_eq!(regexp, "(?:aa|(?:bc){2}|(?:def){3})");
 //! ```
 //!
 //! Setting a minimum number of 2 repetitions in the next example, only the test case `defdefdef`
@@ -145,7 +145,7 @@
 //!     .with_conversion_of(&[Feature::Repetition])
 //!     .with_minimum_repetitions(2)
 //!     .build();
-//! assert_eq!(regexp, "^(?:bcbc|aa|(?:def){3})$");
+//! assert_eq!(regexp, "(?:bcbc|aa|(?:def){3})");
 //! ```
 //!
 //! ### 4.4 Escape non-ascii characters
@@ -156,7 +156,7 @@
 //! let regexp = RegExpBuilder::from(&["You smell like 💩."])
 //!     .with_escaping_of_non_ascii_chars(false)
 //!     .build();
-//! assert_eq!(regexp, "^You smell like \\u{1f4a9}\\.$");
+//! assert_eq!(regexp, "You smell like \\u{1f4a9}\\.");
 //! ```
 //!
 //! Old versions of JavaScript do not support unicode escape sequences for
@@ -171,7 +171,7 @@
 //! let regexp = RegExpBuilder::from(&["You smell like 💩."])
 //!     .with_escaping_of_non_ascii_chars(true)
 //!     .build();
-//! assert_eq!(regexp, "^You smell like \\u{d83d}\\u{dca9}\\.$");
+//! assert_eq!(regexp, "You smell like \\u{d83d}\\u{dca9}\\.");
 //! ```
 //!
 //! ### 4.5 Case-insensitive matching
@@ -185,7 +185,7 @@
 //! let regexp = RegExpBuilder::from(&["big", "BIGGER"])
 //!     .with_conversion_of(&[Feature::CaseInsensitivity])
 //!     .build();
-//! assert_eq!(regexp, "(?i)^big(?:ger)?$");
+//! assert_eq!(regexp, "(?i)big(?:ger)?");
 //! ```
 //!
 //! ### 4.6 Capturing Groups
@@ -199,7 +199,7 @@
 //! let regexp = RegExpBuilder::from(&["big", "BIGGER"])
 //!     .with_conversion_of(&[Feature::CaseInsensitivity, Feature::CapturingGroup])
 //!     .build();
-//! assert_eq!(regexp, "(?i)^big(ger)?$");
+//! assert_eq!(regexp, "(?i)big(ger)?");
 //! ```
 //!
 //! ### 4.7 Verbose mode
@@ -218,16 +218,14 @@
 //! assert_eq!(regexp, indoc!(
 //!     r#"
 //!     (?x)
-//!     ^
+//!     (?:
+//!       b
 //!       (?:
-//!         b
-//!         (?:
-//!           cd
-//!         )?
-//!         |
-//!         a
-//!       )
-//!     $"#
+//!         cd
+//!       )?
+//!       |
+//!       a
+//!     )"#
 //! ));
 //! ```
 //!
