@@ -36,7 +36,7 @@
   5.3 [Examples](#examples)
 6. [How to build?](#how-to-build)
 7. [How does it work?](#how-does-it-work)
-8. [Do you want to contribute?](#contribution)
+8. [Contributions](#contribution)
  
 
 ## 1. <a name="what-does-tool-do"></a> What does this tool do? <sup>[Top ▲](#table-of-contents)</sup>
@@ -490,8 +490,11 @@ is created from the input strings.
 [Brzozowski's algebraic method](http://cs.stackexchange.com/questions/2016/how-to-convert-finite-automata-to-regular-expressions#2392), 
 resulting in the final regular expression.
 
-## 8. <a name="contribution"></a> Do you want to contribute? <sup>[Top ▲](#table-of-contents)</sup>
+## 8. <a name="contribution"></a> Contributions <sup>[Top ▲](#table-of-contents)</sup>
 
-In case you want to contribute something to *grex* even though it's in a very early stage of development, 
-then I encourage you to do so nevertheless. Do you have ideas for cool features? Or have you found any bugs so far? 
+- [Krzysztof Zawisła](https://github.com/KrzysztofZawisla) has written JavaScript bindings. Check out [grex.js](https://github.com/KrzysztofZawisla/grex.js).
+- [Maciej Gryka](https://github.com/maciejgryka) has created [https://regex.help](https://regex.help) where you can try out *grex* in your browser.
+
+In case you want to contribute something to *grex*, I encourage you to do so.
+Do you have ideas for cool features? Or have you found any bugs so far? 
 Feel free to open an issue or send a pull request. It's very much appreciated. :-)
