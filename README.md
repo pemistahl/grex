@@ -104,7 +104,8 @@ an initial correct regex which should be inspected by hand if further optimizati
 
 You can download the self-contained executable for your platform above and put it in a place of your choice. 
 Alternatively, pre-compiled 64-Bit binaries are available within the package managers [Scoop](https://scoop.sh) 
-(for Windows) and [Homebrew](https://brew.sh) (for macOS and Linux).
+(for Windows) and [Homebrew](https://brew.sh) (for macOS and Linux). [Raúl Piracés](https://github.com/piraces)
+has contributed a [Chocolatey Windows package](https://community.chocolatey.org/packages/grex).
 
 *grex* is also hosted on [crates.io](https://crates.io/crates/grex), 
 the official Rust package registry. If you are a Rust developer and already have the Rust 
@@ -113,7 +114,7 @@ toolchain installed, you can install by compiling from source using
 So the summary of your installation options is:
 
 ```
-( scoop | brew | cargo ) install grex
+( choco | scoop | brew | cargo ) install grex
 ```
 
 ### 4.2 <a name="how-to-install-library"></a> The library <sup>[Top ▲](#table-of-contents)</sup>
