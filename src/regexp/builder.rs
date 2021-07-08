@@ -143,6 +143,13 @@ impl RegExpBuilder {
         self
     }
 
+    /// Tells `RegExpBuilder` to concatenate the resulting regular expression with the "^" and "$" anchors.
+    pub fn with_line_borders(&mut self, match_begin: bool, match_end: bool) -> &mut Self {
+        self.config.is_match_begin = match_begin;
+        self.config.is_match_end   = match_end;
+        self
+    }
+
     /// Builds the actual regular expression using the previously given settings.
     /// Every generated regular expression is surrounded by the anchors `^` and `$`
     /// so that substrings not being part of the test cases are not matched accidentally.

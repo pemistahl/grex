@@ -187,6 +187,33 @@ struct Cli {
     )]
     is_output_colorized: bool,
 
+    #[structopt(
+        name = "no-match-beginning",
+        short = "B",
+        long,
+        help = "Don't match the beginning of the string (don't prepend \"^\")",
+        display_order = 14
+    )]
+    no_match_begin: bool,
+
+    #[structopt(
+        name = "no-match-end",
+        short = "E",
+        long,
+        help = "Don't match the end of the string (don't append \"$\")",
+        display_order = 15
+    )]
+    no_match_end: bool,
+
+    #[structopt(
+        name = "no-match-line",
+        short = "X",
+        long,
+        help = "Don't match the whole string (as a shorthand for -B -E)",
+        display_order = 16
+    )]
+    no_match_line: bool,
+
     // --------------------
     // OPTIONS
     // --------------------
@@ -310,6 +337,9 @@ fn handle_input(cli: &Cli, input: Result<Vec<String>, Error>) {
             }
 
             builder
+                .with_line_borders(
+                      ! cli.no_match_begin && ! cli.no_match_line
+                    , ! cli.no_match_end   && ! cli.no_match_line)
                 .with_minimum_repetitions(cli.minimum_repetitions)
                 .with_minimum_substring_length(cli.minimum_substring_length);
 

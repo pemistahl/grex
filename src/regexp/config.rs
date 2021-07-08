@@ -25,6 +25,8 @@ pub struct RegExpConfig {
     pub(crate) is_astral_code_point_converted_to_surrogate: bool,
     pub(crate) is_verbose_mode_enabled: bool,
     pub(crate) is_output_colorized: bool,
+    pub(crate) is_match_begin: bool,
+    pub(crate) is_match_end: bool,
 }
 
 impl RegExpConfig {
@@ -37,6 +39,8 @@ impl RegExpConfig {
             is_astral_code_point_converted_to_surrogate: false,
             is_verbose_mode_enabled: false,
             is_output_colorized: false,
+            is_match_begin: true,
+            is_match_end: true,
         }
     }
 
