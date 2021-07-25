@@ -21,95 +21,6 @@ use rstest::rstest;
 use std::io::Write;
 use tempfile::NamedTempFile;
 
-mod anchor_conversion {
-    use super::*;
-
-    mod no_verbose {
-        use super::*;
-
-        #[rstest(test_cases, expected_output,
-            case(vec!["My ♥♥♥ and 💩💩 is yours."], "My ♥♥♥ and 💩💩 is yours\\.$"),
-        )]
-        fn succeeds_with_no_match_beginning_option(test_cases: Vec<&str>, expected_output: &str) {
-            let regexp = RegExpBuilder::from(&test_cases)
-                .with_line_borders(false, true)
-                .build();
-            assert_that_regexp_is_correct(regexp, expected_output, &test_cases);
-        }
-
-        #[rstest(test_cases, expected_output,
-            case(vec!["My ♥♥♥ and 💩💩 is yours."], "^My ♥♥♥ and 💩💩 is yours\\."),
-        )]
-        fn succeeds_with_no_match_end_option(test_cases: Vec<&str>, expected_output: &str) {
-            let regexp = RegExpBuilder::from(&test_cases)
-                .with_line_borders(true, false)
-                .build();
-            assert_that_regexp_is_correct(regexp, expected_output, &test_cases);
-        }
-
-        #[rstest(test_cases, expected_output,
-            case(vec!["My ♥♥♥ and 💩💩 is yours."], "My ♥♥♥ and 💩💩 is yours\\."),
-        )]
-        fn succeeds_with_no_match_line_option(test_cases: Vec<&str>, expected_output: &str) {
-            let regexp = RegExpBuilder::from(&test_cases)
-                .with_line_borders(false, false)
-                .build();
-            assert_that_regexp_is_correct(regexp, expected_output, &test_cases);
-        }
-    }
-
-    mod verbose {
-        use super::*;
-
-        #[rstest(test_cases, expected_output,
-            case(vec!["My ♥♥♥ and 💩💩 is yours."], indoc!(
-                r#"
-                (?x)
-                  My\ ♥♥♥\ and\ 💩💩\ is\ yours\.
-                $"#
-            ))
-        )]
-        fn succeeds_with_verbose_and_no_match_beginning_option(test_cases: Vec<&str>, expected_output: &str) {
-            let regexp = RegExpBuilder::from(&test_cases)
-                .with_line_borders(false, true)
-                .with_verbose_mode()
-                .build();
-            assert_that_regexp_is_correct(regexp, expected_output, &test_cases);
-        }
-
-        #[rstest(test_cases, expected_output,
-            case(vec!["My ♥♥♥ and 💩💩 is yours."], indoc!(
-                r#"
-                (?x)
-                ^
-                  My\ ♥♥♥\ and\ 💩💩\ is\ yours\."#
-            ))
-        )]
-        fn succeeds_with_verbose_and_no_match_end_option(test_cases: Vec<&str>, expected_output: &str) {
-            let regexp = RegExpBuilder::from(&test_cases)
-                .with_line_borders(true, false)
-                .with_verbose_mode()
-                .build();
-            assert_that_regexp_is_correct(regexp, expected_output, &test_cases);
-        }
-
-        #[rstest(test_cases, expected_output,
-            case(vec!["My ♥♥♥ and 💩💩 is yours."], indoc!(
-                r#"
-                (?x)
-                  My\ ♥♥♥\ and\ 💩💩\ is\ yours\."#
-            ))
-        )]
-        fn succeeds_with_verbose_and_no_match_line_option(test_cases: Vec<&str>, expected_output: &str) {
-            let regexp = RegExpBuilder::from(&test_cases)
-                .with_line_borders(false, false)
-                .with_verbose_mode()
-                .build();
-            assert_that_regexp_is_correct(regexp, expected_output, &test_cases);
-        }
-    }
-}
-
 mod no_conversion {
     use super::*;
 
@@ -2026,6 +1937,102 @@ mod word_non_word_conversion {
                 .build();
             assert_that_regexp_is_correct(regexp, expected_output, &test_cases);
             assert_that_regexp_matches_test_cases(expected_output, test_cases);
+        }
+    }
+}
+
+mod anchor_conversion {
+    use super::*;
+
+    mod no_verbose {
+        use super::*;
+
+        #[rstest(test_cases, expected_output,
+            case(vec!["My ♥♥♥ and 💩💩 is yours."], "My ♥♥♥ and 💩💩 is yours\\.$"),
+        )]
+        fn succeeds_with_no_start_anchor_option(test_cases: Vec<&str>, expected_output: &str) {
+            let regexp = RegExpBuilder::from(&test_cases)
+                .without_start_anchor()
+                .build();
+            assert_that_regexp_is_correct(regexp, expected_output, &test_cases);
+        }
+
+        #[rstest(test_cases, expected_output,
+            case(vec!["My ♥♥♥ and 💩💩 is yours."], "^My ♥♥♥ and 💩💩 is yours\\."),
+        )]
+        fn succeeds_with_no_end_anchor_option(test_cases: Vec<&str>, expected_output: &str) {
+            let regexp = RegExpBuilder::from(&test_cases)
+                .without_end_anchor()
+                .build();
+            assert_that_regexp_is_correct(regexp, expected_output, &test_cases);
+        }
+
+        #[rstest(test_cases, expected_output,
+            case(vec!["My ♥♥♥ and 💩💩 is yours."], "My ♥♥♥ and 💩💩 is yours\\."),
+        )]
+        fn succeeds_with_no_match_line_option(test_cases: Vec<&str>, expected_output: &str) {
+            let regexp = RegExpBuilder::from(&test_cases).without_anchors().build();
+            assert_that_regexp_is_correct(regexp, expected_output, &test_cases);
+        }
+    }
+
+    mod verbose {
+        use super::*;
+
+        #[rstest(test_cases, expected_output,
+            case(vec!["My ♥♥♥ and 💩💩 is yours."], indoc!(
+                r#"
+                (?x)
+                  My\ ♥♥♥\ and\ 💩💩\ is\ yours\.
+                $"#
+            ))
+        )]
+        fn succeeds_with_verbose_mode_and_no_start_anchor_option(
+            test_cases: Vec<&str>,
+            expected_output: &str,
+        ) {
+            let regexp = RegExpBuilder::from(&test_cases)
+                .with_verbose_mode()
+                .without_start_anchor()
+                .build();
+            assert_that_regexp_is_correct(regexp, expected_output, &test_cases);
+        }
+
+        #[rstest(test_cases, expected_output,
+            case(vec!["My ♥♥♥ and 💩💩 is yours."], indoc!(
+                r#"
+                (?x)
+                ^
+                  My\ ♥♥♥\ and\ 💩💩\ is\ yours\."#
+            ))
+        )]
+        fn succeeds_with_verbose_mode_and_no_end_anchor_option(
+            test_cases: Vec<&str>,
+            expected_output: &str,
+        ) {
+            let regexp = RegExpBuilder::from(&test_cases)
+                .with_verbose_mode()
+                .without_end_anchor()
+                .build();
+            assert_that_regexp_is_correct(regexp, expected_output, &test_cases);
+        }
+
+        #[rstest(test_cases, expected_output,
+            case(vec!["My ♥♥♥ and 💩💩 is yours."], indoc!(
+                r#"
+                (?x)
+                  My\ ♥♥♥\ and\ 💩💩\ is\ yours\."#
+            ))
+        )]
+        fn succeeds_with_verbose_mode_and_no_anchors_option(
+            test_cases: Vec<&str>,
+            expected_output: &str,
+        ) {
+            let regexp = RegExpBuilder::from(&test_cases)
+                .with_verbose_mode()
+                .without_anchors()
+                .build();
+            assert_that_regexp_is_correct(regexp, expected_output, &test_cases);
         }
     }
 }

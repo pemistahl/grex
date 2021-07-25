@@ -16,6 +16,7 @@
 
 use grex::{Feature, RegExpBuilder};
 use itertools::Itertools;
+use regex::Regex;
 use std::io::{Error, ErrorKind};
 use std::path::PathBuf;
 use structopt::clap::AppSettings::{AllowLeadingHyphen, ColoredHelp};
@@ -179,40 +180,55 @@ struct Cli {
     is_verbose_mode_enabled: bool,
 
     #[structopt(
+        name = "no-start-anchor",
+        long,
+        help = "Removes caret anchor '^' from resulting regular expression",
+        long_help = "Removes caret anchor '^' from resulting regular expression.\n\n\
+                     By default, the caret anchor is added to every generated regular\n\
+                     expression which guarantees that the expression matches the test cases\n\
+                     given as input only at the start of a string.\n\
+                     This flag removes the anchor, thereby allowing to match the test cases also\n\
+                     when they do not occur at the start of a string.",
+        display_order = 13
+    )]
+    is_caret_anchor_disabled: bool,
+
+    #[structopt(
+        name = "no-end-anchor",
+        long,
+        help = "Removes dollar sign anchor '$' from resulting regular expression",
+        long_help = "Removes dollar sign anchor '$' from resulting regular expression.\n\n\
+                     By default, the dollar sign anchor is added to every generated regular\n\
+                     expression which guarantees that the expression matches the test cases\n\
+                     given as input only at the end of a string.\n\
+                     This flag removes the anchor, thereby allowing to match the test cases also\n\
+                     when they do not occur at the end of a string.",
+        display_order = 14
+    )]
+    is_dollar_sign_anchor_disabled: bool,
+
+    #[structopt(
+        name = "no-anchors",
+        long,
+        help = "Removes caret and dollar sign anchors from resulting regular expression",
+        long_help = "Removes caret and dollar sign anchors from resulting regular expression.\n\n\
+                     By default, anchors are added to every generated regular expression\n\
+                     which guarantee that the expression exactly matches only the test cases\n\
+                     given as input and nothing else.\n\
+                     This flag removes the anchors, thereby allowing to match the test cases also\n\
+                     when they occur within a larger string that contains other content as well.",
+        display_order = 15
+    )]
+    are_anchors_disabled: bool,
+
+    #[structopt(
         name = "colorize",
         short,
         long,
         help = "Provides syntax highlighting for the resulting regular expression",
-        display_order = 13
-    )]
-    is_output_colorized: bool,
-
-    #[structopt(
-        name = "no-match-beginning",
-        short = "B",
-        long,
-        help = "Don't match the beginning of the string (don't prepend \"^\")",
-        display_order = 14
-    )]
-    no_match_begin: bool,
-
-    #[structopt(
-        name = "no-match-end",
-        short = "E",
-        long,
-        help = "Don't match the end of the string (don't append \"$\")",
-        display_order = 15
-    )]
-    no_match_end: bool,
-
-    #[structopt(
-        name = "no-match-line",
-        short = "X",
-        long,
-        help = "Don't match the whole string (as a shorthand for -B -E)",
         display_order = 16
     )]
-    no_match_line: bool,
+    is_output_colorized: bool,
 
     // --------------------
     // OPTIONS
@@ -332,14 +348,23 @@ fn handle_input(cli: &Cli, input: Result<Vec<String>, Error>) {
                 builder.with_verbose_mode();
             }
 
+            if cli.is_caret_anchor_disabled {
+                builder.without_start_anchor();
+            }
+
+            if cli.is_dollar_sign_anchor_disabled {
+                builder.without_end_anchor();
+            }
+
+            if cli.are_anchors_disabled {
+                builder.without_anchors();
+            }
+
             if cli.is_output_colorized {
                 builder.with_syntax_highlighting();
             }
 
             builder
-                .with_line_borders(
-                      ! cli.no_match_begin && ! cli.no_match_line
-                    , ! cli.no_match_end   && ! cli.no_match_line)
                 .with_minimum_repetitions(cli.minimum_repetitions)
                 .with_minimum_substring_length(cli.minimum_substring_length);
 

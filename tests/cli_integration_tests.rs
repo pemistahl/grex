@@ -23,83 +23,6 @@ use tempfile::NamedTempFile;
 
 const TEST_CASE: &str = "I   ♥♥♥ 36 and ٣ and y̆y̆ and 💩💩.";
 
-mod anchor_conversion {
-    use super::*;
-
-    mod no_verbose {
-        use super::*;
-
-        #[test]
-        fn succeeds_with_no_match_beginning_option() {
-            let mut grex = init_command();
-            grex.args(&["--no-match-beginning", TEST_CASE]);
-            grex.assert()
-                .success()
-                .stdout(predicate::eq("I   ♥♥♥ 36 and ٣ and y̆y̆ and 💩💩\\.$\n"));
-        }
-
-        #[test]
-        fn succeeds_with_no_match_end_option() {
-            let mut grex = init_command();
-            grex.args(&["--no-match-end", TEST_CASE]);
-            grex.assert()
-                .success()
-                .stdout(predicate::eq("^I   ♥♥♥ 36 and ٣ and y̆y̆ and 💩💩\\.\n"));
-        }
-
-        #[test]
-        fn succeeds_with_no_match_line_option() {
-            let mut grex = init_command();
-            grex.args(&["--no-match-line", TEST_CASE]);
-            grex.assert()
-                .success()
-                .stdout(predicate::eq("I   ♥♥♥ 36 and ٣ and y̆y̆ and 💩💩\\.\n"));
-        }
-    }
-
-    mod verbose {
-        use super::*;
-
-        #[test]
-        fn succeeds_with_verbose_mode_and_no_match_beginning_option() {
-            let mut grex = init_command();
-            grex.args(&["--verbose", "--no-match-beginning", TEST_CASE]);
-            grex.assert().success().stdout(predicate::eq(indoc!(
-                r#"
-                (?x)
-                  I\ \ \ ♥♥♥\ 36\ and\ ٣\ and\ y̆y̆\ and\ 💩💩\.
-                $
-                "#,
-            )));
-        }
-
-        #[test]
-        fn succeeds_with_verbose_mode_and_no_match_end_option() {
-            let mut grex = init_command();
-            grex.args(&["--verbose", "--no-match-end", TEST_CASE]);
-            grex.assert().success().stdout(predicate::eq(indoc!(
-                r#"
-                (?x)
-                ^
-                  I\ \ \ ♥♥♥\ 36\ and\ ٣\ and\ y̆y̆\ and\ 💩💩\.
-                "#,
-            )));
-        }
-
-        #[test]
-        fn succeeds_with_verbose_mode_and_no_match_line_option() {
-            let mut grex = init_command();
-            grex.args(&["--verbose", "--no-match-line", TEST_CASE]);
-            grex.assert().success().stdout(predicate::eq(indoc!(
-                r#"
-                (?x)
-                  I\ \ \ ♥♥♥\ 36\ and\ ٣\ and\ y̆y̆\ and\ 💩💩\.
-                "#,
-            )));
-        }
-    }
-}
-
 mod no_conversion {
     use super::*;
 
@@ -3863,6 +3786,83 @@ mod word_non_word_conversion {
                   \w\W{7}\w{2}\W\w{3}\W\w\W\w{3}\W\w{4}\W\w{3}\W{4}
                 $
                 "#
+            )));
+        }
+    }
+}
+
+mod anchor_conversion {
+    use super::*;
+
+    mod no_verbose {
+        use super::*;
+
+        #[test]
+        fn succeeds_with_no_start_anchor_option() {
+            let mut grex = init_command();
+            grex.args(&["--no-start-anchor", TEST_CASE]);
+            grex.assert()
+                .success()
+                .stdout(predicate::eq("I   ♥♥♥ 36 and ٣ and y̆y̆ and 💩💩\\.$\n"));
+        }
+
+        #[test]
+        fn succeeds_with_no_end_anchor_option() {
+            let mut grex = init_command();
+            grex.args(&["--no-end-anchor", TEST_CASE]);
+            grex.assert()
+                .success()
+                .stdout(predicate::eq("^I   ♥♥♥ 36 and ٣ and y̆y̆ and 💩💩\\.\n"));
+        }
+
+        #[test]
+        fn succeeds_with_no_anchors_option() {
+            let mut grex = init_command();
+            grex.args(&["--no-anchors", TEST_CASE]);
+            grex.assert()
+                .success()
+                .stdout(predicate::eq("I   ♥♥♥ 36 and ٣ and y̆y̆ and 💩💩\\.\n"));
+        }
+    }
+
+    mod verbose {
+        use super::*;
+
+        #[test]
+        fn succeeds_with_verbose_mode_and_no_start_anchor_option() {
+            let mut grex = init_command();
+            grex.args(&["--verbose", "--no-start-anchor", TEST_CASE]);
+            grex.assert().success().stdout(predicate::eq(indoc!(
+                r#"
+                (?x)
+                  I\ \ \ ♥♥♥\ 36\ and\ ٣\ and\ y̆y̆\ and\ 💩💩\.
+                $
+                "#,
+            )));
+        }
+
+        #[test]
+        fn succeeds_with_verbose_mode_and_no_end_anchor_option() {
+            let mut grex = init_command();
+            grex.args(&["--verbose", "--no-end-anchor", TEST_CASE]);
+            grex.assert().success().stdout(predicate::eq(indoc!(
+                r#"
+                (?x)
+                ^
+                  I\ \ \ ♥♥♥\ 36\ and\ ٣\ and\ y̆y̆\ and\ 💩💩\.
+                "#,
+            )));
+        }
+
+        #[test]
+        fn succeeds_with_verbose_mode_and_no_anchors_option() {
+            let mut grex = init_command();
+            grex.args(&["--verbose", "--no-anchors", TEST_CASE]);
+            grex.assert().success().stdout(predicate::eq(indoc!(
+                r#"
+                (?x)
+                  I\ \ \ ♥♥♥\ 36\ and\ ٣\ and\ y̆y̆\ and\ 💩💩\.
+                "#,
             )));
         }
     }

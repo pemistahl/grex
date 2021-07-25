@@ -128,8 +128,34 @@ impl RegExpBuilder {
         self
     }
 
+    /// Tells `RegExpBuilder` to produce a nicer looking regular expression in verbose mode.
     pub fn with_verbose_mode(&mut self) -> &mut Self {
         self.config.is_verbose_mode_enabled = true;
+        self
+    }
+
+    /// Tells `RegExpBuilder` to remove the caret anchor '^' from the resulting regular
+    /// expression, thereby allowing to match the test cases also when they do not occur
+    /// at the start of a string.
+    pub fn without_start_anchor(&mut self) -> &mut Self {
+        self.config.is_start_anchor_disabled = true;
+        self
+    }
+
+    /// Tells `RegExpBuilder` to remove the dollar sign anchor '$' from the resulting regular
+    /// expression, thereby allowing to match the test cases also when they do not occur
+    /// at the end of a string.
+    pub fn without_end_anchor(&mut self) -> &mut Self {
+        self.config.is_end_anchor_disabled = true;
+        self
+    }
+
+    /// Tells `RegExpBuilder` to remove the caret and dollar sign anchors from the resulting
+    /// regular expression, thereby allowing to match the test cases also when they occur
+    /// within a larger string that contains other content as well.
+    pub fn without_anchors(&mut self) -> &mut Self {
+        self.config.is_start_anchor_disabled = true;
+        self.config.is_end_anchor_disabled = true;
         self
     }
 
@@ -140,13 +166,6 @@ impl RegExpBuilder {
     /// this setting cannot be fed into the [*regex*](https://crates.io/crates/regex) crate.
     pub fn with_syntax_highlighting(&mut self) -> &mut Self {
         self.config.is_output_colorized = true;
-        self
-    }
-
-    /// Tells `RegExpBuilder` to concatenate the resulting regular expression with the "^" and "$" anchors.
-    pub fn with_line_borders(&mut self, match_begin: bool, match_end: bool) -> &mut Self {
-        self.config.is_match_begin = match_begin;
-        self.config.is_match_end   = match_end;
         self
     }
 
