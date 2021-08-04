@@ -42,7 +42,16 @@ impl Dfa {
         for cluster in grapheme_clusters {
             dfa.insert(cluster);
         }
-        dfa.minimize();
+
+        let is_exactly_one_anchor_disabled =
+            config.is_start_anchor_disabled ^ config.is_end_anchor_disabled;
+        let is_no_anchor_disabled =
+            !config.is_start_anchor_disabled && !config.is_end_anchor_disabled;
+
+        if is_exactly_one_anchor_disabled || is_no_anchor_disabled {
+            dfa.minimize();
+        }
+
         dfa
     }
 
