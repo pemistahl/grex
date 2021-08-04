@@ -22,9 +22,8 @@ proptest! {
     #![proptest_config(ProptestConfig::with_cases(500))]
 
     #[test]
-    #[ignore]
     fn valid_regexes_with_default_settings(
-        test_cases in prop::collection::hash_set(".{1,20}", 1..=10)
+        test_cases in prop::collection::hash_set(".{1,10}", 1..=5)
     ) {
         let test_cases_vec = test_cases.iter().cloned().collect::<Vec<_>>();
         let regexp = RegExpBuilder::from(&test_cases_vec).build();
@@ -32,9 +31,8 @@ proptest! {
     }
 
     #[test]
-    #[ignore]
     fn valid_regexes_with_escape_sequences(
-        test_cases in prop::collection::hash_set(".{1,20}", 1..=10)
+        test_cases in prop::collection::hash_set(".{1,10}", 1..=5)
     ) {
         let test_cases_vec = test_cases.iter().cloned().collect::<Vec<_>>();
         let regexp = RegExpBuilder::from(&test_cases_vec)
@@ -44,9 +42,8 @@ proptest! {
     }
 
     #[test]
-    #[ignore]
     fn valid_regexes_with_verbose_mode(
-        test_cases in prop::collection::hash_set(".{1,20}", 1..=10)
+        test_cases in prop::collection::hash_set(".{1,10}", 1..=5)
     ) {
         let test_cases_vec = test_cases.iter().cloned().collect::<Vec<_>>();
         let regexp = RegExpBuilder::from(&test_cases_vec)
@@ -56,9 +53,8 @@ proptest! {
     }
 
     #[test]
-    #[ignore]
     fn valid_regexes_with_escape_sequences_and_verbose_mode(
-        test_cases in prop::collection::hash_set(".{1,20}", 1..=10)
+        test_cases in prop::collection::hash_set(".{1,10}", 1..=5)
     ) {
         let test_cases_vec = test_cases.iter().cloned().collect::<Vec<_>>();
         let regexp = RegExpBuilder::from(&test_cases_vec)
@@ -69,9 +65,8 @@ proptest! {
     }
 
     #[test]
-    #[ignore]
     fn valid_regexes_with_conversion_features(
-        test_cases in prop::collection::hash_set(".{1,20}", 1..=10),
+        test_cases in prop::collection::hash_set(".{1,10}", 1..=5),
         conversion_features in prop::collection::hash_set(conversion_feature_strategy(), 1..=9),
         minimum_repetitions in 1..100u32,
         minimum_substring_length in 1..100u32
@@ -86,9 +81,8 @@ proptest! {
     }
 
     #[test]
-    #[ignore]
     fn valid_regexes_with_conversion_features_and_escape_sequences(
-        test_cases in prop::collection::hash_set(".{1,20}", 1..=10),
+        test_cases in prop::collection::hash_set(".{1,10}", 1..=5),
         conversion_features in prop::collection::hash_set(conversion_feature_strategy(), 1..=9),
         minimum_repetitions in 1..100u32,
         minimum_substring_length in 1..100u32
@@ -104,9 +98,8 @@ proptest! {
     }
 
     #[test]
-    #[ignore]
     fn valid_regexes_with_conversion_features_and_verbose_mode(
-        test_cases in prop::collection::hash_set(".{1,20}", 1..=10),
+        test_cases in prop::collection::hash_set(".{1,10}", 1..=5),
         conversion_features in prop::collection::hash_set(conversion_feature_strategy(), 1..=9),
         minimum_repetitions in 1..100u32,
         minimum_substring_length in 1..100u32
@@ -122,9 +115,8 @@ proptest! {
     }
 
     #[test]
-    #[ignore]
     fn matching_regexes_with_default_settings(
-        test_cases in prop::collection::hash_set(".{1,20}", 1..=10)
+        test_cases in prop::collection::hash_set(".{1,10}", 1..=5)
     ) {
         let test_cases_vec = test_cases.iter().cloned().collect::<Vec<_>>();
         let regexp = RegExpBuilder::from(&test_cases_vec).build();
@@ -134,9 +126,8 @@ proptest! {
     }
 
     #[test]
-    #[ignore]
     fn matching_regexes_with_escape_sequences(
-        test_cases in prop::collection::hash_set(".{1,20}", 1..=10)
+        test_cases in prop::collection::hash_set(".{1,10}", 1..=5)
     ) {
         let test_cases_vec = test_cases.iter().cloned().collect::<Vec<_>>();
         let regexp = RegExpBuilder::from(&test_cases_vec)
@@ -148,9 +139,8 @@ proptest! {
     }
 
     #[test]
-    #[ignore]
     fn matching_regexes_with_verbose_mode(
-        test_cases in prop::collection::hash_set(".{1,20}", 1..=10)
+        test_cases in prop::collection::hash_set(".{1,10}", 1..=5)
     ) {
         let test_cases_vec = test_cases.iter().cloned().collect::<Vec<_>>();
         let regexp = RegExpBuilder::from(&test_cases_vec)
@@ -162,9 +152,8 @@ proptest! {
     }
 
     #[test]
-    #[ignore]
     fn matching_regexes_with_escape_sequences_and_verbose_mode(
-        test_cases in prop::collection::hash_set(".{1,20}", 1..=10)
+        test_cases in prop::collection::hash_set(".{1,10}", 1..=5)
     ) {
         let test_cases_vec = test_cases.iter().cloned().collect::<Vec<_>>();
         let regexp = RegExpBuilder::from(&test_cases_vec)
@@ -177,9 +166,8 @@ proptest! {
     }
 
     #[test]
-    #[ignore]
     fn matching_regexes_with_conversion_features(
-        test_cases in prop::collection::hash_set(".{1,20}", 1..=10),
+        test_cases in prop::collection::hash_set(".{1,10}", 1..=5),
         conversion_features in prop::collection::hash_set(conversion_feature_strategy(), 1..=9),
         minimum_repetitions in 1..100u32,
         minimum_substring_length in 1..100u32
@@ -196,9 +184,8 @@ proptest! {
     }
 
     #[test]
-    #[ignore]
     fn matching_regexes_with_conversion_features_and_escape_sequences(
-        test_cases in prop::collection::hash_set(".{1,20}", 1..=10),
+        test_cases in prop::collection::hash_set(".{1,10}", 1..=5),
         conversion_features in prop::collection::hash_set(conversion_feature_strategy(), 1..=9),
         minimum_repetitions in 1..100u32,
         minimum_substring_length in 1..100u32
@@ -216,9 +203,8 @@ proptest! {
     }
 
     #[test]
-    #[ignore]
     fn matching_regexes_with_conversion_features_and_verbose_mode(
-        test_cases in prop::collection::hash_set(".{1,20}", 1..=10),
+        test_cases in prop::collection::hash_set(".{1,10}", 1..=5),
         conversion_features in prop::collection::hash_set(conversion_feature_strategy(), 1..=9),
         minimum_repetitions in 1..100u32,
         minimum_substring_length in 1..100u32
@@ -236,7 +222,52 @@ proptest! {
     }
 
     #[test]
-    #[ignore]
+    fn matching_regexes_without_start_anchor(
+        test_cases in prop::collection::hash_set("[A-C]{1,10}", 1..=5)
+    ) {
+        let test_cases_vec = test_cases.iter().cloned().collect::<Vec<_>>();
+        let regexp = RegExpBuilder::from(&test_cases_vec).without_start_anchor().build();
+        if let Ok(compiled_regexp) = compile_regexp(&regexp) {
+            for test_case in test_cases_vec {
+                let matches = compiled_regexp.find_iter(&test_case).collect::<Vec<_>>();
+                let substrings = matches.iter().map(|m| m.as_str()).collect::<Vec<_>>();
+                prop_assert_eq!(
+                    matches.len(),
+                    1,
+                    "expression '{}' does not match test case '{}' entirely but {} of its substrings: {:?}",
+                    regexp,
+                    test_case,
+                    matches.len(),
+                    substrings
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn matching_regexes_without_end_anchor(
+        test_cases in prop::collection::hash_set("[A-C]{1,10}", 1..=5)
+    ) {
+        let test_cases_vec = test_cases.iter().cloned().collect::<Vec<_>>();
+        let regexp = RegExpBuilder::from(&test_cases_vec).without_end_anchor().build();
+        if let Ok(compiled_regexp) = compile_regexp(&regexp) {
+            for test_case in test_cases_vec {
+                let matches = compiled_regexp.find_iter(&test_case).collect::<Vec<_>>();
+                let substrings = matches.iter().map(|m| m.as_str()).collect::<Vec<_>>();
+                prop_assert_eq!(
+                    matches.len(),
+                    1,
+                    "expression '{}' does not match test case '{}' entirely but {} of its substrings: {:?}",
+                    regexp,
+                    test_case,
+                    matches.len(),
+                    substrings
+                );
+            }
+        }
+    }
+
+    #[test]
     fn matching_regexes_without_anchors(
         test_cases in prop::collection::hash_set("[A-C]{1,10}", 1..=5)
     ) {
@@ -260,10 +291,9 @@ proptest! {
     }
 
     #[test]
-    #[ignore]
     fn regexes_not_matching_other_strings_with_default_settings(
-        test_cases in prop::collection::hash_set(".{1,20}", 1..=10),
-        other_strings in prop::collection::hash_set(".{1,20}", 1..=10)
+        test_cases in prop::collection::hash_set(".{1,10}", 1..=5),
+        other_strings in prop::collection::hash_set(".{1,10}", 1..=5)
     ) {
         if test_cases.is_disjoint(&other_strings) {
             let test_cases_vec = test_cases.iter().cloned().collect::<Vec<_>>();
@@ -275,10 +305,9 @@ proptest! {
     }
 
     #[test]
-    #[ignore]
     fn regexes_not_matching_other_strings_with_escape_sequences(
-        test_cases in prop::collection::hash_set(".{1,20}", 1..=10),
-        other_strings in prop::collection::hash_set(".{1,20}", 1..=10)
+        test_cases in prop::collection::hash_set(".{1,10}", 1..=5),
+        other_strings in prop::collection::hash_set(".{1,10}", 1..=5)
     ) {
         if test_cases.is_disjoint(&other_strings) {
             let test_cases_vec = test_cases.iter().cloned().collect::<Vec<_>>();
