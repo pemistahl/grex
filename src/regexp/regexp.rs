@@ -36,7 +36,7 @@ impl RegExp {
             Self::convert_to_lowercase(test_cases);
         }
         Self::sort(test_cases);
-        let grapheme_clusters = Self::grapheme_clusters(&test_cases, config);
+        let grapheme_clusters = Self::grapheme_clusters(test_cases, config);
         let dfa = Dfa::from(grapheme_clusters, config);
         let ast = Expression::from(dfa, config);
         Self {
@@ -53,7 +53,7 @@ impl RegExp {
         test_cases.sort();
         test_cases.dedup();
         test_cases.sort_by(|a, b| match a.len().cmp(&b.len()) {
-            Ordering::Equal => a.cmp(&b),
+            Ordering::Equal => a.cmp(b),
             other => other,
         });
     }

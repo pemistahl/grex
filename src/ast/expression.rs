@@ -212,15 +212,8 @@ impl Expression {
         expr: &Option<Expression>,
         config: &RegExpConfig,
     ) -> Option<Expression> {
-        if let Some(value) = expr {
-            Some(Expression::new_repetition(
-                value.clone(),
-                Quantifier::KleeneStar,
-                config,
-            ))
-        } else {
-            None
-        }
+        expr.as_ref()
+            .map(|value| Expression::new_repetition(value.clone(), Quantifier::KleeneStar, config))
     }
 
     fn concatenate(

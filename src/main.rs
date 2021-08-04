@@ -16,7 +16,6 @@
 
 use grex::{Feature, RegExpBuilder};
 use itertools::Itertools;
-use regex::Regex;
 use std::io::{Error, ErrorKind};
 use std::path::PathBuf;
 use structopt::clap::AppSettings::{AllowLeadingHyphen, ColoredHelp};
