@@ -318,6 +318,12 @@ mod no_conversion {
             case(vec!["a"], "^a$"),
             case(vec!["aa"], "^a{2}$"),
             case(vec!["aaa"], "^a{3}$"),
+            case(vec!["aaa aaa"], "^a{3} a{3}$"),
+            case(vec!["ababab ababab"], "^(?:ab){3} (?:ab){3}$"),
+            case(vec!["ababab  ababab"], "^(?:ab){3} {2}(?:ab){3}$"),
+            case(vec!["a ababab ababab"], "^a(?: (?:ab){3}){2}$"),
+            case(vec!["ababab ababab a"], "^a(?:b(?:ab){2} a){2}$"),
+            case(vec!["ababababab abab ababab"], "^ababab(?:(?:ab){2} ){2}(?:ab){3}$"),
             case(vec!["a", "aa"], "^a{1,2}$"),
             case(vec!["aaa", "a", "aa"], "^a{1,3}$"),
             case(vec!["aaaa", "a", "aa"], "^(?:a{1,2}|a{4})$"),
@@ -331,9 +337,9 @@ mod no_conversion {
             case(vec!["aababab"], "^a(?:ab){3}$"),
             case(vec!["abababaa"], "^(?:ab){3}a{2}$"),
             case(vec!["aaaaaabbbbb"], "^a{6}b{5}$"),
-            case(vec!["aabaababab"], "^(?:a{2}b){2}abab$"), // goal: ^(a{2}b){2}(ab){2}$
+            case(vec!["aabaababab"], "^a{2}ba(?:ab){3}$"),
             case(vec!["aaaaaaabbbbbba"], "^a{7}b{6}a$"),
-            case(vec!["abaaaabaaba"], "^abaa(?:a{2}b){2}a$"),
+            case(vec!["abaaaabaaba"], "^abaaa(?:aba){2}$"),
             case(vec!["bbaababb"], "^b{2}a{2}bab{2}$"),
             case(vec!["b", "ba"], "^ba?$"),
             case(vec!["b", "ba", "baa"], "^b(?:a{1,2})?$"),
@@ -483,21 +489,20 @@ mod no_conversion {
                 r#"
                 (?x)
                 ^
+                  a{2}ba
                   (?:
-                    a{2}b
-                  ){2}
-                  abab
+                    ab
+                  ){3}
                 $"#
             )),
             case(vec!["abaaaabaaba"], indoc!(
                 r#"
                 (?x)
                 ^
-                  abaa
+                  abaaa
                   (?:
-                    a{2}b
+                    aba
                   ){2}
-                  a
                 $"#
             )),
             case(vec!["xy̆y̆z", "xy̆y̆y̆y̆z"], indoc!(
@@ -565,6 +570,7 @@ mod no_conversion {
             case(vec!["aaa"], "^aaa$"),
             case(vec!["aaaa"], "^a{4}$"),
             case(vec!["aaaaa"], "^a{5}$"),
+            case(vec!["ababababab abab ababab"], "^(?:ab){5} abab ababab$"),
             case(vec!["aabbaaaabbbabbbbba"], "^aabba{4}bbbab{5}a$"),
             case(vec!["baabaaaaaabb"], "^baaba{6}bb$"),
             case(vec!["ababab"], "^ababab$"),
@@ -595,7 +601,8 @@ mod no_conversion {
             case(vec!["ababab"], "^ababab$"),
             case(vec!["abcabcabc"], "^(?:abc){3}$"),
             case(vec!["abcabcabc", "dede"], "^(?:dede|(?:abc){3})$"),
-            case(vec!["abcabcabc", "defgdefg"], "^(?:(?:defg){2}|(?:abc){3})$")
+            case(vec!["abcabcabc", "defgdefg"], "^(?:(?:defg){2}|(?:abc){3})$"),
+            case(vec!["ababababab abab ababab"], "^ababab(?:abab ){2}ababab$")
         )]
         fn succeeds_with_increased_minimum_substring_length(
             test_cases: Vec<&str>,
@@ -614,7 +621,8 @@ mod no_conversion {
             case(vec!["abcabcabc"], "^abcabcabc$"),
             case(vec!["abcabcabcabc"], "^(?:abc){4}$"),
             case(vec!["aaaaaaaaaaaa"], "^aaaaaaaaaaaa$"),
-            case(vec!["abababab", "abcabcabcabc"], "^(?:abababab|(?:abc){4})$")
+            case(vec!["abababab", "abcabcabcabc"], "^(?:abababab|(?:abc){4})$"),
+            case(vec!["ababababab abab ababab"], "^ababababab abab ababab$")
         )]
         fn succeeds_with_increased_minimum_repetitions_and_substring_length(
             test_cases: Vec<&str>,
@@ -962,7 +970,7 @@ mod word_conversion {
         #[rstest(test_cases, expected_output,
             case(
                 vec!["I   ♥♥♥ 36 and ٣ and y̆y̆ and 💩💩."],
-                "^\\w {3}♥{3} \\w{2} \\w{3} \\w \\w{3} \\w{4} \\w{3} 💩{2}\\.$"
+                "^\\w {3}♥{3} \\w{2}(?: \\w{3} \\w){2}(?:\\w{3} ){2}💩{2}\\.$"
             )
         )]
         fn succeeds(test_cases: Vec<&str>, expected_output: &str) {
@@ -976,7 +984,7 @@ mod word_conversion {
         #[rstest(test_cases, expected_output,
             case(
                 vec!["I   ♥♥♥ 36 and ٣ and y̆y̆ and 💩💩."],
-                "^\\w {3}\\u{2665}{3} \\w{2} \\w{3} \\w \\w{3} \\w{4} \\w{3} \\u{1f4a9}{2}\\.$"
+                "^\\w {3}\\u{2665}{3} \\w{2}(?: \\w{3} \\w){2}(?:\\w{3} ){2}\\u{1f4a9}{2}\\.$"
             )
         )]
         fn succeeds_with_escape_option(test_cases: Vec<&str>, expected_output: &str) {
@@ -991,7 +999,7 @@ mod word_conversion {
         #[rstest(test_cases, expected_output,
             case(
                 vec!["I   ♥♥♥ 36 and ٣ and y̆y̆ and 💩💩."],
-                "^\\w {3}\\u{2665}{3} \\w{2} \\w{3} \\w \\w{3} \\w{4} \\w{3} (?:\\u{d83d}\\u{dca9}){2}\\.$"
+                "^\\w {3}\\u{2665}{3} \\w{2}(?: \\w{3} \\w){2}(?:\\w{3} ){2}(?:\\u{d83d}\\u{dca9}){2}\\.$"
             )
         )]
         fn succeeds_with_escape_and_surrogate_option(test_cases: Vec<&str>, expected_output: &str) {
@@ -1241,7 +1249,7 @@ mod digit_word_conversion {
         #[rstest(test_cases, expected_output,
             case(
                 vec!["I   ♥♥♥ 36 and ٣ and y̆y̆ and 💩💩."],
-                "^\\w {3}♥{3} \\d(?:\\d \\w{3} ){2}\\w{4} \\w{3} 💩{2}\\.$"
+                "^\\w {3}♥{3} \\d(?:\\d \\w{3} ){2}\\w(?:\\w{3} ){2}💩{2}\\.$"
             )
         )]
         fn succeeds(test_cases: Vec<&str>, expected_output: &str) {
@@ -1255,7 +1263,7 @@ mod digit_word_conversion {
         #[rstest(test_cases, expected_output,
             case(
                 vec!["I   ♥♥♥ 36 and ٣ and y̆y̆ and 💩💩."],
-                "^\\w {3}\\u{2665}{3} \\d(?:\\d \\w{3} ){2}\\w{4} \\w{3} \\u{1f4a9}{2}\\.$"
+                "^\\w {3}\\u{2665}{3} \\d(?:\\d \\w{3} ){2}\\w(?:\\w{3} ){2}\\u{1f4a9}{2}\\.$"
             )
         )]
         fn succeeds_with_escape_option(test_cases: Vec<&str>, expected_output: &str) {
@@ -1270,7 +1278,7 @@ mod digit_word_conversion {
         #[rstest(test_cases, expected_output,
             case(
                 vec!["I   ♥♥♥ 36 and ٣ and y̆y̆ and 💩💩."],
-                "^\\w {3}\\u{2665}{3} \\d(?:\\d \\w{3} ){2}\\w{4} \\w{3} (?:\\u{d83d}\\u{dca9}){2}\\.$"
+                "^\\w {3}\\u{2665}{3} \\d(?:\\d \\w{3} ){2}\\w(?:\\w{3} ){2}(?:\\u{d83d}\\u{dca9}){2}\\.$"
             )
         )]
         fn succeeds_with_escape_and_surrogate_option(test_cases: Vec<&str>, expected_output: &str) {
@@ -1339,7 +1347,7 @@ mod space_word_conversion {
         #[rstest(test_cases, expected_output,
             case(
                 vec!["I   ♥♥♥ 36 and ٣ and y̆y̆ and 💩💩."],
-                "^\\w\\s{3}♥{3}\\s\\w{2}\\s\\w{3}\\s\\w\\s\\w{3}\\s\\w{4}\\s\\w{3}\\s💩{2}\\.$"
+                "^\\w\\s{3}♥{3}\\s\\w{2}(?:\\s\\w{3}\\s\\w){2}(?:\\w{3}\\s){2}💩{2}\\.$"
             )
         )]
         fn succeeds(test_cases: Vec<&str>, expected_output: &str) {
@@ -1353,7 +1361,7 @@ mod space_word_conversion {
         #[rstest(test_cases, expected_output,
             case(
                 vec!["I   ♥♥♥ 36 and ٣ and y̆y̆ and 💩💩."],
-                "^\\w\\s{3}\\u{2665}{3}\\s\\w{2}\\s\\w{3}\\s\\w\\s\\w{3}\\s\\w{4}\\s\\w{3}\\s\\u{1f4a9}{2}\\.$"
+                "^\\w\\s{3}\\u{2665}{3}\\s\\w{2}(?:\\s\\w{3}\\s\\w){2}(?:\\w{3}\\s){2}\\u{1f4a9}{2}\\.$"
             )
         )]
         fn succeeds_with_escape_option(test_cases: Vec<&str>, expected_output: &str) {
@@ -1368,7 +1376,7 @@ mod space_word_conversion {
         #[rstest(test_cases, expected_output,
             case(
                 vec!["I   ♥♥♥ 36 and ٣ and y̆y̆ and 💩💩."],
-                "^\\w\\s{3}\\u{2665}{3}\\s\\w{2}\\s\\w{3}\\s\\w\\s\\w{3}\\s\\w{4}\\s\\w{3}\\s(?:\\u{d83d}\\u{dca9}){2}\\.$"
+                "^\\w\\s{3}\\u{2665}{3}\\s\\w{2}(?:\\s\\w{3}\\s\\w){2}(?:\\w{3}\\s){2}(?:\\u{d83d}\\u{dca9}){2}\\.$"
             )
         )]
         fn succeeds_with_escape_and_surrogate_option(test_cases: Vec<&str>, expected_output: &str) {
@@ -1437,7 +1445,7 @@ mod digit_space_word_conversion {
         #[rstest(test_cases, expected_output,
             case(
                 vec!["I   ♥♥♥ 36 and ٣ and y̆y̆ and 💩💩."],
-                "^\\w\\s{3}♥{3}\\s\\d(?:\\d\\s\\w{3}\\s){2}\\w{4}\\s\\w{3}\\s💩{2}\\.$"
+                "^\\w\\s{3}♥{3}\\s\\d(?:\\d\\s\\w{3}\\s){2}\\w(?:\\w{3}\\s){2}💩{2}\\.$"
             )
         )]
         fn succeeds(test_cases: Vec<&str>, expected_output: &str) {
@@ -1456,7 +1464,7 @@ mod digit_space_word_conversion {
         #[rstest(test_cases, expected_output,
             case(
                 vec!["I   ♥♥♥ 36 and ٣ and y̆y̆ and 💩💩."],
-                "^\\w\\s{3}\\u{2665}{3}\\s\\d(?:\\d\\s\\w{3}\\s){2}\\w{4}\\s\\w{3}\\s\\u{1f4a9}{2}\\.$"
+                "^\\w\\s{3}\\u{2665}{3}\\s\\d(?:\\d\\s\\w{3}\\s){2}\\w(?:\\w{3}\\s){2}\\u{1f4a9}{2}\\.$"
             )
         )]
         fn succeeds_with_escape_option(test_cases: Vec<&str>, expected_output: &str) {
@@ -1476,7 +1484,7 @@ mod digit_space_word_conversion {
         #[rstest(test_cases, expected_output,
             case(
                 vec!["I   ♥♥♥ 36 and ٣ and y̆y̆ and 💩💩."],
-                "^\\w\\s{3}\\u{2665}{3}\\s\\d(?:\\d\\s\\w{3}\\s){2}\\w{4}\\s\\w{3}\\s(?:\\u{d83d}\\u{dca9}){2}\\.$"
+                "^\\w\\s{3}\\u{2665}{3}\\s\\d(?:\\d\\s\\w{3}\\s){2}\\w(?:\\w{3}\\s){2}(?:\\u{d83d}\\u{dca9}){2}\\.$"
             )
         )]
         fn succeeds_with_escape_and_surrogate_option(test_cases: Vec<&str>, expected_output: &str) {
@@ -1585,7 +1593,7 @@ mod non_space_conversion {
         #[rstest(test_cases, expected_output,
             case(
                 vec!["I   ♥♥♥ 36 and ٣ and y̆y̆ and 💩💩."],
-                "^\\S {3}\\S{3} \\S{2} \\S{3} \\S \\S{3} \\S{4} \\S{3} \\S{3}$"
+                "^\\S {3}\\S(?:\\S{2} ){2}\\S{3} (?:\\S(?: \\S{3}){2}){2}$"
             )
         )]
         fn succeeds(test_cases: Vec<&str>, expected_output: &str) {
@@ -1769,7 +1777,7 @@ mod non_space_non_word_conversion {
         #[rstest(test_cases, expected_output,
             case(
                 vec!["I   ♥♥♥ 36 and ٣ and y̆y̆ and 💩💩."],
-                "^\\S\\W{7}\\S{2}\\W\\S{3}\\W\\S\\W\\S{3}\\W\\S{4}\\W\\S{3}\\W{4}$"
+                "^\\S\\W{7}\\S(?:\\S\\W\\S{3}\\W){2}\\S{4}\\W\\S{3}\\W{4}$"
             )
         )]
         fn succeeds(test_cases: Vec<&str>, expected_output: &str) {
@@ -1888,7 +1896,7 @@ mod space_non_space_conversion {
         #[rstest(test_cases, expected_output,
             case(
                 vec!["I   ♥♥♥ 36 and ٣ and y̆y̆ and 💩💩."],
-                "^\\S\\s{3}\\S{3}\\s\\S{2}\\s\\S{3}\\s\\S\\s\\S{3}\\s\\S{4}\\s\\S{3}\\s\\S{3}$"
+                "^\\S\\s{3}\\S(?:\\S{2}\\s){2}\\S{3}\\s(?:\\S(?:\\s\\S{3}){2}){2}$"
             )
         )]
         fn succeeds(test_cases: Vec<&str>, expected_output: &str) {
@@ -1928,7 +1936,7 @@ mod word_non_word_conversion {
         #[rstest(test_cases, expected_output,
             case(
                 vec!["I   ♥♥♥ 36 and ٣ and y̆y̆ and 💩💩."],
-                "^\\w\\W{7}\\w{2}\\W\\w{3}\\W\\w\\W\\w{3}\\W\\w{4}\\W\\w{3}\\W{4}$"
+                "^\\w\\W{7}\\w(?:\\w\\W\\w{3}\\W){2}\\w{4}\\W\\w{3}\\W{4}$"
             )
         )]
         fn succeeds(test_cases: Vec<&str>, expected_output: &str) {

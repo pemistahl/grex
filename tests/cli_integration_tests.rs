@@ -855,7 +855,7 @@ mod word_conversion {
             let mut grex = init_command();
             grex.args(&["--repetitions", "--words", TEST_CASE]);
             grex.assert().success().stdout(predicate::eq(
-                "^\\w {3}♥{3} \\w{2} \\w{3} \\w \\w{3} \\w{4} \\w{3} 💩{2}\\.$\n",
+                "^\\w {3}♥{3} \\w{2}(?: \\w{3} \\w){2}(?:\\w{3} ){2}💩{2}\\.$\n",
             ));
         }
 
@@ -864,7 +864,7 @@ mod word_conversion {
             let mut grex = init_command();
             grex.args(&["--repetitions", "--words", "--escape", TEST_CASE]);
             grex.assert().success().stdout(predicate::eq(
-                "^\\w {3}\\u{2665}{3} \\w{2} \\w{3} \\w \\w{3} \\w{4} \\w{3} \\u{1f4a9}{2}\\.$\n",
+                "^\\w {3}\\u{2665}{3} \\w{2}(?: \\w{3} \\w){2}(?:\\w{3} ){2}\\u{1f4a9}{2}\\.$\n",
             ));
         }
 
@@ -879,7 +879,7 @@ mod word_conversion {
                 TEST_CASE,
             ]);
             grex.assert().success().stdout(predicate::eq(
-                "^\\w {3}\\u{2665}{3} \\w{2} \\w{3} \\w \\w{3} \\w{4} \\w{3} (?:\\u{d83d}\\u{dca9}){2}\\.$\n",
+                "^\\w {3}\\u{2665}{3} \\w{2}(?: \\w{3} \\w){2}(?:\\w{3} ){2}(?:\\u{d83d}\\u{dca9}){2}\\.$\n",
             ));
         }
 
@@ -891,7 +891,14 @@ mod word_conversion {
                 r#"
                 (?x)
                 ^
-                  \w\ {3}♥{3}\ \w{2}\ \w{3}\ \w\ \w{3}\ \w{4}\ \w{3}\ 💩{2}\.
+                  \w\ {3}♥{3}\ \w{2}
+                  (?:
+                    \ \w{3}\ \w
+                  ){2}
+                  (?:
+                    \w{3}\ 
+                  ){2}
+                  💩{2}\.
                 $
                 "#
             )));
@@ -911,7 +918,14 @@ mod word_conversion {
                 r#"
                 (?x)
                 ^
-                  \w\ {3}\u{2665}{3}\ \w{2}\ \w{3}\ \w\ \w{3}\ \w{4}\ \w{3}\ \u{1f4a9}{2}\.
+                  \w\ {3}\u{2665}{3}\ \w{2}
+                  (?:
+                    \ \w{3}\ \w
+                  ){2}
+                  (?:
+                    \w{3}\ 
+                  ){2}
+                  \u{1f4a9}{2}\.
                 $
                 "#
             )));
@@ -932,7 +946,13 @@ mod word_conversion {
                 r#"
                 (?x)
                 ^
-                  \w\ {3}\u{2665}{3}\ \w{2}\ \w{3}\ \w\ \w{3}\ \w{4}\ \w{3}\ 
+                  \w\ {3}\u{2665}{3}\ \w{2}
+                  (?:
+                    \ \w{3}\ \w
+                  ){2}
+                  (?:
+                    \w{3}\ 
+                  ){2}
                   (?:
                     \u{d83d}\u{dca9}
                   ){2}
@@ -1263,7 +1283,7 @@ mod digit_word_conversion {
             let mut grex = init_command();
             grex.args(&["--repetitions", "--digits", "--words", TEST_CASE]);
             grex.assert().success().stdout(predicate::eq(
-                "^\\w {3}♥{3} \\d(?:\\d \\w{3} ){2}\\w{4} \\w{3} 💩{2}\\.$\n",
+                "^\\w {3}♥{3} \\d(?:\\d \\w{3} ){2}\\w(?:\\w{3} ){2}💩{2}\\.$\n",
             ));
         }
 
@@ -1278,7 +1298,7 @@ mod digit_word_conversion {
                 TEST_CASE,
             ]);
             grex.assert().success().stdout(predicate::eq(
-                "^\\w {3}\\u{2665}{3} \\d(?:\\d \\w{3} ){2}\\w{4} \\w{3} \\u{1f4a9}{2}\\.$\n",
+                "^\\w {3}\\u{2665}{3} \\d(?:\\d \\w{3} ){2}\\w(?:\\w{3} ){2}\\u{1f4a9}{2}\\.$\n",
             ));
         }
 
@@ -1294,7 +1314,7 @@ mod digit_word_conversion {
                 TEST_CASE,
             ]);
             grex.assert().success().stdout(predicate::eq(
-                "^\\w {3}\\u{2665}{3} \\d(?:\\d \\w{3} ){2}\\w{4} \\w{3} (?:\\u{d83d}\\u{dca9}){2}\\.$\n",
+                "^\\w {3}\\u{2665}{3} \\d(?:\\d \\w{3} ){2}\\w(?:\\w{3} ){2}(?:\\u{d83d}\\u{dca9}){2}\\.$\n",
             ));
         }
 
@@ -1316,7 +1336,11 @@ mod digit_word_conversion {
                   (?:
                     \d\ \w{3}\ 
                   ){2}
-                  \w{4}\ \w{3}\ 💩{2}\.
+                  \w
+                  (?:
+                    \w{3}\ 
+                  ){2}
+                  💩{2}\.
                 $
                 "#
             )));
@@ -1341,7 +1365,11 @@ mod digit_word_conversion {
                   (?:
                     \d\ \w{3}\ 
                   ){2}
-                  \w{4}\ \w{3}\ \u{1f4a9}{2}\.
+                  \w
+                  (?:
+                    \w{3}\ 
+                  ){2}
+                  \u{1f4a9}{2}\.
                 $
                 "#
             )));
@@ -1367,7 +1395,10 @@ mod digit_word_conversion {
                   (?:
                     \d\ \w{3}\ 
                   ){2}
-                  \w{4}\ \w{3}\ 
+                  \w
+                  (?:
+                    \w{3}\ 
+                  ){2}
                   (?:
                     \u{d83d}\u{dca9}
                   ){2}
@@ -1476,7 +1507,7 @@ mod space_word_conversion {
             let mut grex = init_command();
             grex.args(&["--repetitions", "--words", "--spaces", TEST_CASE]);
             grex.assert().success().stdout(predicate::eq(
-                "^\\w\\s{3}♥{3}\\s\\w{2}\\s\\w{3}\\s\\w\\s\\w{3}\\s\\w{4}\\s\\w{3}\\s💩{2}\\.$\n",
+                "^\\w\\s{3}♥{3}\\s\\w{2}(?:\\s\\w{3}\\s\\w){2}(?:\\w{3}\\s){2}💩{2}\\.$\n",
             ));
         }
 
@@ -1491,7 +1522,7 @@ mod space_word_conversion {
                 TEST_CASE,
             ]);
             grex.assert().success().stdout(predicate::eq(
-                "^\\w\\s{3}\\u{2665}{3}\\s\\w{2}\\s\\w{3}\\s\\w\\s\\w{3}\\s\\w{4}\\s\\w{3}\\s\\u{1f4a9}{2}\\.$\n",
+                "^\\w\\s{3}\\u{2665}{3}\\s\\w{2}(?:\\s\\w{3}\\s\\w){2}(?:\\w{3}\\s){2}\\u{1f4a9}{2}\\.$\n",
             ));
         }
 
@@ -1507,7 +1538,7 @@ mod space_word_conversion {
                 TEST_CASE,
             ]);
             grex.assert().success().stdout(predicate::eq(
-                "^\\w\\s{3}\\u{2665}{3}\\s\\w{2}\\s\\w{3}\\s\\w\\s\\w{3}\\s\\w{4}\\s\\w{3}\\s(?:\\u{d83d}\\u{dca9}){2}\\.$\n",
+                "^\\w\\s{3}\\u{2665}{3}\\s\\w{2}(?:\\s\\w{3}\\s\\w){2}(?:\\w{3}\\s){2}(?:\\u{d83d}\\u{dca9}){2}\\.$\n",
             ));
         }
 
@@ -1525,7 +1556,14 @@ mod space_word_conversion {
                 r#"
                 (?x)
                 ^
-                  \w\s{3}♥{3}\s\w{2}\s\w{3}\s\w\s\w{3}\s\w{4}\s\w{3}\s💩{2}\.
+                  \w\s{3}♥{3}\s\w{2}
+                  (?:
+                    \s\w{3}\s\w
+                  ){2}
+                  (?:
+                    \w{3}\s
+                  ){2}
+                  💩{2}\.
                 $
                 "#
             )));
@@ -1546,7 +1584,14 @@ mod space_word_conversion {
                 r#"
                 (?x)
                 ^
-                  \w\s{3}\u{2665}{3}\s\w{2}\s\w{3}\s\w\s\w{3}\s\w{4}\s\w{3}\s\u{1f4a9}{2}\.
+                  \w\s{3}\u{2665}{3}\s\w{2}
+                  (?:
+                    \s\w{3}\s\w
+                  ){2}
+                  (?:
+                    \w{3}\s
+                  ){2}
+                  \u{1f4a9}{2}\.
                 $
                 "#
             )));
@@ -1568,7 +1613,13 @@ mod space_word_conversion {
                 r#"
                 (?x)
                 ^
-                  \w\s{3}\u{2665}{3}\s\w{2}\s\w{3}\s\w\s\w{3}\s\w{4}\s\w{3}\s
+                  \w\s{3}\u{2665}{3}\s\w{2}
+                  (?:
+                    \s\w{3}\s\w
+                  ){2}
+                  (?:
+                    \w{3}\s
+                  ){2}
                   (?:
                     \u{d83d}\u{dca9}
                   ){2}
@@ -1692,7 +1743,7 @@ mod digit_space_word_conversion {
                 TEST_CASE,
             ]);
             grex.assert().success().stdout(predicate::eq(
-                "^\\w\\s{3}♥{3}\\s\\d(?:\\d\\s\\w{3}\\s){2}\\w{4}\\s\\w{3}\\s💩{2}\\.$\n",
+                "^\\w\\s{3}♥{3}\\s\\d(?:\\d\\s\\w{3}\\s){2}\\w(?:\\w{3}\\s){2}💩{2}\\.$\n",
             ));
         }
 
@@ -1708,7 +1759,7 @@ mod digit_space_word_conversion {
                 TEST_CASE,
             ]);
             grex.assert().success().stdout(predicate::eq(
-                "^\\w\\s{3}\\u{2665}{3}\\s\\d(?:\\d\\s\\w{3}\\s){2}\\w{4}\\s\\w{3}\\s\\u{1f4a9}{2}\\.$\n",
+                "^\\w\\s{3}\\u{2665}{3}\\s\\d(?:\\d\\s\\w{3}\\s){2}\\w(?:\\w{3}\\s){2}\\u{1f4a9}{2}\\.$\n",
             ));
         }
 
@@ -1725,7 +1776,7 @@ mod digit_space_word_conversion {
                 TEST_CASE,
             ]);
             grex.assert().success().stdout(predicate::eq(
-                "^\\w\\s{3}\\u{2665}{3}\\s\\d(?:\\d\\s\\w{3}\\s){2}\\w{4}\\s\\w{3}\\s(?:\\u{d83d}\\u{dca9}){2}\\.$\n",
+                "^\\w\\s{3}\\u{2665}{3}\\s\\d(?:\\d\\s\\w{3}\\s){2}\\w(?:\\w{3}\\s){2}(?:\\u{d83d}\\u{dca9}){2}\\.$\n",
             ));
         }
 
@@ -1748,7 +1799,11 @@ mod digit_space_word_conversion {
                   (?:
                     \d\s\w{3}\s
                   ){2}
-                  \w{4}\s\w{3}\s💩{2}\.
+                  \w
+                  (?:
+                    \w{3}\s
+                  ){2}
+                  💩{2}\.
                 $
                 "#
             )));
@@ -1774,7 +1829,11 @@ mod digit_space_word_conversion {
                   (?:
                     \d\s\w{3}\s
                   ){2}
-                  \w{4}\s\w{3}\s\u{1f4a9}{2}\.
+                  \w
+                  (?:
+                    \w{3}\s
+                  ){2}
+                  \u{1f4a9}{2}\.
                 $
                 "#
             )));
@@ -1801,7 +1860,10 @@ mod digit_space_word_conversion {
                   (?:
                     \d\s\w{3}\s
                   ){2}
-                  \w{4}\s\w{3}\s
+                  \w
+                  (?:
+                    \w{3}\s
+                  ){2}
                   (?:
                     \u{d83d}\u{dca9}
                   ){2}
@@ -2078,7 +2140,7 @@ mod non_space_conversion {
             let mut grex = init_command();
             grex.args(&["--repetitions", "--non-spaces", TEST_CASE]);
             grex.assert().success().stdout(predicate::eq(
-                "^\\S {3}\\S{3} \\S{2} \\S{3} \\S \\S{3} \\S{4} \\S{3} \\S{3}$\n",
+                "^\\S {3}\\S(?:\\S{2} ){2}\\S{3} (?:\\S(?: \\S{3}){2}){2}$\n",
             ));
         }
 
@@ -2087,7 +2149,7 @@ mod non_space_conversion {
             let mut grex = init_command();
             grex.args(&["--repetitions", "--non-spaces", "--escape", TEST_CASE]);
             grex.assert().success().stdout(predicate::eq(
-                "^\\S {3}\\S{3} \\S{2} \\S{3} \\S \\S{3} \\S{4} \\S{3} \\S{3}$\n",
+                "^\\S {3}\\S(?:\\S{2} ){2}\\S{3} (?:\\S(?: \\S{3}){2}){2}$\n",
             ));
         }
 
@@ -2102,7 +2164,7 @@ mod non_space_conversion {
                 TEST_CASE,
             ]);
             grex.assert().success().stdout(predicate::eq(
-                "^\\S {3}\\S{3} \\S{2} \\S{3} \\S \\S{3} \\S{4} \\S{3} \\S{3}$\n",
+                "^\\S {3}\\S(?:\\S{2} ){2}\\S{3} (?:\\S(?: \\S{3}){2}){2}$\n",
             ));
         }
 
@@ -2114,7 +2176,17 @@ mod non_space_conversion {
                 r#"
                 (?x)
                 ^
-                  \S\ {3}\S{3}\ \S{2}\ \S{3}\ \S\ \S{3}\ \S{4}\ \S{3}\ \S{3}
+                  \S\ {3}\S
+                  (?:
+                    \S{2}\ 
+                  ){2}
+                  \S{3}\ 
+                  (?:
+                    \S
+                    (?:
+                      \ \S{3}
+                    ){2}
+                  ){2}
                 $
                 "#
             )));
@@ -2134,7 +2206,17 @@ mod non_space_conversion {
                 r#"
                 (?x)
                 ^
-                  \S\ {3}\S{3}\ \S{2}\ \S{3}\ \S\ \S{3}\ \S{4}\ \S{3}\ \S{3}
+                  \S\ {3}\S
+                  (?:
+                    \S{2}\ 
+                  ){2}
+                  \S{3}\ 
+                  (?:
+                    \S
+                    (?:
+                      \ \S{3}
+                    ){2}
+                  ){2}
                 $
                 "#
             )));
@@ -2155,7 +2237,17 @@ mod non_space_conversion {
                 r#"
                 (?x)
                 ^
-                  \S\ {3}\S{3}\ \S{2}\ \S{3}\ \S\ \S{3}\ \S{4}\ \S{3}\ \S{3}
+                  \S\ {3}\S
+                  (?:
+                    \S{2}\ 
+                  ){2}
+                  \S{3}\ 
+                  (?:
+                    \S
+                    (?:
+                      \ \S{3}
+                    ){2}
+                  ){2}
                 $
                 "#
             )));
@@ -2859,7 +2951,7 @@ mod non_space_non_word_conversion {
             let mut grex = init_command();
             grex.args(&["--repetitions", "--non-spaces", "--non-words", TEST_CASE]);
             grex.assert().success().stdout(predicate::eq(
-                "^\\S\\W{7}\\S{2}\\W\\S{3}\\W\\S\\W\\S{3}\\W\\S{4}\\W\\S{3}\\W{4}$\n",
+                "^\\S\\W{7}\\S(?:\\S\\W\\S{3}\\W){2}\\S{4}\\W\\S{3}\\W{4}$\n",
             ));
         }
 
@@ -2874,7 +2966,7 @@ mod non_space_non_word_conversion {
                 TEST_CASE,
             ]);
             grex.assert().success().stdout(predicate::eq(
-                "^\\S\\W{7}\\S{2}\\W\\S{3}\\W\\S\\W\\S{3}\\W\\S{4}\\W\\S{3}\\W{4}$\n",
+                "^\\S\\W{7}\\S(?:\\S\\W\\S{3}\\W){2}\\S{4}\\W\\S{3}\\W{4}$\n",
             ));
         }
 
@@ -2890,7 +2982,7 @@ mod non_space_non_word_conversion {
                 TEST_CASE,
             ]);
             grex.assert().success().stdout(predicate::eq(
-                "^\\S\\W{7}\\S{2}\\W\\S{3}\\W\\S\\W\\S{3}\\W\\S{4}\\W\\S{3}\\W{4}$\n",
+                "^\\S\\W{7}\\S(?:\\S\\W\\S{3}\\W){2}\\S{4}\\W\\S{3}\\W{4}$\n",
             ));
         }
 
@@ -2908,7 +3000,11 @@ mod non_space_non_word_conversion {
                 r#"
                 (?x)
                 ^
-                  \S\W{7}\S{2}\W\S{3}\W\S\W\S{3}\W\S{4}\W\S{3}\W{4}
+                  \S\W{7}\S
+                  (?:
+                    \S\W\S{3}\W
+                  ){2}
+                  \S{4}\W\S{3}\W{4}
                 $
                 "#
             )));
@@ -2929,7 +3025,11 @@ mod non_space_non_word_conversion {
                 r#"
                 (?x)
                 ^
-                  \S\W{7}\S{2}\W\S{3}\W\S\W\S{3}\W\S{4}\W\S{3}\W{4}
+                  \S\W{7}\S
+                  (?:
+                    \S\W\S{3}\W
+                  ){2}
+                  \S{4}\W\S{3}\W{4}
                 $
                 "#
             )));
@@ -2951,7 +3051,11 @@ mod non_space_non_word_conversion {
                 r#"
                 (?x)
                 ^
-                  \S\W{7}\S{2}\W\S{3}\W\S\W\S{3}\W\S{4}\W\S{3}\W{4}
+                  \S\W{7}\S
+                  (?:
+                    \S\W\S{3}\W
+                  ){2}
+                  \S{4}\W\S{3}\W{4}
                 $
                 "#
             )));
@@ -3494,7 +3598,7 @@ mod space_non_space_conversion {
             let mut grex = init_command();
             grex.args(&["--repetitions", "--spaces", "--non-spaces", TEST_CASE]);
             grex.assert().success().stdout(predicate::eq(
-                "^\\S\\s{3}\\S{3}\\s\\S{2}\\s\\S{3}\\s\\S\\s\\S{3}\\s\\S{4}\\s\\S{3}\\s\\S{3}$\n",
+                "^\\S\\s{3}\\S(?:\\S{2}\\s){2}\\S{3}\\s(?:\\S(?:\\s\\S{3}){2}){2}$\n",
             ));
         }
 
@@ -3509,7 +3613,7 @@ mod space_non_space_conversion {
                 TEST_CASE,
             ]);
             grex.assert().success().stdout(predicate::eq(
-                "^\\S\\s{3}\\S{3}\\s\\S{2}\\s\\S{3}\\s\\S\\s\\S{3}\\s\\S{4}\\s\\S{3}\\s\\S{3}$\n",
+                "^\\S\\s{3}\\S(?:\\S{2}\\s){2}\\S{3}\\s(?:\\S(?:\\s\\S{3}){2}){2}$\n",
             ));
         }
 
@@ -3525,7 +3629,7 @@ mod space_non_space_conversion {
                 TEST_CASE,
             ]);
             grex.assert().success().stdout(predicate::eq(
-                "^\\S\\s{3}\\S{3}\\s\\S{2}\\s\\S{3}\\s\\S\\s\\S{3}\\s\\S{4}\\s\\S{3}\\s\\S{3}$\n",
+                "^\\S\\s{3}\\S(?:\\S{2}\\s){2}\\S{3}\\s(?:\\S(?:\\s\\S{3}){2}){2}$\n",
             ));
         }
 
@@ -3543,7 +3647,17 @@ mod space_non_space_conversion {
                 r#"
                 (?x)
                 ^
-                  \S\s{3}\S{3}\s\S{2}\s\S{3}\s\S\s\S{3}\s\S{4}\s\S{3}\s\S{3}
+                  \S\s{3}\S
+                  (?:
+                    \S{2}\s
+                  ){2}
+                  \S{3}\s
+                  (?:
+                    \S
+                    (?:
+                      \s\S{3}
+                    ){2}
+                  ){2}
                 $
                 "#
             )));
@@ -3564,7 +3678,17 @@ mod space_non_space_conversion {
                 r#"
                 (?x)
                 ^
-                  \S\s{3}\S{3}\s\S{2}\s\S{3}\s\S\s\S{3}\s\S{4}\s\S{3}\s\S{3}
+                  \S\s{3}\S
+                  (?:
+                    \S{2}\s
+                  ){2}
+                  \S{3}\s
+                  (?:
+                    \S
+                    (?:
+                      \s\S{3}
+                    ){2}
+                  ){2}
                 $
                 "#
             )));
@@ -3586,7 +3710,17 @@ mod space_non_space_conversion {
                 r#"
                 (?x)
                 ^
-                  \S\s{3}\S{3}\s\S{2}\s\S{3}\s\S\s\S{3}\s\S{4}\s\S{3}\s\S{3}
+                  \S\s{3}\S
+                  (?:
+                    \S{2}\s
+                  ){2}
+                  \S{3}\s
+                  (?:
+                    \S
+                    (?:
+                      \s\S{3}
+                    ){2}
+                  ){2}
                 $
                 "#
             )));
@@ -3691,7 +3825,7 @@ mod word_non_word_conversion {
             let mut grex = init_command();
             grex.args(&["--repetitions", "--words", "--non-words", TEST_CASE]);
             grex.assert().success().stdout(predicate::eq(
-                "^\\w\\W{7}\\w{2}\\W\\w{3}\\W\\w\\W\\w{3}\\W\\w{4}\\W\\w{3}\\W{4}$\n",
+                "^\\w\\W{7}\\w(?:\\w\\W\\w{3}\\W){2}\\w{4}\\W\\w{3}\\W{4}$\n",
             ));
         }
 
@@ -3706,7 +3840,7 @@ mod word_non_word_conversion {
                 TEST_CASE,
             ]);
             grex.assert().success().stdout(predicate::eq(
-                "^\\w\\W{7}\\w{2}\\W\\w{3}\\W\\w\\W\\w{3}\\W\\w{4}\\W\\w{3}\\W{4}$\n",
+                "^\\w\\W{7}\\w(?:\\w\\W\\w{3}\\W){2}\\w{4}\\W\\w{3}\\W{4}$\n",
             ));
         }
 
@@ -3722,7 +3856,7 @@ mod word_non_word_conversion {
                 TEST_CASE,
             ]);
             grex.assert().success().stdout(predicate::eq(
-                "^\\w\\W{7}\\w{2}\\W\\w{3}\\W\\w\\W\\w{3}\\W\\w{4}\\W\\w{3}\\W{4}$\n",
+                "^\\w\\W{7}\\w(?:\\w\\W\\w{3}\\W){2}\\w{4}\\W\\w{3}\\W{4}$\n",
             ));
         }
 
@@ -3740,7 +3874,11 @@ mod word_non_word_conversion {
                 r#"
                 (?x)
                 ^
-                  \w\W{7}\w{2}\W\w{3}\W\w\W\w{3}\W\w{4}\W\w{3}\W{4}
+                  \w\W{7}\w
+                  (?:
+                    \w\W\w{3}\W
+                  ){2}
+                  \w{4}\W\w{3}\W{4}
                 $
                 "#
             )));
@@ -3761,7 +3899,11 @@ mod word_non_word_conversion {
                 r#"
                 (?x)
                 ^
-                  \w\W{7}\w{2}\W\w{3}\W\w\W\w{3}\W\w{4}\W\w{3}\W{4}
+                  \w\W{7}\w
+                  (?:
+                    \w\W\w{3}\W
+                  ){2}
+                  \w{4}\W\w{3}\W{4}
                 $
                 "#
             )));
@@ -3783,7 +3925,11 @@ mod word_non_word_conversion {
                 r#"
                 (?x)
                 ^
-                  \w\W{7}\w{2}\W\w{3}\W\w\W\w{3}\W\w{4}\W\w{3}\W{4}
+                  \w\W{7}\w
+                  (?:
+                    \w\W\w{3}\W
+                  ){2}
+                  \w{4}\W\w{3}\W{4}
                 $
                 "#
             )));
