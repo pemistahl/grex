@@ -77,7 +77,7 @@ fn format_character_class(
     char_set: &BTreeSet<char>,
     config: &RegExpConfig,
 ) -> Result {
-    let chars_to_escape = ['[', ']', '\\', '-', '^'];
+    let chars_to_escape = ['[', ']', '\\', '-', '^', '$'];
     let escaped_char_set = char_set
         .iter()
         .map(|c| {

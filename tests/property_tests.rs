@@ -229,15 +229,14 @@ proptest! {
         let regexp = RegExpBuilder::from(&test_cases_vec).without_start_anchor().build();
         if let Ok(compiled_regexp) = compile_regexp(&regexp) {
             for test_case in test_cases_vec {
-                let matches = compiled_regexp.find_iter(&test_case).collect::<Vec<_>>();
-                let substrings = matches.iter().map(|m| m.as_str()).collect::<Vec<_>>();
+                let substrings = compiled_regexp.find_iter(&test_case).map(|m| m.as_str()).collect::<Vec<_>>();
                 prop_assert_eq!(
-                    matches.len(),
+                    substrings.len(),
                     1,
                     "expression '{}' does not match test case '{}' entirely but {} of its substrings: {:?}",
                     regexp,
                     test_case,
-                    matches.len(),
+                    substrings.len(),
                     substrings
                 );
             }
@@ -252,15 +251,14 @@ proptest! {
         let regexp = RegExpBuilder::from(&test_cases_vec).without_end_anchor().build();
         if let Ok(compiled_regexp) = compile_regexp(&regexp) {
             for test_case in test_cases_vec {
-                let matches = compiled_regexp.find_iter(&test_case).collect::<Vec<_>>();
-                let substrings = matches.iter().map(|m| m.as_str()).collect::<Vec<_>>();
+                let substrings = compiled_regexp.find_iter(&test_case).map(|m| m.as_str()).collect::<Vec<_>>();
                 prop_assert_eq!(
-                    matches.len(),
+                    substrings.len(),
                     1,
                     "expression '{}' does not match test case '{}' entirely but {} of its substrings: {:?}",
                     regexp,
                     test_case,
-                    matches.len(),
+                    substrings.len(),
                     substrings
                 );
             }
@@ -275,15 +273,14 @@ proptest! {
         let regexp = RegExpBuilder::from(&test_cases_vec).without_anchors().build();
         if let Ok(compiled_regexp) = compile_regexp(&regexp) {
             for test_case in test_cases_vec {
-                let matches = compiled_regexp.find_iter(&test_case).collect::<Vec<_>>();
-                let substrings = matches.iter().map(|m| m.as_str()).collect::<Vec<_>>();
+                let substrings = compiled_regexp.find_iter(&test_case).map(|m| m.as_str()).collect::<Vec<_>>();
                 prop_assert_eq!(
-                    matches.len(),
+                    substrings.len(),
                     1,
                     "expression '{}' does not match test case '{}' entirely but {} of its substrings: {:?}",
                     regexp,
                     test_case,
-                    matches.len(),
+                    substrings.len(),
                     substrings
                 );
             }

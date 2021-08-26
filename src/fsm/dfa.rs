@@ -37,21 +37,18 @@ pub struct Dfa {
 }
 
 impl Dfa {
-    pub(crate) fn from(grapheme_clusters: Vec<GraphemeCluster>, config: &RegExpConfig) -> Self {
+    pub(crate) fn from(
+        grapheme_clusters: &[GraphemeCluster],
+        is_minimized: bool,
+        config: &RegExpConfig,
+    ) -> Self {
         let mut dfa = Self::new(config);
         for cluster in grapheme_clusters {
             dfa.insert(cluster);
         }
-
-        let is_exactly_one_anchor_disabled =
-            config.is_start_anchor_disabled ^ config.is_end_anchor_disabled;
-        let is_no_anchor_disabled =
-            !config.is_start_anchor_disabled && !config.is_end_anchor_disabled;
-
-        if is_exactly_one_anchor_disabled || is_no_anchor_disabled {
+        if is_minimized {
             dfa.minimize();
         }
-
         dfa
     }
 
@@ -88,17 +85,17 @@ impl Dfa {
         }
     }
 
-    fn insert(&mut self, cluster: GraphemeCluster) {
+    fn insert(&mut self, cluster: &GraphemeCluster) {
         let mut current_state = self.initial_state;
 
         for grapheme in cluster.graphemes() {
             self.alphabet.insert(grapheme.clone());
-            current_state = self.get_next_state(current_state, grapheme);
+            current_state = self.return_next_state(current_state, grapheme);
         }
         self.final_state_indices.insert(current_state.index());
     }
 
-    fn get_next_state(&mut self, current_state: State, edge_label: &Grapheme) -> State {
+    fn return_next_state(&mut self, current_state: State, edge_label: &Grapheme) -> State {
         match self.find_next_state(current_state, edge_label) {
             Some(next_state) => next_state,
             None => self.add_new_state(current_state, edge_label),
@@ -276,7 +273,7 @@ mod tests {
         let mut dfa = Dfa::new(&config);
         assert_eq!(dfa.state_count(), 1);
 
-        dfa.insert(GraphemeCluster::from("abcd", &RegExpConfig::new()));
+        dfa.insert(&GraphemeCluster::from("abcd", &RegExpConfig::new()));
         assert_eq!(dfa.state_count(), 5);
     }
 
@@ -284,7 +281,8 @@ mod tests {
     fn test_is_final_state() {
         let config = RegExpConfig::new();
         let dfa = Dfa::from(
-            vec![GraphemeCluster::from("abcd", &RegExpConfig::new())],
+            &vec![GraphemeCluster::from("abcd", &RegExpConfig::new())],
+            true,
             &config,
         );
 
@@ -299,10 +297,11 @@ mod tests {
     fn test_outgoing_edges() {
         let config = RegExpConfig::new();
         let dfa = Dfa::from(
-            vec![
+            &vec![
                 GraphemeCluster::from("abcd", &RegExpConfig::new()),
                 GraphemeCluster::from("abxd", &RegExpConfig::new()),
             ],
+            true,
             &config,
         );
         let state = State::new(2);
@@ -330,10 +329,11 @@ mod tests {
     fn test_states_in_depth_first_order() {
         let config = RegExpConfig::new();
         let dfa = Dfa::from(
-            vec![
+            &vec![
                 GraphemeCluster::from("abcd", &RegExpConfig::new()),
                 GraphemeCluster::from("axyz", &RegExpConfig::new()),
             ],
+            true,
             &config,
         );
         let states = dfa.states_in_depth_first_order();
@@ -403,11 +403,11 @@ mod tests {
         assert_eq!(dfa.graph.node_count(), 1);
         assert_eq!(dfa.graph.edge_count(), 0);
 
-        dfa.insert(GraphemeCluster::from("abcd", &RegExpConfig::new()));
+        dfa.insert(&GraphemeCluster::from("abcd", &RegExpConfig::new()));
         assert_eq!(dfa.graph.node_count(), 5);
         assert_eq!(dfa.graph.edge_count(), 4);
 
-        dfa.insert(GraphemeCluster::from("abxd", &RegExpConfig::new()));
+        dfa.insert(&GraphemeCluster::from("abxd", &RegExpConfig::new()));
         assert_eq!(dfa.graph.node_count(), 7);
         assert_eq!(dfa.graph.edge_count(), 6);
 
@@ -420,10 +420,11 @@ mod tests {
     fn test_dfa_constructor() {
         let config = RegExpConfig::new();
         let dfa = Dfa::from(
-            vec![
+            &vec![
                 GraphemeCluster::from("abcd", &RegExpConfig::new()),
                 GraphemeCluster::from("abxd", &RegExpConfig::new()),
             ],
+            true,
             &config,
         );
         assert_eq!(dfa.graph.node_count(), 5);

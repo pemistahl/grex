@@ -306,6 +306,21 @@ mod no_conversion {
             assert_that_regexp_is_correct(regexp, expected_output, &test_cases);
             assert_that_regexp_matches_test_cases(expected_output, test_cases);
         }
+
+        #[rstest(test_cases, expected_output,
+            case(vec!["bab", "b", "cb", "bba"], "(?:(?:ba|c)b|b(?:ba)?)"),
+            case(vec!["a", "aba", "baaa", "aaab"], "(?:baaa|a(?:aab|ba)?)"),
+            case(vec!["a", "abab", "bbb", "aaac"], "(?:a(?:bab|aac)?|bbb)"),
+            case(
+                // https://github.com/pemistahl/grex/issues/31
+                vec!["agbhd", "eibcd", "egbcd", "fbjbf", "agbh", "eibc", "egbc", "ebc", "fbc", "cd", "f", "c", "abcd", "ebcd", "fbcd"], 
+                "(?:(?:e(?:[gi])?bc|(?:fb)?c)d?|a(?:gbhd?|bcd)|f(?:bjbf)?)")
+        )]
+        fn succeeds_without_anchors(test_cases: Vec<&str>, expected_output: &str) {
+            let regexp = RegExpBuilder::from(&test_cases).without_anchors().build();
+            assert_that_regexp_is_correct(regexp, expected_output, &test_cases);
+            assert_that_regexp_matches_test_cases(expected_output, test_cases);
+        }
     }
 
     mod repetition {
@@ -2056,8 +2071,9 @@ fn assert_that_regexp_is_correct(regexp: String, expected_output: &str, test_cas
 fn assert_that_regexp_matches_test_cases(expected_output: &str, test_cases: Vec<&str>) {
     let re = Regex::new(expected_output).unwrap();
     for test_case in test_cases {
-        assert!(
-            re.is_match(test_case),
+        assert_eq!(
+            re.find_iter(test_case).count(),
+            1,
             "\n\n\"{}\" does not match regex {}\n\n",
             test_case,
             expected_output

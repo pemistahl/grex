@@ -37,8 +37,17 @@ impl RegExp {
         }
         Self::sort(test_cases);
         let grapheme_clusters = Self::grapheme_clusters(test_cases, config);
-        let dfa = Dfa::from(grapheme_clusters, config);
-        let ast = Expression::from(dfa, config);
+        let mut dfa = Dfa::from(&grapheme_clusters, true, config);
+        let mut ast = Expression::from(dfa, config);
+
+        if config.is_start_anchor_disabled
+            && config.is_end_anchor_disabled
+            && !Self::is_each_test_case_matched(&mut ast, test_cases)
+        {
+            dfa = Dfa::from(&grapheme_clusters, false, config);
+            ast = Expression::from(dfa, config);
+        }
+
         Self {
             ast,
             config: config.clone(),
@@ -77,6 +86,30 @@ impl RegExp {
         }
 
         clusters
+    }
+
+    fn is_each_test_case_matched(expr: &mut Expression, test_cases: &[String]) -> bool {
+        for _ in 1..test_cases.len() {
+            let regex = Regex::new(&expr.to_string()).unwrap();
+            if test_cases
+                .iter()
+                .all(|test_case| regex.find_iter(test_case).count() == 1)
+            {
+                return true;
+            } else if let Expression::Alternation(options, _) = expr {
+                options.rotate_right(1);
+            } else if let Expression::Concatenation(first, second, _) = expr {
+                let a: &mut Expression = first;
+                let b: &mut Expression = second;
+
+                if let Expression::Alternation(options, _) = a {
+                    options.rotate_right(1);
+                } else if let Expression::Alternation(options, _) = b {
+                    options.rotate_right(1);
+                }
+            }
+        }
+        false
     }
 }
 
