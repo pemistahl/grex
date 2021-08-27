@@ -14,11 +14,10 @@
  * limitations under the License.
  */
 
-use assert_cmd::prelude::*;
+use assert_cmd::Command;
 use indoc::indoc;
 use predicates::prelude::*;
 use std::io::Write;
-use std::process::Command;
 use tempfile::NamedTempFile;
 
 const TEST_CASE: &str = "I   ♥♥♥ 36 and ٣ and y̆y̆ and 💩💩.";
@@ -125,6 +124,27 @@ mod no_conversion {
             grex.args(&["-f", file.path().to_str().unwrap()]);
             grex.assert()
                 .success()
+                .stdout(predicate::eq("^(?:b\\\\n|äöü|[ac♥])$\n"));
+        }
+
+        #[test]
+        fn succeeds_with_test_cases_from_stdin() {
+            let mut grex = init_command();
+            grex.write_stdin("a\nb\\n\n\nc\näöü\n♥")
+                .arg("-")
+                .assert()
+                .stdout(predicate::eq("^(?:b\\\\n|äöü|[ac♥])$\n"));
+        }
+
+        #[test]
+        fn succeeds_with_file_from_stdin() {
+            let mut file = NamedTempFile::new().unwrap();
+            writeln!(file, "a\nb\\n\n\nc\näöü\n♥").unwrap();
+
+            let mut grex = init_command();
+            grex.write_stdin(file.path().to_str().unwrap())
+                .args(&["-f", "-"])
+                .assert()
                 .stdout(predicate::eq("^(?:b\\\\n|äöü|[ac♥])$\n"));
         }
 

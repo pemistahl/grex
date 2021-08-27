@@ -16,7 +16,7 @@
 
 use grex::{Feature, RegExpBuilder};
 use itertools::Itertools;
-use std::io::{Error, ErrorKind};
+use std::io::{BufRead, Error, ErrorKind, Read};
 use std::path::PathBuf;
 use structopt::clap::AppSettings::{AllowLeadingHyphen, ColoredHelp};
 use structopt::StructOpt;
@@ -276,10 +276,31 @@ fn main() {
 }
 
 fn obtain_input(cli: &Cli) -> Result<Vec<String>, Error> {
+    let is_stdin_available = atty::isnt(atty::Stream::Stdin);
+
     if !cli.input.is_empty() {
-        Ok(cli.input.clone())
+        let is_single_item = cli.input.len() == 1;
+        let is_hyphen = cli.input.get(0).unwrap() == "-";
+
+        if is_single_item && is_hyphen && is_stdin_available {
+            Ok(std::io::stdin()
+                .lock()
+                .lines()
+                .map(|line| line.unwrap())
+                .collect_vec())
+        } else {
+            Ok(cli.input.clone())
+        }
     } else if let Some(file_path) = &cli.file_path {
-        match std::fs::read_to_string(&file_path) {
+        let is_hyphen = file_path.as_os_str() == "-";
+        let path = if is_hyphen && is_stdin_available {
+            let mut stdin_file_path = String::new();
+            std::io::stdin().read_to_string(&mut stdin_file_path)?;
+            PathBuf::from(stdin_file_path.trim())
+        } else {
+            file_path.to_path_buf()
+        };
+        match std::fs::read_to_string(&path) {
             Ok(file_content) => Ok(file_content.lines().map(|it| it.to_string()).collect_vec()),
             Err(error) => Err(error),
         }
