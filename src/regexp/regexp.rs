@@ -299,6 +299,7 @@ fn apply_verbose_mode(regexp: String, config: &RegExpConfig) -> String {
         .replace(" ", "\\s")
         .replace(" ", "\\s")
         .replace("\u{85}", "\\s")
+        .replace("\u{2005}", "\\s")
         .replace("\u{2028}", "\\s")
         .replace(" ", "\\ ");
 
