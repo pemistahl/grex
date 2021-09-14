@@ -233,6 +233,22 @@
 //! ));
 //! ```
 //!
+//! ### 4.8 Disable anchors
+//!
+//! By default, the anchors `^` and `$` are put around every generated regular expression in order
+//! to ensure that it matches only the test cases given as input. Often enough, however, it is
+//! desired to use the generated pattern as part of a larger one. For this purpose, the anchors
+//! can be disabled, either separately or both of them.
+//!
+//! ```
+//! use grex::RegExpBuilder;
+//!
+//! let regexp = RegExpBuilder::from(&["a", "aa", "aaa"])
+//!     .without_anchors()
+//!     .build();
+//! assert_eq!(regexp, "a(?:aa?)?");
+//! ```
+//!
 //! ### 5. How does it work?
 //!
 //! 1. A [deterministic finite automaton](https://en.wikipedia.org/wiki/Deterministic_finite_automaton) (DFA)

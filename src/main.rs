@@ -181,8 +181,8 @@ struct Cli {
     #[structopt(
         name = "no-start-anchor",
         long,
-        help = "Removes caret anchor '^' from resulting regular expression",
-        long_help = "Removes caret anchor '^' from resulting regular expression.\n\n\
+        help = "Removes the caret anchor '^' from the resulting regular expression",
+        long_help = "Removes the caret anchor '^' from the resulting regular expression.\n\n\
                      By default, the caret anchor is added to every generated regular\n\
                      expression which guarantees that the expression matches the test cases\n\
                      given as input only at the start of a string.\n\
@@ -195,8 +195,8 @@ struct Cli {
     #[structopt(
         name = "no-end-anchor",
         long,
-        help = "Removes dollar sign anchor '$' from resulting regular expression",
-        long_help = "Removes dollar sign anchor '$' from resulting regular expression.\n\n\
+        help = "Removes the dollar sign anchor '$' from the resulting regular expression",
+        long_help = "Removes the dollar sign anchor '$' from the resulting regular expression.\n\n\
                      By default, the dollar sign anchor is added to every generated regular\n\
                      expression which guarantees that the expression matches the test cases\n\
                      given as input only at the end of a string.\n\
@@ -209,8 +209,8 @@ struct Cli {
     #[structopt(
         name = "no-anchors",
         long,
-        help = "Removes caret and dollar sign anchors from resulting regular expression",
-        long_help = "Removes caret and dollar sign anchors from resulting regular expression.\n\n\
+        help = "Removes the caret and dollar sign anchors from the resulting regular expression",
+        long_help = "Removes the caret and dollar sign anchors from the resulting regular expression.\n\n\
                      By default, anchors are added to every generated regular expression\n\
                      which guarantee that the expression exactly matches only the test cases\n\
                      given as input and nothing else.\n\
