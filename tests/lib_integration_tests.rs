@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-use grex::{Feature, RegExpBuilder};
+use grex::RegExpBuilder;
 use indoc::indoc;
 use regex::Regex;
 use rstest::rstest;
@@ -105,7 +105,7 @@ mod no_conversion {
         )]
         fn succeeds_with_ignore_case_option(test_cases: Vec<&str>, expected_output: &str) {
             let regexp = RegExpBuilder::from(&test_cases)
-                .with_conversion_of(&[Feature::CaseInsensitivity])
+                .with_case_insensitive_matching()
                 .build();
             assert_that_regexp_is_correct(regexp, expected_output, &test_cases);
             assert_that_regexp_matches_test_cases(expected_output, test_cases);
@@ -150,7 +150,7 @@ mod no_conversion {
         )]
         fn succeeds_with_capturing_groups_option(test_cases: Vec<&str>, expected_output: &str) {
             let regexp = RegExpBuilder::from(&test_cases)
-                .with_conversion_of(&[Feature::CapturingGroup])
+                .with_capturing_groups()
                 .build();
             assert_that_regexp_is_correct(regexp, expected_output, &test_cases);
             assert_that_regexp_matches_test_cases(expected_output, test_cases);
@@ -287,7 +287,7 @@ mod no_conversion {
             expected_output: &str,
         ) {
             let regexp = RegExpBuilder::from(&test_cases)
-                .with_conversion_of(&[Feature::CaseInsensitivity])
+                .with_case_insensitive_matching()
                 .with_verbose_mode()
                 .build();
             assert_that_regexp_is_correct(regexp, expected_output, &test_cases);
@@ -387,7 +387,7 @@ mod no_conversion {
         )]
         fn succeeds(test_cases: Vec<&str>, expected_output: &str) {
             let regexp = RegExpBuilder::from(&test_cases)
-                .with_conversion_of(&[Feature::Repetition])
+                .with_conversion_of_repetitions()
                 .build();
             assert_that_regexp_is_correct(regexp, expected_output, &test_cases);
             assert_that_regexp_matches_test_cases(expected_output, test_cases);
@@ -399,7 +399,8 @@ mod no_conversion {
         )]
         fn succeeds_with_ignore_case_option(test_cases: Vec<&str>, expected_output: &str) {
             let regexp = RegExpBuilder::from(&test_cases)
-                .with_conversion_of(&[Feature::Repetition, Feature::CaseInsensitivity])
+                .with_conversion_of_repetitions()
+                .with_case_insensitive_matching()
                 .build();
             assert_that_regexp_is_correct(regexp, expected_output, &test_cases);
             assert_that_regexp_matches_test_cases(expected_output, test_cases);
@@ -415,7 +416,7 @@ mod no_conversion {
         )]
         fn succeeds_with_escape_option(test_cases: Vec<&str>, expected_output: &str) {
             let regexp = RegExpBuilder::from(&test_cases)
-                .with_conversion_of(&[Feature::Repetition])
+                .with_conversion_of_repetitions()
                 .with_escaping_of_non_ascii_chars(false)
                 .build();
             assert_that_regexp_is_correct(regexp, expected_output, &test_cases);
@@ -432,7 +433,7 @@ mod no_conversion {
         )]
         fn succeeds_with_escape_and_surrogate_option(test_cases: Vec<&str>, expected_output: &str) {
             let regexp = RegExpBuilder::from(&test_cases)
-                .with_conversion_of(&[Feature::Repetition])
+                .with_conversion_of_repetitions()
                 .with_escaping_of_non_ascii_chars(true)
                 .build();
             assert_that_regexp_is_correct(regexp, expected_output, &test_cases);
@@ -567,7 +568,7 @@ mod no_conversion {
         )]
         fn succeeds_with_verbose_mode_option(test_cases: Vec<&str>, expected_output: &str) {
             let regexp = RegExpBuilder::from(&test_cases)
-                .with_conversion_of(&[Feature::Repetition])
+                .with_conversion_of_repetitions()
                 .with_verbose_mode()
                 .build();
             assert_that_regexp_is_correct(regexp, expected_output, &test_cases);
@@ -604,7 +605,7 @@ mod no_conversion {
             expected_output: &str,
         ) {
             let regexp = RegExpBuilder::from(&test_cases)
-                .with_conversion_of(&[Feature::Repetition])
+                .with_conversion_of_repetitions()
                 .with_minimum_repetitions(3)
                 .build();
             assert_that_regexp_is_correct(regexp, expected_output, &test_cases);
@@ -624,7 +625,7 @@ mod no_conversion {
             expected_output: &str,
         ) {
             let regexp = RegExpBuilder::from(&test_cases)
-                .with_conversion_of(&[Feature::Repetition])
+                .with_conversion_of_repetitions()
                 .with_minimum_substring_length(3)
                 .build();
             assert_that_regexp_is_correct(regexp, expected_output, &test_cases);
@@ -644,7 +645,7 @@ mod no_conversion {
             expected_output: &str,
         ) {
             let regexp = RegExpBuilder::from(&test_cases)
-                .with_conversion_of(&[Feature::Repetition])
+                .with_conversion_of_repetitions()
                 .with_minimum_repetitions(3)
                 .with_minimum_substring_length(3)
                 .build();
@@ -682,7 +683,7 @@ mod digit_conversion {
         )]
         fn succeeds(test_cases: Vec<&str>, expected_output: &str) {
             let regexp = RegExpBuilder::from(&test_cases)
-                .with_conversion_of(&[Feature::Digit])
+                .with_conversion_of_digits()
                 .build();
             assert_that_regexp_is_correct(regexp, expected_output, &test_cases);
             assert_that_regexp_matches_test_cases(expected_output, test_cases);
@@ -696,7 +697,7 @@ mod digit_conversion {
         )]
         fn succeeds_with_escape_option(test_cases: Vec<&str>, expected_output: &str) {
             let regexp = RegExpBuilder::from(&test_cases)
-                .with_conversion_of(&[Feature::Digit])
+                .with_conversion_of_digits()
                 .with_escaping_of_non_ascii_chars(false)
                 .build();
             assert_that_regexp_is_correct(regexp, expected_output, &test_cases);
@@ -711,7 +712,7 @@ mod digit_conversion {
         )]
         fn succeeds_with_escape_and_surrogate_option(test_cases: Vec<&str>, expected_output: &str) {
             let regexp = RegExpBuilder::from(&test_cases)
-                .with_conversion_of(&[Feature::Digit])
+                .with_conversion_of_digits()
                 .with_escaping_of_non_ascii_chars(true)
                 .build();
             assert_that_regexp_is_correct(regexp, expected_output, &test_cases);
@@ -729,7 +730,8 @@ mod digit_conversion {
         )]
         fn succeeds(test_cases: Vec<&str>, expected_output: &str) {
             let regexp = RegExpBuilder::from(&test_cases)
-                .with_conversion_of(&[Feature::Repetition, Feature::Digit])
+                .with_conversion_of_repetitions()
+                .with_conversion_of_digits()
                 .build();
             assert_that_regexp_is_correct(regexp, expected_output, &test_cases);
             assert_that_regexp_matches_test_cases(expected_output, test_cases);
@@ -743,7 +745,8 @@ mod digit_conversion {
         )]
         fn succeeds_with_escape_option(test_cases: Vec<&str>, expected_output: &str) {
             let regexp = RegExpBuilder::from(&test_cases)
-                .with_conversion_of(&[Feature::Repetition, Feature::Digit])
+                .with_conversion_of_repetitions()
+                .with_conversion_of_digits()
                 .with_escaping_of_non_ascii_chars(false)
                 .build();
             assert_that_regexp_is_correct(regexp, expected_output, &test_cases);
@@ -758,7 +761,8 @@ mod digit_conversion {
         )]
         fn succeeds_with_escape_and_surrogate_option(test_cases: Vec<&str>, expected_output: &str) {
             let regexp = RegExpBuilder::from(&test_cases)
-                .with_conversion_of(&[Feature::Repetition, Feature::Digit])
+                .with_conversion_of_repetitions()
+                .with_conversion_of_digits()
                 .with_escaping_of_non_ascii_chars(true)
                 .build();
             assert_that_regexp_is_correct(regexp, expected_output, &test_cases);
@@ -778,7 +782,8 @@ mod digit_conversion {
             expected_output: &str,
         ) {
             let regexp = RegExpBuilder::from(&test_cases)
-                .with_conversion_of(&[Feature::Repetition, Feature::Digit])
+                .with_conversion_of_repetitions()
+                .with_conversion_of_digits()
                 .with_minimum_repetitions(2)
                 .build();
             assert_that_regexp_is_correct(regexp, expected_output, &test_cases);
@@ -809,7 +814,7 @@ mod space_conversion {
         )]
         fn succeeds(test_cases: Vec<&str>, expected_output: &str) {
             let regexp = RegExpBuilder::from(&test_cases)
-                .with_conversion_of(&[Feature::Space])
+                .with_conversion_of_whitespace()
                 .build();
             assert_that_regexp_is_correct(regexp, expected_output, &test_cases);
             assert_that_regexp_matches_test_cases(expected_output, test_cases);
@@ -823,7 +828,7 @@ mod space_conversion {
         )]
         fn succeeds_with_escape_option(test_cases: Vec<&str>, expected_output: &str) {
             let regexp = RegExpBuilder::from(&test_cases)
-                .with_conversion_of(&[Feature::Space])
+                .with_conversion_of_whitespace()
                 .with_escaping_of_non_ascii_chars(false)
                 .build();
             assert_that_regexp_is_correct(regexp, expected_output, &test_cases);
@@ -838,7 +843,7 @@ mod space_conversion {
         )]
         fn succeeds_with_escape_and_surrogate_option(test_cases: Vec<&str>, expected_output: &str) {
             let regexp = RegExpBuilder::from(&test_cases)
-                .with_conversion_of(&[Feature::Space])
+                .with_conversion_of_whitespace()
                 .with_escaping_of_non_ascii_chars(true)
                 .build();
             assert_that_regexp_is_correct(regexp, expected_output, &test_cases);
@@ -856,7 +861,8 @@ mod space_conversion {
         )]
         fn succeeds(test_cases: Vec<&str>, expected_output: &str) {
             let regexp = RegExpBuilder::from(&test_cases)
-                .with_conversion_of(&[Feature::Repetition, Feature::Space])
+                .with_conversion_of_repetitions()
+                .with_conversion_of_whitespace()
                 .build();
             assert_that_regexp_is_correct(regexp, expected_output, &test_cases);
             assert_that_regexp_matches_test_cases(expected_output, test_cases);
@@ -870,7 +876,8 @@ mod space_conversion {
         )]
         fn succeeds_with_escape_option(test_cases: Vec<&str>, expected_output: &str) {
             let regexp = RegExpBuilder::from(&test_cases)
-                .with_conversion_of(&[Feature::Repetition, Feature::Space])
+                .with_conversion_of_repetitions()
+                .with_conversion_of_whitespace()
                 .with_escaping_of_non_ascii_chars(false)
                 .build();
             assert_that_regexp_is_correct(regexp, expected_output, &test_cases);
@@ -885,7 +892,8 @@ mod space_conversion {
         )]
         fn succeeds_with_escape_and_surrogate_option(test_cases: Vec<&str>, expected_output: &str) {
             let regexp = RegExpBuilder::from(&test_cases)
-                .with_conversion_of(&[Feature::Repetition, Feature::Space])
+                .with_conversion_of_repetitions()
+                .with_conversion_of_whitespace()
                 .with_escaping_of_non_ascii_chars(true)
                 .build();
             assert_that_regexp_is_correct(regexp, expected_output, &test_cases);
@@ -908,7 +916,8 @@ mod space_conversion {
             expected_output: &str,
         ) {
             let regexp = RegExpBuilder::from(&test_cases)
-                .with_conversion_of(&[Feature::Repetition, Feature::Space])
+                .with_conversion_of_repetitions()
+                .with_conversion_of_whitespace()
                 .with_minimum_repetitions(2)
                 .build();
             assert_that_regexp_is_correct(regexp, expected_output, &test_cases);
@@ -943,7 +952,7 @@ mod word_conversion {
         )]
         fn succeeds(test_cases: Vec<&str>, expected_output: &str) {
             let regexp = RegExpBuilder::from(&test_cases)
-                .with_conversion_of(&[Feature::Word])
+                .with_conversion_of_words()
                 .build();
             assert_that_regexp_is_correct(regexp, expected_output, &test_cases);
             assert_that_regexp_matches_test_cases(expected_output, test_cases);
@@ -957,7 +966,7 @@ mod word_conversion {
         )]
         fn succeeds_with_escape_option(test_cases: Vec<&str>, expected_output: &str) {
             let regexp = RegExpBuilder::from(&test_cases)
-                .with_conversion_of(&[Feature::Word])
+                .with_conversion_of_words()
                 .with_escaping_of_non_ascii_chars(false)
                 .build();
             assert_that_regexp_is_correct(regexp, expected_output, &test_cases);
@@ -972,7 +981,7 @@ mod word_conversion {
         )]
         fn succeeds_with_escape_and_surrogate_option(test_cases: Vec<&str>, expected_output: &str) {
             let regexp = RegExpBuilder::from(&test_cases)
-                .with_conversion_of(&[Feature::Word])
+                .with_conversion_of_words()
                 .with_escaping_of_non_ascii_chars(true)
                 .build();
             assert_that_regexp_is_correct(regexp, expected_output, &test_cases);
@@ -990,7 +999,8 @@ mod word_conversion {
         )]
         fn succeeds(test_cases: Vec<&str>, expected_output: &str) {
             let regexp = RegExpBuilder::from(&test_cases)
-                .with_conversion_of(&[Feature::Repetition, Feature::Word])
+                .with_conversion_of_repetitions()
+                .with_conversion_of_words()
                 .build();
             assert_that_regexp_is_correct(regexp, expected_output, &test_cases);
             assert_that_regexp_matches_test_cases(expected_output, test_cases);
@@ -1004,7 +1014,8 @@ mod word_conversion {
         )]
         fn succeeds_with_escape_option(test_cases: Vec<&str>, expected_output: &str) {
             let regexp = RegExpBuilder::from(&test_cases)
-                .with_conversion_of(&[Feature::Repetition, Feature::Word])
+                .with_conversion_of_repetitions()
+                .with_conversion_of_words()
                 .with_escaping_of_non_ascii_chars(false)
                 .build();
             assert_that_regexp_is_correct(regexp, expected_output, &test_cases);
@@ -1019,7 +1030,8 @@ mod word_conversion {
         )]
         fn succeeds_with_escape_and_surrogate_option(test_cases: Vec<&str>, expected_output: &str) {
             let regexp = RegExpBuilder::from(&test_cases)
-                .with_conversion_of(&[Feature::Repetition, Feature::Word])
+                .with_conversion_of_repetitions()
+                .with_conversion_of_words()
                 .with_escaping_of_non_ascii_chars(true)
                 .build();
             assert_that_regexp_is_correct(regexp, expected_output, &test_cases);
@@ -1042,7 +1054,8 @@ mod word_conversion {
             expected_output: &str,
         ) {
             let regexp = RegExpBuilder::from(&test_cases)
-                .with_conversion_of(&[Feature::Repetition, Feature::Word])
+                .with_conversion_of_repetitions()
+                .with_conversion_of_words()
                 .with_minimum_repetitions(2)
                 .build();
             assert_that_regexp_is_correct(regexp, expected_output, &test_cases);
@@ -1065,7 +1078,8 @@ mod digit_space_conversion {
         )]
         fn succeeds(test_cases: Vec<&str>, expected_output: &str) {
             let regexp = RegExpBuilder::from(&test_cases)
-                .with_conversion_of(&[Feature::Digit, Feature::Space])
+                .with_conversion_of_digits()
+                .with_conversion_of_whitespace()
                 .build();
             assert_that_regexp_is_correct(regexp, expected_output, &test_cases);
             assert_that_regexp_matches_test_cases(expected_output, test_cases);
@@ -1079,7 +1093,8 @@ mod digit_space_conversion {
         )]
         fn succeeds_with_escape_option(test_cases: Vec<&str>, expected_output: &str) {
             let regexp = RegExpBuilder::from(&test_cases)
-                .with_conversion_of(&[Feature::Digit, Feature::Space])
+                .with_conversion_of_digits()
+                .with_conversion_of_whitespace()
                 .with_escaping_of_non_ascii_chars(false)
                 .build();
             assert_that_regexp_is_correct(regexp, expected_output, &test_cases);
@@ -1094,7 +1109,8 @@ mod digit_space_conversion {
         )]
         fn succeeds_with_escape_and_surrogate_option(test_cases: Vec<&str>, expected_output: &str) {
             let regexp = RegExpBuilder::from(&test_cases)
-                .with_conversion_of(&[Feature::Digit, Feature::Space])
+                .with_conversion_of_digits()
+                .with_conversion_of_whitespace()
                 .with_escaping_of_non_ascii_chars(true)
                 .build();
             assert_that_regexp_is_correct(regexp, expected_output, &test_cases);
@@ -1112,7 +1128,9 @@ mod digit_space_conversion {
         )]
         fn succeeds(test_cases: Vec<&str>, expected_output: &str) {
             let regexp = RegExpBuilder::from(&test_cases)
-                .with_conversion_of(&[Feature::Repetition, Feature::Digit, Feature::Space])
+                .with_conversion_of_repetitions()
+                .with_conversion_of_digits()
+                .with_conversion_of_whitespace()
                 .build();
             assert_that_regexp_is_correct(regexp, expected_output, &test_cases);
             assert_that_regexp_matches_test_cases(expected_output, test_cases);
@@ -1126,7 +1144,9 @@ mod digit_space_conversion {
         )]
         fn succeeds_with_escape_option(test_cases: Vec<&str>, expected_output: &str) {
             let regexp = RegExpBuilder::from(&test_cases)
-                .with_conversion_of(&[Feature::Repetition, Feature::Digit, Feature::Space])
+                .with_conversion_of_repetitions()
+                .with_conversion_of_digits()
+                .with_conversion_of_whitespace()
                 .with_escaping_of_non_ascii_chars(false)
                 .build();
             assert_that_regexp_is_correct(regexp, expected_output, &test_cases);
@@ -1141,7 +1161,9 @@ mod digit_space_conversion {
         )]
         fn succeeds_with_escape_and_surrogate_option(test_cases: Vec<&str>, expected_output: &str) {
             let regexp = RegExpBuilder::from(&test_cases)
-                .with_conversion_of(&[Feature::Repetition, Feature::Digit, Feature::Space])
+                .with_conversion_of_repetitions()
+                .with_conversion_of_digits()
+                .with_conversion_of_whitespace()
                 .with_escaping_of_non_ascii_chars(true)
                 .build();
             assert_that_regexp_is_correct(regexp, expected_output, &test_cases);
@@ -1164,7 +1186,9 @@ mod digit_space_conversion {
             expected_output: &str,
         ) {
             let regexp = RegExpBuilder::from(&test_cases)
-                .with_conversion_of(&[Feature::Repetition, Feature::Digit, Feature::Space])
+                .with_conversion_of_repetitions()
+                .with_conversion_of_digits()
+                .with_conversion_of_whitespace()
                 .with_minimum_repetitions(2)
                 .build();
             assert_that_regexp_is_correct(regexp, expected_output, &test_cases);
@@ -1180,7 +1204,7 @@ mod digit_space_conversion {
             expected_output: &str,
         ) {
             let regexp = RegExpBuilder::from(&test_cases)
-                .with_conversion_of(&[Feature::Repetition])
+                .with_conversion_of_repetitions()
                 .with_minimum_substring_length(3)
                 .build();
             assert_that_regexp_is_correct(regexp, expected_output, &test_cases);
@@ -1198,7 +1222,7 @@ mod digit_space_conversion {
             expected_output: &str,
         ) {
             let regexp = RegExpBuilder::from(&test_cases)
-                .with_conversion_of(&[Feature::Repetition])
+                .with_conversion_of_repetitions()
                 .with_minimum_repetitions(2)
                 .with_minimum_substring_length(3)
                 .build();
@@ -1222,7 +1246,8 @@ mod digit_word_conversion {
         )]
         fn succeeds(test_cases: Vec<&str>, expected_output: &str) {
             let regexp = RegExpBuilder::from(&test_cases)
-                .with_conversion_of(&[Feature::Digit, Feature::Word])
+                .with_conversion_of_digits()
+                .with_conversion_of_words()
                 .build();
             assert_that_regexp_is_correct(regexp, expected_output, &test_cases);
             assert_that_regexp_matches_test_cases(expected_output, test_cases);
@@ -1236,7 +1261,8 @@ mod digit_word_conversion {
         )]
         fn succeeds_with_escape_option(test_cases: Vec<&str>, expected_output: &str) {
             let regexp = RegExpBuilder::from(&test_cases)
-                .with_conversion_of(&[Feature::Digit, Feature::Word])
+                .with_conversion_of_digits()
+                .with_conversion_of_words()
                 .with_escaping_of_non_ascii_chars(false)
                 .build();
             assert_that_regexp_is_correct(regexp, expected_output, &test_cases);
@@ -1251,7 +1277,8 @@ mod digit_word_conversion {
         )]
         fn succeeds_with_escape_and_surrogate_option(test_cases: Vec<&str>, expected_output: &str) {
             let regexp = RegExpBuilder::from(&test_cases)
-                .with_conversion_of(&[Feature::Digit, Feature::Word])
+                .with_conversion_of_digits()
+                .with_conversion_of_words()
                 .with_escaping_of_non_ascii_chars(true)
                 .build();
             assert_that_regexp_is_correct(regexp, expected_output, &test_cases);
@@ -1269,7 +1296,9 @@ mod digit_word_conversion {
         )]
         fn succeeds(test_cases: Vec<&str>, expected_output: &str) {
             let regexp = RegExpBuilder::from(&test_cases)
-                .with_conversion_of(&[Feature::Repetition, Feature::Digit, Feature::Word])
+                .with_conversion_of_repetitions()
+                .with_conversion_of_digits()
+                .with_conversion_of_words()
                 .build();
             assert_that_regexp_is_correct(regexp, expected_output, &test_cases);
             assert_that_regexp_matches_test_cases(expected_output, test_cases);
@@ -1283,7 +1312,9 @@ mod digit_word_conversion {
         )]
         fn succeeds_with_escape_option(test_cases: Vec<&str>, expected_output: &str) {
             let regexp = RegExpBuilder::from(&test_cases)
-                .with_conversion_of(&[Feature::Repetition, Feature::Digit, Feature::Word])
+                .with_conversion_of_repetitions()
+                .with_conversion_of_digits()
+                .with_conversion_of_words()
                 .with_escaping_of_non_ascii_chars(false)
                 .build();
             assert_that_regexp_is_correct(regexp, expected_output, &test_cases);
@@ -1298,7 +1329,9 @@ mod digit_word_conversion {
         )]
         fn succeeds_with_escape_and_surrogate_option(test_cases: Vec<&str>, expected_output: &str) {
             let regexp = RegExpBuilder::from(&test_cases)
-                .with_conversion_of(&[Feature::Repetition, Feature::Digit, Feature::Word])
+                .with_conversion_of_repetitions()
+                .with_conversion_of_digits()
+                .with_conversion_of_words()
                 .with_escaping_of_non_ascii_chars(true)
                 .build();
             assert_that_regexp_is_correct(regexp, expected_output, &test_cases);
@@ -1320,7 +1353,8 @@ mod space_word_conversion {
         )]
         fn succeeds(test_cases: Vec<&str>, expected_output: &str) {
             let regexp = RegExpBuilder::from(&test_cases)
-                .with_conversion_of(&[Feature::Space, Feature::Word])
+                .with_conversion_of_whitespace()
+                .with_conversion_of_words()
                 .build();
             assert_that_regexp_is_correct(regexp, expected_output, &test_cases);
             assert_that_regexp_matches_test_cases(expected_output, test_cases);
@@ -1334,7 +1368,8 @@ mod space_word_conversion {
         )]
         fn succeeds_with_escape_option(test_cases: Vec<&str>, expected_output: &str) {
             let regexp = RegExpBuilder::from(&test_cases)
-                .with_conversion_of(&[Feature::Space, Feature::Word])
+                .with_conversion_of_whitespace()
+                .with_conversion_of_words()
                 .with_escaping_of_non_ascii_chars(false)
                 .build();
             assert_that_regexp_is_correct(regexp, expected_output, &test_cases);
@@ -1349,7 +1384,8 @@ mod space_word_conversion {
         )]
         fn succeeds_with_escape_and_surrogate_option(test_cases: Vec<&str>, expected_output: &str) {
             let regexp = RegExpBuilder::from(&test_cases)
-                .with_conversion_of(&[Feature::Space, Feature::Word])
+                .with_conversion_of_whitespace()
+                .with_conversion_of_words()
                 .with_escaping_of_non_ascii_chars(true)
                 .build();
             assert_that_regexp_is_correct(regexp, expected_output, &test_cases);
@@ -1367,7 +1403,9 @@ mod space_word_conversion {
         )]
         fn succeeds(test_cases: Vec<&str>, expected_output: &str) {
             let regexp = RegExpBuilder::from(&test_cases)
-                .with_conversion_of(&[Feature::Repetition, Feature::Space, Feature::Word])
+                .with_conversion_of_repetitions()
+                .with_conversion_of_whitespace()
+                .with_conversion_of_words()
                 .build();
             assert_that_regexp_is_correct(regexp, expected_output, &test_cases);
             assert_that_regexp_matches_test_cases(expected_output, test_cases);
@@ -1381,7 +1419,9 @@ mod space_word_conversion {
         )]
         fn succeeds_with_escape_option(test_cases: Vec<&str>, expected_output: &str) {
             let regexp = RegExpBuilder::from(&test_cases)
-                .with_conversion_of(&[Feature::Repetition, Feature::Space, Feature::Word])
+                .with_conversion_of_repetitions()
+                .with_conversion_of_whitespace()
+                .with_conversion_of_words()
                 .with_escaping_of_non_ascii_chars(false)
                 .build();
             assert_that_regexp_is_correct(regexp, expected_output, &test_cases);
@@ -1396,7 +1436,9 @@ mod space_word_conversion {
         )]
         fn succeeds_with_escape_and_surrogate_option(test_cases: Vec<&str>, expected_output: &str) {
             let regexp = RegExpBuilder::from(&test_cases)
-                .with_conversion_of(&[Feature::Repetition, Feature::Space, Feature::Word])
+                .with_conversion_of_repetitions()
+                .with_conversion_of_whitespace()
+                .with_conversion_of_words()
                 .with_escaping_of_non_ascii_chars(true)
                 .build();
             assert_that_regexp_is_correct(regexp, expected_output, &test_cases);
@@ -1418,7 +1460,9 @@ mod digit_space_word_conversion {
         )]
         fn succeeds(test_cases: Vec<&str>, expected_output: &str) {
             let regexp = RegExpBuilder::from(&test_cases)
-                .with_conversion_of(&[Feature::Digit, Feature::Space, Feature::Word])
+                .with_conversion_of_digits()
+                .with_conversion_of_whitespace()
+                .with_conversion_of_words()
                 .build();
             assert_that_regexp_is_correct(regexp, expected_output, &test_cases);
             assert_that_regexp_matches_test_cases(expected_output, test_cases);
@@ -1432,7 +1476,9 @@ mod digit_space_word_conversion {
         )]
         fn succeeds_with_escape_option(test_cases: Vec<&str>, expected_output: &str) {
             let regexp = RegExpBuilder::from(&test_cases)
-                .with_conversion_of(&[Feature::Digit, Feature::Space, Feature::Word])
+                .with_conversion_of_digits()
+                .with_conversion_of_whitespace()
+                .with_conversion_of_words()
                 .with_escaping_of_non_ascii_chars(false)
                 .build();
             assert_that_regexp_is_correct(regexp, expected_output, &test_cases);
@@ -1447,7 +1493,9 @@ mod digit_space_word_conversion {
         )]
         fn succeeds_with_escape_and_surrogate_option(test_cases: Vec<&str>, expected_output: &str) {
             let regexp = RegExpBuilder::from(&test_cases)
-                .with_conversion_of(&[Feature::Digit, Feature::Space, Feature::Word])
+                .with_conversion_of_digits()
+                .with_conversion_of_whitespace()
+                .with_conversion_of_words()
                 .with_escaping_of_non_ascii_chars(true)
                 .build();
             assert_that_regexp_is_correct(regexp, expected_output, &test_cases);
@@ -1465,12 +1513,10 @@ mod digit_space_word_conversion {
         )]
         fn succeeds(test_cases: Vec<&str>, expected_output: &str) {
             let regexp = RegExpBuilder::from(&test_cases)
-                .with_conversion_of(&[
-                    Feature::Repetition,
-                    Feature::Digit,
-                    Feature::Space,
-                    Feature::Word,
-                ])
+                .with_conversion_of_repetitions()
+                .with_conversion_of_digits()
+                .with_conversion_of_whitespace()
+                .with_conversion_of_words()
                 .build();
             assert_that_regexp_is_correct(regexp, expected_output, &test_cases);
             assert_that_regexp_matches_test_cases(expected_output, test_cases);
@@ -1484,12 +1530,10 @@ mod digit_space_word_conversion {
         )]
         fn succeeds_with_escape_option(test_cases: Vec<&str>, expected_output: &str) {
             let regexp = RegExpBuilder::from(&test_cases)
-                .with_conversion_of(&[
-                    Feature::Repetition,
-                    Feature::Digit,
-                    Feature::Space,
-                    Feature::Word,
-                ])
+                .with_conversion_of_repetitions()
+                .with_conversion_of_digits()
+                .with_conversion_of_whitespace()
+                .with_conversion_of_words()
                 .with_escaping_of_non_ascii_chars(false)
                 .build();
             assert_that_regexp_is_correct(regexp, expected_output, &test_cases);
@@ -1504,12 +1548,10 @@ mod digit_space_word_conversion {
         )]
         fn succeeds_with_escape_and_surrogate_option(test_cases: Vec<&str>, expected_output: &str) {
             let regexp = RegExpBuilder::from(&test_cases)
-                .with_conversion_of(&[
-                    Feature::Repetition,
-                    Feature::Digit,
-                    Feature::Space,
-                    Feature::Word,
-                ])
+                .with_conversion_of_repetitions()
+                .with_conversion_of_digits()
+                .with_conversion_of_whitespace()
+                .with_conversion_of_words()
                 .with_escaping_of_non_ascii_chars(true)
                 .build();
             assert_that_regexp_is_correct(regexp, expected_output, &test_cases);
@@ -1531,7 +1573,7 @@ mod non_digit_conversion {
         )]
         fn succeeds(test_cases: Vec<&str>, expected_output: &str) {
             let regexp = RegExpBuilder::from(&test_cases)
-                .with_conversion_of(&[Feature::NonDigit])
+                .with_conversion_of_non_digits()
                 .build();
             assert_that_regexp_is_correct(regexp, expected_output, &test_cases);
             assert_that_regexp_matches_test_cases(expected_output, test_cases);
@@ -1545,7 +1587,7 @@ mod non_digit_conversion {
         )]
         fn succeeds_with_escape_option(test_cases: Vec<&str>, expected_output: &str) {
             let regexp = RegExpBuilder::from(&test_cases)
-                .with_conversion_of(&[Feature::NonDigit])
+                .with_conversion_of_non_digits()
                 .with_escaping_of_non_ascii_chars(false)
                 .build();
             assert_that_regexp_is_correct(regexp, expected_output, &test_cases);
@@ -1561,7 +1603,8 @@ mod non_digit_conversion {
         )]
         fn succeeds(test_cases: Vec<&str>, expected_output: &str) {
             let regexp = RegExpBuilder::from(&test_cases)
-                .with_conversion_of(&[Feature::Repetition, Feature::NonDigit])
+                .with_conversion_of_repetitions()
+                .with_conversion_of_non_digits()
                 .build();
             assert_that_regexp_is_correct(regexp, expected_output, &test_cases);
             assert_that_regexp_matches_test_cases(expected_output, test_cases);
@@ -1572,7 +1615,8 @@ mod non_digit_conversion {
         )]
         fn succeeds_with_escape_option(test_cases: Vec<&str>, expected_output: &str) {
             let regexp = RegExpBuilder::from(&test_cases)
-                .with_conversion_of(&[Feature::Repetition, Feature::NonDigit])
+                .with_conversion_of_repetitions()
+                .with_conversion_of_non_digits()
                 .with_escaping_of_non_ascii_chars(false)
                 .build();
             assert_that_regexp_is_correct(regexp, expected_output, &test_cases);
@@ -1595,7 +1639,7 @@ mod non_space_conversion {
         )]
         fn succeeds(test_cases: Vec<&str>, expected_output: &str) {
             let regexp = RegExpBuilder::from(&test_cases)
-                .with_conversion_of(&[Feature::NonSpace])
+                .with_conversion_of_non_whitespace()
                 .build();
             assert_that_regexp_is_correct(regexp, expected_output, &test_cases);
             assert_that_regexp_matches_test_cases(expected_output, test_cases);
@@ -1613,7 +1657,8 @@ mod non_space_conversion {
         )]
         fn succeeds(test_cases: Vec<&str>, expected_output: &str) {
             let regexp = RegExpBuilder::from(&test_cases)
-                .with_conversion_of(&[Feature::Repetition, Feature::NonSpace])
+                .with_conversion_of_repetitions()
+                .with_conversion_of_non_whitespace()
                 .build();
             assert_that_regexp_is_correct(regexp, expected_output, &test_cases);
             assert_that_regexp_matches_test_cases(expected_output, test_cases);
@@ -1635,7 +1680,7 @@ mod non_word_conversion {
         )]
         fn succeeds(test_cases: Vec<&str>, expected_output: &str) {
             let regexp = RegExpBuilder::from(&test_cases)
-                .with_conversion_of(&[Feature::NonWord])
+                .with_conversion_of_non_words()
                 .build();
             assert_that_regexp_is_correct(regexp, expected_output, &test_cases);
             assert_that_regexp_matches_test_cases(expected_output, test_cases);
@@ -1649,7 +1694,7 @@ mod non_word_conversion {
         )]
         fn succeeds_with_escape_option(test_cases: Vec<&str>, expected_output: &str) {
             let regexp = RegExpBuilder::from(&test_cases)
-                .with_conversion_of(&[Feature::NonWord])
+                .with_conversion_of_non_words()
                 .with_escaping_of_non_ascii_chars(false)
                 .build();
             assert_that_regexp_is_correct(regexp, expected_output, &test_cases);
@@ -1668,7 +1713,8 @@ mod non_word_conversion {
         )]
         fn succeeds(test_cases: Vec<&str>, expected_output: &str) {
             let regexp = RegExpBuilder::from(&test_cases)
-                .with_conversion_of(&[Feature::Repetition, Feature::NonWord])
+                .with_conversion_of_repetitions()
+                .with_conversion_of_non_words()
                 .build();
             assert_that_regexp_is_correct(regexp, expected_output, &test_cases);
             assert_that_regexp_matches_test_cases(expected_output, test_cases);
@@ -1682,7 +1728,8 @@ mod non_word_conversion {
         )]
         fn succeeds_with_escape_option(test_cases: Vec<&str>, expected_output: &str) {
             let regexp = RegExpBuilder::from(&test_cases)
-                .with_conversion_of(&[Feature::Repetition, Feature::NonWord])
+                .with_conversion_of_repetitions()
+                .with_conversion_of_non_words()
                 .with_escaping_of_non_ascii_chars(false)
                 .build();
             assert_that_regexp_is_correct(regexp, expected_output, &test_cases);
@@ -1705,7 +1752,8 @@ mod non_digit_non_space_conversion {
         )]
         fn succeeds(test_cases: Vec<&str>, expected_output: &str) {
             let regexp = RegExpBuilder::from(&test_cases)
-                .with_conversion_of(&[Feature::NonDigit, Feature::NonSpace])
+                .with_conversion_of_non_digits()
+                .with_conversion_of_non_whitespace()
                 .build();
             assert_that_regexp_is_correct(regexp, expected_output, &test_cases);
             assert_that_regexp_matches_test_cases(expected_output, test_cases);
@@ -1720,7 +1768,9 @@ mod non_digit_non_space_conversion {
         )]
         fn succeeds(test_cases: Vec<&str>, expected_output: &str) {
             let regexp = RegExpBuilder::from(&test_cases)
-                .with_conversion_of(&[Feature::Repetition, Feature::NonDigit, Feature::NonSpace])
+                .with_conversion_of_repetitions()
+                .with_conversion_of_non_digits()
+                .with_conversion_of_non_whitespace()
                 .build();
             assert_that_regexp_is_correct(regexp, expected_output, &test_cases);
             assert_that_regexp_matches_test_cases(expected_output, test_cases);
@@ -1742,7 +1792,8 @@ mod non_digit_non_word_conversion {
         )]
         fn succeeds(test_cases: Vec<&str>, expected_output: &str) {
             let regexp = RegExpBuilder::from(&test_cases)
-                .with_conversion_of(&[Feature::NonDigit, Feature::NonWord])
+                .with_conversion_of_non_digits()
+                .with_conversion_of_non_words()
                 .build();
             assert_that_regexp_is_correct(regexp, expected_output, &test_cases);
             assert_that_regexp_matches_test_cases(expected_output, test_cases);
@@ -1757,7 +1808,9 @@ mod non_digit_non_word_conversion {
         )]
         fn succeeds(test_cases: Vec<&str>, expected_output: &str) {
             let regexp = RegExpBuilder::from(&test_cases)
-                .with_conversion_of(&[Feature::Repetition, Feature::NonDigit, Feature::NonWord])
+                .with_conversion_of_repetitions()
+                .with_conversion_of_non_digits()
+                .with_conversion_of_non_words()
                 .build();
             assert_that_regexp_is_correct(regexp, expected_output, &test_cases);
             assert_that_regexp_matches_test_cases(expected_output, test_cases);
@@ -1779,7 +1832,8 @@ mod non_space_non_word_conversion {
         )]
         fn succeeds(test_cases: Vec<&str>, expected_output: &str) {
             let regexp = RegExpBuilder::from(&test_cases)
-                .with_conversion_of(&[Feature::NonSpace, Feature::NonWord])
+                .with_conversion_of_non_whitespace()
+                .with_conversion_of_non_words()
                 .build();
             assert_that_regexp_is_correct(regexp, expected_output, &test_cases);
             assert_that_regexp_matches_test_cases(expected_output, test_cases);
@@ -1797,7 +1851,9 @@ mod non_space_non_word_conversion {
         )]
         fn succeeds(test_cases: Vec<&str>, expected_output: &str) {
             let regexp = RegExpBuilder::from(&test_cases)
-                .with_conversion_of(&[Feature::Repetition, Feature::NonSpace, Feature::NonWord])
+                .with_conversion_of_repetitions()
+                .with_conversion_of_non_whitespace()
+                .with_conversion_of_non_words()
                 .build();
             assert_that_regexp_is_correct(regexp, expected_output, &test_cases);
             assert_that_regexp_matches_test_cases(expected_output, test_cases);
@@ -1819,7 +1875,9 @@ mod non_digit_non_space_non_word_conversion {
         )]
         fn succeeds(test_cases: Vec<&str>, expected_output: &str) {
             let regexp = RegExpBuilder::from(&test_cases)
-                .with_conversion_of(&[Feature::NonDigit, Feature::NonSpace, Feature::NonWord])
+                .with_conversion_of_non_digits()
+                .with_conversion_of_non_whitespace()
+                .with_conversion_of_non_words()
                 .build();
             assert_that_regexp_is_correct(regexp, expected_output, &test_cases);
             assert_that_regexp_matches_test_cases(expected_output, test_cases);
@@ -1834,12 +1892,10 @@ mod non_digit_non_space_non_word_conversion {
         )]
         fn succeeds(test_cases: Vec<&str>, expected_output: &str) {
             let regexp = RegExpBuilder::from(&test_cases)
-                .with_conversion_of(&[
-                    Feature::Repetition,
-                    Feature::NonDigit,
-                    Feature::NonSpace,
-                    Feature::NonWord,
-                ])
+                .with_conversion_of_repetitions()
+                .with_conversion_of_non_digits()
+                .with_conversion_of_non_whitespace()
+                .with_conversion_of_non_words()
                 .build();
             assert_that_regexp_is_correct(regexp, expected_output, &test_cases);
             assert_that_regexp_matches_test_cases(expected_output, test_cases);
@@ -1861,7 +1917,8 @@ mod digit_non_digit_conversion {
         )]
         fn succeeds(test_cases: Vec<&str>, expected_output: &str) {
             let regexp = RegExpBuilder::from(&test_cases)
-                .with_conversion_of(&[Feature::Digit, Feature::NonDigit])
+                .with_conversion_of_digits()
+                .with_conversion_of_non_digits()
                 .build();
             assert_that_regexp_is_correct(regexp, expected_output, &test_cases);
             assert_that_regexp_matches_test_cases(expected_output, test_cases);
@@ -1876,7 +1933,9 @@ mod digit_non_digit_conversion {
         )]
         fn succeeds(test_cases: Vec<&str>, expected_output: &str) {
             let regexp = RegExpBuilder::from(&test_cases)
-                .with_conversion_of(&[Feature::Repetition, Feature::Digit, Feature::NonDigit])
+                .with_conversion_of_repetitions()
+                .with_conversion_of_digits()
+                .with_conversion_of_non_digits()
                 .build();
             assert_that_regexp_is_correct(regexp, expected_output, &test_cases);
             assert_that_regexp_matches_test_cases(expected_output, test_cases);
@@ -1898,7 +1957,8 @@ mod space_non_space_conversion {
         )]
         fn succeeds(test_cases: Vec<&str>, expected_output: &str) {
             let regexp = RegExpBuilder::from(&test_cases)
-                .with_conversion_of(&[Feature::Space, Feature::NonSpace])
+                .with_conversion_of_whitespace()
+                .with_conversion_of_non_whitespace()
                 .build();
             assert_that_regexp_is_correct(regexp, expected_output, &test_cases);
             assert_that_regexp_matches_test_cases(expected_output, test_cases);
@@ -1916,7 +1976,9 @@ mod space_non_space_conversion {
         )]
         fn succeeds(test_cases: Vec<&str>, expected_output: &str) {
             let regexp = RegExpBuilder::from(&test_cases)
-                .with_conversion_of(&[Feature::Repetition, Feature::Space, Feature::NonSpace])
+                .with_conversion_of_repetitions()
+                .with_conversion_of_whitespace()
+                .with_conversion_of_non_whitespace()
                 .build();
             assert_that_regexp_is_correct(regexp, expected_output, &test_cases);
             assert_that_regexp_matches_test_cases(expected_output, test_cases);
@@ -1938,7 +2000,8 @@ mod word_non_word_conversion {
         )]
         fn succeeds(test_cases: Vec<&str>, expected_output: &str) {
             let regexp = RegExpBuilder::from(&test_cases)
-                .with_conversion_of(&[Feature::Word, Feature::NonWord])
+                .with_conversion_of_words()
+                .with_conversion_of_non_words()
                 .build();
             assert_that_regexp_is_correct(regexp, expected_output, &test_cases);
             assert_that_regexp_matches_test_cases(expected_output, test_cases);
@@ -1956,7 +2019,9 @@ mod word_non_word_conversion {
         )]
         fn succeeds(test_cases: Vec<&str>, expected_output: &str) {
             let regexp = RegExpBuilder::from(&test_cases)
-                .with_conversion_of(&[Feature::Repetition, Feature::Word, Feature::NonWord])
+                .with_conversion_of_repetitions()
+                .with_conversion_of_words()
+                .with_conversion_of_non_words()
                 .build();
             assert_that_regexp_is_correct(regexp, expected_output, &test_cases);
             assert_that_regexp_matches_test_cases(expected_output, test_cases);

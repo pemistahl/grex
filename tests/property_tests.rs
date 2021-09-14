@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+#![allow(deprecated)]
+
 use grex::{Feature, RegExpBuilder};
 use proptest::prelude::*;
 use regex::{Error, Regex, RegexBuilder};

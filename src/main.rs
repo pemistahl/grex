@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-use grex::{Feature, RegExpBuilder};
+use grex::RegExpBuilder;
 use itertools::Itertools;
 use std::io::{BufRead, Error, ErrorKind, Read};
 use std::path::PathBuf;
@@ -316,46 +316,41 @@ fn handle_input(cli: &Cli, input: Result<Vec<String>, Error>) {
     match input {
         Ok(test_cases) => {
             let mut builder = RegExpBuilder::from(&test_cases);
-            let mut conversion_features = vec![];
 
             if cli.is_digit_converted {
-                conversion_features.push(Feature::Digit);
+                builder.with_conversion_of_digits();
             }
 
             if cli.is_non_digit_converted {
-                conversion_features.push(Feature::NonDigit);
+                builder.with_conversion_of_non_digits();
             }
 
             if cli.is_space_converted {
-                conversion_features.push(Feature::Space);
+                builder.with_conversion_of_whitespace();
             }
 
             if cli.is_non_space_converted {
-                conversion_features.push(Feature::NonSpace);
+                builder.with_conversion_of_non_whitespace();
             }
 
             if cli.is_word_converted {
-                conversion_features.push(Feature::Word);
+                builder.with_conversion_of_words();
             }
 
             if cli.is_non_word_converted {
-                conversion_features.push(Feature::NonWord);
+                builder.with_conversion_of_non_words();
             }
 
             if cli.is_repetition_converted {
-                conversion_features.push(Feature::Repetition);
+                builder.with_conversion_of_repetitions();
             }
 
             if cli.is_case_ignored {
-                conversion_features.push(Feature::CaseInsensitivity);
+                builder.with_case_insensitive_matching();
             }
 
             if cli.is_group_captured {
-                conversion_features.push(Feature::CapturingGroup);
-            }
-
-            if !conversion_features.is_empty() {
-                builder.with_conversion_of(&conversion_features);
+                builder.with_capturing_groups();
             }
 
             if cli.is_non_ascii_char_escaped {
