@@ -62,7 +62,9 @@ jobs:
         if: ${{ matrix.os == 'windows-latest' }}
         run: |
           choco install zip
-          zip target/${{ matrix.target }}/release/grex-${{ steps.get_version.outputs.version }}-${{ matrix.target }}.zip target/${{ matrix.target }}/release/grex.exe
+          cd target/${{ matrix.target }}/release
+          zip grex-${{ steps.get_version.outputs.version }}-${{ matrix.target }}.zip grex.exe
+          cd ../../..
 
       - name: Create tar.gz file on macOS and Linux
         if: ${{ matrix.os != 'windows-latest' }}
@@ -79,9 +81,8 @@ jobs:
           file_glob: true
           file: target/${{ matrix.target }}/release/grex-${{ steps.get_version.outputs.version }}-${{ matrix.target }}.{zip,tar.gz}
 
-      # ENABLE AGAIN FOR NEXT RELEASE 1.3
-      #- name: Upload release to crates.io
-      #  uses: katyo/publish-crates@v1
-      #  if: ${{ matrix.os == 'ubuntu-latest' }}
-      #  with:
-      #    registry-token: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+      - name: Upload release to crates.io
+        uses: katyo/publish-crates@v1
+        if: ${{ matrix.os == 'ubuntu-latest' }}
+        with:
+          registry-token: ${{ secrets.CARGO_REGISTRY_TOKEN }}

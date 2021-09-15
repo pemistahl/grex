@@ -36,9 +36,18 @@ impl RegExp {
             Self::convert_to_lowercase(test_cases);
         }
         Self::sort(test_cases);
-        let grapheme_clusters = Self::grapheme_clusters(&test_cases, config);
-        let dfa = Dfa::from(grapheme_clusters, config);
-        let ast = Expression::from(dfa, config);
+        let grapheme_clusters = Self::grapheme_clusters(test_cases, config);
+        let mut dfa = Dfa::from(&grapheme_clusters, true, config);
+        let mut ast = Expression::from(dfa, config);
+
+        if config.is_start_anchor_disabled
+            && config.is_end_anchor_disabled
+            && !Self::is_each_test_case_matched(&mut ast, test_cases, config)
+        {
+            dfa = Dfa::from(&grapheme_clusters, false, config);
+            ast = Expression::from(dfa, config);
+        }
+
         Self {
             ast,
             config: config.clone(),
@@ -53,7 +62,7 @@ impl RegExp {
         test_cases.sort();
         test_cases.dedup();
         test_cases.sort_by(|a, b| match a.len().cmp(&b.len()) {
-            Ordering::Equal => a.cmp(&b),
+            Ordering::Equal => a.cmp(b),
             other => other,
         });
     }
@@ -78,6 +87,40 @@ impl RegExp {
 
         clusters
     }
+
+    fn is_each_test_case_matched(
+        expr: &mut Expression,
+        test_cases: &[String],
+        config: &RegExpConfig,
+    ) -> bool {
+        let regex = if config.is_output_colorized {
+            let color_replace_regex = Regex::new("\u{1b}\\[(?:\\d+;\\d+|0)m").unwrap();
+            Regex::new(&*color_replace_regex.replace_all(&expr.to_string(), "")).unwrap()
+        } else {
+            Regex::new(&expr.to_string()).unwrap()
+        };
+
+        for _ in 1..test_cases.len() {
+            if test_cases
+                .iter()
+                .all(|test_case| regex.find_iter(test_case).count() == 1)
+            {
+                return true;
+            } else if let Expression::Alternation(options, _) = expr {
+                options.rotate_right(1);
+            } else if let Expression::Concatenation(first, second, _) = expr {
+                let a: &mut Expression = first;
+                let b: &mut Expression = second;
+
+                if let Expression::Alternation(options, _) = a {
+                    options.rotate_right(1);
+                } else if let Expression::Alternation(options, _) = b {
+                    options.rotate_right(1);
+                }
+            }
+        }
+        false
+    }
 }
 
 impl Display for RegExp {
@@ -87,8 +130,16 @@ impl Display for RegExp {
         } else {
             String::new()
         };
-        let caret = Component::Caret.to_repr(self.config.is_output_colorized);
-        let dollar_sign = Component::DollarSign.to_repr(self.config.is_output_colorized);
+        let caret = if self.config.is_start_anchor_disabled {
+            String::new()
+        } else {
+            Component::Caret.to_repr(self.config.is_output_colorized)
+        };
+        let dollar_sign = if self.config.is_end_anchor_disabled {
+            String::new()
+        } else {
+            Component::DollarSign.to_repr(self.config.is_output_colorized)
+        };
         let mut regexp = match self.ast {
             Expression::Alternation(_, _) => {
                 format!(
@@ -238,7 +289,11 @@ fn apply_verbose_mode(regexp: String, config: &RegExpConfig) -> String {
     };
 
     let mut verbose_regexp = vec![verbose_mode_flag];
-    let mut nesting_level = 0;
+    let mut nesting_level = if config.is_start_anchor_disabled {
+        1
+    } else {
+        0
+    };
 
     let regexp_with_replacements = regexp
         .replace(
@@ -254,6 +309,7 @@ fn apply_verbose_mode(regexp: String, config: &RegExpConfig) -> String {
         .replace(" ", "\\s")
         .replace(" ", "\\s")
         .replace("\u{85}", "\\s")
+        .replace("\u{2005}", "\\s")
         .replace("\u{2028}", "\\s")
         .replace(" ", "\\ ");
 

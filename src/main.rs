@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-use grex::{Feature, RegExpBuilder};
+use grex::RegExpBuilder;
 use itertools::Itertools;
-use std::io::{Error, ErrorKind};
+use std::io::{BufRead, Error, ErrorKind, Read};
 use std::path::PathBuf;
 use structopt::clap::AppSettings::{AllowLeadingHyphen, ColoredHelp};
 use structopt::StructOpt;
@@ -179,11 +179,53 @@ struct Cli {
     is_verbose_mode_enabled: bool,
 
     #[structopt(
+        name = "no-start-anchor",
+        long,
+        help = "Removes the caret anchor '^' from the resulting regular expression",
+        long_help = "Removes the caret anchor '^' from the resulting regular expression.\n\n\
+                     By default, the caret anchor is added to every generated regular\n\
+                     expression which guarantees that the expression matches the test cases\n\
+                     given as input only at the start of a string.\n\
+                     This flag removes the anchor, thereby allowing to match the test cases also\n\
+                     when they do not occur at the start of a string.",
+        display_order = 13
+    )]
+    is_caret_anchor_disabled: bool,
+
+    #[structopt(
+        name = "no-end-anchor",
+        long,
+        help = "Removes the dollar sign anchor '$' from the resulting regular expression",
+        long_help = "Removes the dollar sign anchor '$' from the resulting regular expression.\n\n\
+                     By default, the dollar sign anchor is added to every generated regular\n\
+                     expression which guarantees that the expression matches the test cases\n\
+                     given as input only at the end of a string.\n\
+                     This flag removes the anchor, thereby allowing to match the test cases also\n\
+                     when they do not occur at the end of a string.",
+        display_order = 14
+    )]
+    is_dollar_sign_anchor_disabled: bool,
+
+    #[structopt(
+        name = "no-anchors",
+        long,
+        help = "Removes the caret and dollar sign anchors from the resulting regular expression",
+        long_help = "Removes the caret and dollar sign anchors from the resulting regular expression.\n\n\
+                     By default, anchors are added to every generated regular expression\n\
+                     which guarantee that the expression exactly matches only the test cases\n\
+                     given as input and nothing else.\n\
+                     This flag removes the anchors, thereby allowing to match the test cases also\n\
+                     when they occur within a larger string that contains other content as well.",
+        display_order = 15
+    )]
+    are_anchors_disabled: bool,
+
+    #[structopt(
         name = "colorize",
         short,
         long,
         help = "Provides syntax highlighting for the resulting regular expression",
-        display_order = 13
+        display_order = 16
     )]
     is_output_colorized: bool,
 
@@ -234,10 +276,31 @@ fn main() {
 }
 
 fn obtain_input(cli: &Cli) -> Result<Vec<String>, Error> {
+    let is_stdin_available = atty::isnt(atty::Stream::Stdin);
+
     if !cli.input.is_empty() {
-        Ok(cli.input.clone())
+        let is_single_item = cli.input.len() == 1;
+        let is_hyphen = cli.input.get(0).unwrap() == "-";
+
+        if is_single_item && is_hyphen && is_stdin_available {
+            Ok(std::io::stdin()
+                .lock()
+                .lines()
+                .map(|line| line.unwrap())
+                .collect_vec())
+        } else {
+            Ok(cli.input.clone())
+        }
     } else if let Some(file_path) = &cli.file_path {
-        match std::fs::read_to_string(&file_path) {
+        let is_hyphen = file_path.as_os_str() == "-";
+        let path = if is_hyphen && is_stdin_available {
+            let mut stdin_file_path = String::new();
+            std::io::stdin().read_to_string(&mut stdin_file_path)?;
+            PathBuf::from(stdin_file_path.trim())
+        } else {
+            file_path.to_path_buf()
+        };
+        match std::fs::read_to_string(&path) {
             Ok(file_content) => Ok(file_content.lines().map(|it| it.to_string()).collect_vec()),
             Err(error) => Err(error),
         }
@@ -253,46 +316,41 @@ fn handle_input(cli: &Cli, input: Result<Vec<String>, Error>) {
     match input {
         Ok(test_cases) => {
             let mut builder = RegExpBuilder::from(&test_cases);
-            let mut conversion_features = vec![];
 
             if cli.is_digit_converted {
-                conversion_features.push(Feature::Digit);
+                builder.with_conversion_of_digits();
             }
 
             if cli.is_non_digit_converted {
-                conversion_features.push(Feature::NonDigit);
+                builder.with_conversion_of_non_digits();
             }
 
             if cli.is_space_converted {
-                conversion_features.push(Feature::Space);
+                builder.with_conversion_of_whitespace();
             }
 
             if cli.is_non_space_converted {
-                conversion_features.push(Feature::NonSpace);
+                builder.with_conversion_of_non_whitespace();
             }
 
             if cli.is_word_converted {
-                conversion_features.push(Feature::Word);
+                builder.with_conversion_of_words();
             }
 
             if cli.is_non_word_converted {
-                conversion_features.push(Feature::NonWord);
+                builder.with_conversion_of_non_words();
             }
 
             if cli.is_repetition_converted {
-                conversion_features.push(Feature::Repetition);
+                builder.with_conversion_of_repetitions();
             }
 
             if cli.is_case_ignored {
-                conversion_features.push(Feature::CaseInsensitivity);
+                builder.with_case_insensitive_matching();
             }
 
             if cli.is_group_captured {
-                conversion_features.push(Feature::CapturingGroup);
-            }
-
-            if !conversion_features.is_empty() {
-                builder.with_conversion_of(&conversion_features);
+                builder.with_capturing_groups();
             }
 
             if cli.is_non_ascii_char_escaped {
@@ -303,6 +361,18 @@ fn handle_input(cli: &Cli, input: Result<Vec<String>, Error>) {
 
             if cli.is_verbose_mode_enabled {
                 builder.with_verbose_mode();
+            }
+
+            if cli.is_caret_anchor_disabled {
+                builder.without_start_anchor();
+            }
+
+            if cli.is_dollar_sign_anchor_disabled {
+                builder.without_end_anchor();
+            }
+
+            if cli.are_anchors_disabled {
+                builder.without_anchors();
             }
 
             if cli.is_output_colorized {

@@ -26,17 +26,17 @@ impl Display for Expression {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         match self {
             Expression::Alternation(options, config) => {
-                format_alternation(f, &self, options, config)
+                format_alternation(f, self, options, config)
             }
             Expression::CharacterClass(char_set, config) => {
                 format_character_class(f, char_set, config)
             }
             Expression::Concatenation(expr1, expr2, config) => {
-                format_concatenation(f, &self, expr1, expr2, config)
+                format_concatenation(f, self, expr1, expr2, config)
             }
             Expression::Literal(cluster, config) => format_literal(f, cluster, config),
             Expression::Repetition(expr, quantifier, config) => {
-                format_repetition(f, &self, expr, quantifier, config)
+                format_repetition(f, self, expr, quantifier, config)
             }
         }
     }
@@ -77,11 +77,11 @@ fn format_character_class(
     char_set: &BTreeSet<char>,
     config: &RegExpConfig,
 ) -> Result {
-    let chars_to_escape = ['[', ']', '\\', '-', '^'];
+    let chars_to_escape = ['[', ']', '\\', '-', '^', '$'];
     let escaped_char_set = char_set
         .iter()
         .map(|c| {
-            if chars_to_escape.contains(&c) {
+            if chars_to_escape.contains(c) {
                 format!("{}{}", "\\", c)
             } else if c == &'\n' {
                 "\\n".to_string()

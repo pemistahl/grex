@@ -167,7 +167,7 @@ fn convert_repetitions(
     config: &RegExpConfig,
 ) {
     let repeated_substrings = collect_repeated_substrings(graphemes);
-    let ranges_of_repetitions = create_ranges_of_repetitions(repeated_substrings);
+    let ranges_of_repetitions = create_ranges_of_repetitions(repeated_substrings, config);
     let coalesced_repetitions = coalesce_repetitions(ranges_of_repetitions);
     replace_graphemes_with_repetitions(coalesced_repetitions, graphemes, repetitions, config)
 }
@@ -190,43 +190,38 @@ fn collect_repeated_substrings(graphemes: &[Grapheme]) -> HashMap<Vec<String>, V
 
 fn create_ranges_of_repetitions(
     repeated_substrings: HashMap<Vec<String>, Vec<usize>>,
+    config: &RegExpConfig,
 ) -> Vec<(Range<usize>, Vec<String>)> {
     let mut repetitions = Vec::<(Range<usize>, Vec<String>)>::new();
 
     for (prefix_length, group) in &repeated_substrings
         .iter()
-        .filter(|&(_, indices)| indices.len() > 1)
+        .filter(|&(prefix, indices)| {
+            indices
+                .iter()
+                .tuple_windows()
+                .all(|(first, second)| (second - first) >= prefix.len())
+        })
         .sorted_by_key(|&(prefix, _)| prefix.len())
         .rev()
         .group_by(|&(prefix, _)| prefix.len())
     {
         for (prefix, indices) in group.sorted_by_key(|&(_, indices)| indices[0]) {
-            let all_even = indices
+            indices
                 .iter()
-                .all(|it| it % prefix_length == 0 || it % 2 == 0);
-            let all_odd = indices
-                .iter()
-                .all(|it| it % prefix_length == 1 || it % 2 == 1);
-
-            if all_even || all_odd {
-                let ranges = indices
-                    .iter()
-                    .cloned()
-                    .map(|it| it..it + prefix_length)
-                    .coalesce(|x, y| {
-                        if x.end == y.start {
-                            Ok(x.start..y.end)
-                        } else {
-                            Err((x, y))
-                        }
-                    })
-                    .filter(|it| (it.end - it.start) > prefix_length)
-                    .collect_vec();
-
-                for range in ranges {
-                    repetitions.push((range, prefix.clone()));
-                }
-            }
+                .map(|it| *it..it + prefix_length)
+                .coalesce(|x, y| {
+                    if x.end == y.start {
+                        Ok(x.start..y.end)
+                    } else {
+                        Err((x, y))
+                    }
+                })
+                .filter(|range| {
+                    let count = ((range.end - range.start) / prefix_length) as u32;
+                    count > config.minimum_repetitions
+                })
+                .for_each(|range| repetitions.push((range, prefix.clone())));
         }
     }
     repetitions
@@ -281,20 +276,8 @@ fn replace_graphemes_with_repetitions(
 
         let count = ((range.end - range.start) / substr.len()) as u32;
 
-        if count <= config.minimum_repetitions
-            || substr.len() < config.minimum_substring_length as usize
-        {
+        if substr.len() < config.minimum_substring_length as usize {
             continue;
-        }
-
-        let joined_substr = substr.iter().join("").repeat(count as usize);
-        let graphemes_slice = repetitions[range.clone()]
-            .iter()
-            .map(|it| it.value())
-            .join("");
-
-        if graphemes_slice != joined_substr {
-            break;
         }
 
         repetitions.splice(

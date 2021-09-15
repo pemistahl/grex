@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+#![allow(deprecated)]
+
 use crate::regexp::feature::Feature;
 use crate::regexp::{RegExp, RegExpConfig};
 use itertools::Itertools;
@@ -74,11 +76,107 @@ impl RegExpBuilder {
         }
     }
 
+    /// Tells `RegExpBuilder` to convert any Unicode decimal digit to character class `\d`.
+    ///
+    /// This method takes precedence over
+    /// [`with_conversion_of_words`](Self::with_conversion_of_words) if both are set.
+    /// Decimal digits are converted to `\d`, the remaining word characters to `\w`.
+    ///
+    /// This method takes precedence over
+    /// [`with_conversion_of_non_whitespace`](Self::with_conversion_of_non_whitespace) if both are set.
+    /// Decimal digits are converted to `\d`, the remaining non-whitespace characters to `\S`.
+    pub fn with_conversion_of_digits(&mut self) -> &mut Self {
+        self.config.is_digit_converted = true;
+        self
+    }
+
+    /// Tells `RegExpBuilder` to convert any character which is not
+    /// a Unicode decimal digit to character class `\D`.
+    ///
+    /// This method takes precedence over
+    /// [`with_conversion_of_non_words`](Self::with_conversion_of_non_words) if both are set.
+    /// Non-digits which are also non-word characters are converted to `\D`.
+    ///
+    /// This method takes precedence over
+    /// [`with_conversion_of_non_whitespace`](Self::with_conversion_of_non_whitespace) if both are set.
+    /// Non-digits which are also non-space characters are converted to `\D`.
+    pub fn with_conversion_of_non_digits(&mut self) -> &mut Self {
+        self.config.is_non_digit_converted = true;
+        self
+    }
+
+    /// Tells `RegExpBuilder` to convert any Unicode whitespace character to character class `\s`.
+    ///
+    /// This method takes precedence over
+    /// [`with_conversion_of_non_digits`](Self::with_conversion_of_non_digits) if both are set.
+    /// Whitespace characters are converted to `\s`, the remaining non-digit characters to `\D`.
+    ///
+    /// This method takes precedence over
+    /// [`with_conversion_of_non_words`](Self::with_conversion_of_non_words) if both are set.
+    /// Whitespace characters are converted to `\s`, the remaining non-word characters to `\W`.
+    pub fn with_conversion_of_whitespace(&mut self) -> &mut Self {
+        self.config.is_space_converted = true;
+        self
+    }
+
+    /// Tells `RegExpBuilder` to convert any character which is not
+    /// a Unicode whitespace character to character class `\S`.
+    pub fn with_conversion_of_non_whitespace(&mut self) -> &mut Self {
+        self.config.is_non_space_converted = true;
+        self
+    }
+
+    /// Tells `RegExpBuilder` to convert any Unicode word character to character class `\w`.
+    ///
+    /// This method takes precedence over
+    /// [`with_conversion_of_non_digits`](Self::with_conversion_of_non_digits) if both are set.
+    /// Word characters are converted to `\w`, the remaining non-digit characters to `\D`.
+    ///
+    /// This method takes precedence over
+    /// [`with_conversion_of_non_whitespace`](Self::with_conversion_of_non_whitespace) if both are set.
+    /// Word characters are converted to `\w`, the remaining non-space characters to `\S`.
+    pub fn with_conversion_of_words(&mut self) -> &mut Self {
+        self.config.is_word_converted = true;
+        self
+    }
+
+    /// Tells `RegExpBuilder` to convert any character which is not
+    /// a Unicode word character to character class `\W`.
+    ///
+    /// This method takes precedence over
+    /// [`with_conversion_of_non_whitespace`](Self::with_conversion_of_non_whitespace) if both are set.
+    /// Non-words which are also non-space characters are converted to `\W`.
+    pub fn with_conversion_of_non_words(&mut self) -> &mut Self {
+        self.config.is_non_word_converted = true;
+        self
+    }
+
+    /// Tells `RegExpBuilder` to detect repeated non-overlapping substrings and
+    /// to convert them to `{min,max}` quantifier notation.
+    pub fn with_conversion_of_repetitions(&mut self) -> &mut Self {
+        self.config.is_repetition_converted = true;
+        self
+    }
+
+    /// Tells `RegExpBuilder` to enable case-insensitive matching of test cases
+    /// so that letters match both upper and lower case.
+    pub fn with_case_insensitive_matching(&mut self) -> &mut Self {
+        self.config.is_case_insensitive_matching = true;
+        self
+    }
+
+    /// Tells `RegExpBuilder` to replace non-capturing groups by capturing ones.
+    pub fn with_capturing_groups(&mut self) -> &mut Self {
+        self.config.is_capturing_group_enabled = true;
+        self
+    }
+
     /// Tells `RegExpBuilder` which conversions should be performed during
     /// regular expression generation. The available conversion features
     /// are listed in the [`Feature`](./enum.Feature.html#variants) enum.
     ///
     /// ⚠ Panics if `features` is empty.
+    #[deprecated(since = "1.3.0", note = "This method will be removed in 1.4.0.")]
     pub fn with_conversion_of(&mut self, features: &[Feature]) -> &mut Self {
         if features.is_empty() {
             panic!("No conversion features have been provided for regular expression generation");
@@ -88,9 +186,7 @@ impl RegExpBuilder {
     }
 
     /// Specifies the minimum quantity of substring repetitions to be converted if
-    /// [`Feature::Repetition`](./enum.Feature.html#variant.Repetition)
-    /// is set as one of the features in method
-    /// [`with_conversion_of`](./struct.RegExpBuilder.html#method.with_conversion_of).
+    /// [`with_conversion_of_repetitions`](Self::with_conversion_of_repetitions) is set.
     ///
     /// If the quantity is not explicitly set with this method, a default value of 1 will be used.
     ///
@@ -104,9 +200,7 @@ impl RegExpBuilder {
     }
 
     /// Specifies the minimum length a repeated substring must have in order to be converted if
-    /// [`Feature::Repetition`](./enum.Feature.html#variant.Repetition)
-    /// is set as one of the features in method
-    /// [`with_conversion_of`](./struct.RegExpBuilder.html#method.with_conversion_of).
+    /// [`with_conversion_of_repetitions`](Self::with_conversion_of_repetitions) is set.
     ///
     /// If the length is not explicitly set with this method, a default value of 1 will be used.
     ///
@@ -128,8 +222,34 @@ impl RegExpBuilder {
         self
     }
 
+    /// Tells `RegExpBuilder` to produce a nicer looking regular expression in verbose mode.
     pub fn with_verbose_mode(&mut self) -> &mut Self {
         self.config.is_verbose_mode_enabled = true;
+        self
+    }
+
+    /// Tells `RegExpBuilder` to remove the caret anchor '^' from the resulting regular
+    /// expression, thereby allowing to match the test cases also when they do not occur
+    /// at the start of a string.
+    pub fn without_start_anchor(&mut self) -> &mut Self {
+        self.config.is_start_anchor_disabled = true;
+        self
+    }
+
+    /// Tells `RegExpBuilder` to remove the dollar sign anchor '$' from the resulting regular
+    /// expression, thereby allowing to match the test cases also when they do not occur
+    /// at the end of a string.
+    pub fn without_end_anchor(&mut self) -> &mut Self {
+        self.config.is_end_anchor_disabled = true;
+        self
+    }
+
+    /// Tells `RegExpBuilder` to remove the caret and dollar sign anchors from the resulting
+    /// regular expression, thereby allowing to match the test cases also when they occur
+    /// within a larger string that contains other content as well.
+    pub fn without_anchors(&mut self) -> &mut Self {
+        self.config.is_start_anchor_disabled = true;
+        self.config.is_end_anchor_disabled = true;
         self
     }
 

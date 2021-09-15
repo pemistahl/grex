@@ -14,18 +14,21 @@
  * limitations under the License.
  */
 
+#![allow(deprecated)]
+
 /// This enum specifies the supported conversion features which can be passed to method
 /// [`RegExpBuilder.with_conversion_of`](./struct.RegExpBuilder.html#method.with_conversion_of).
 #[derive(Clone, Debug, Hash, Ord, PartialOrd, Eq, PartialEq)]
+#[deprecated(since = "1.3.0", note = "This enum will be removed in 1.4.0.")]
 pub enum Feature {
     /// This feature converts any Unicode decimal digit to character class `\d`.
     ///
     /// It takes precedence over the
-    /// [`Word`](./enum.Feature.html#variant.Word) feature if both are set.
+    /// [`Word`](Feature::Word) feature if both are set.
     /// Decimal digits are converted to `\d`, the remaining word characters to `\w`.
     ///
     /// It takes precedence over the
-    /// [`NonSpace`](./enum.Feature.html#variant.NonSpace) feature if both are set.
+    /// [`NonSpace`](Feature::NonSpace) feature if both are set.
     /// Decimal digits are converted to `\d`, the remaining non-whitespace characters to `\S`.
     Digit,
 
@@ -33,22 +36,22 @@ pub enum Feature {
     /// a Unicode decimal digit to character class `\D`.
     ///
     /// It takes precedence over the
-    /// [`NonWord`](./enum.Feature.html#variant.NonWord) feature if both are set.
+    /// [`NonWord`](Feature::NonWord) feature if both are set.
     /// Non-digits which are also non-word characters are converted to `\D`.
     ///
     /// It takes precedence over the
-    /// [`NonSpace`](./enum.Feature.html#variant.NonSpace) feature if both are set.
+    /// [`NonSpace`](Feature::NonSpace) feature if both are set.
     /// Non-digits which are also non-space characters are converted to `\D`.
     NonDigit,
 
     /// This feature converts any Unicode whitespace character to character class `\s`.
     ///
     /// It takes precedence over the
-    /// [`NonDigit`](./enum.Feature.html#variant.NonDigit) feature if both are set.
+    /// [`NonDigit`](Feature::NonDigit) feature if both are set.
     /// Whitespace characters are converted to `\s`, the remaining non-digit characters to `\D`.
     ///
     /// It takes precedence over the
-    /// [`NonWord`](./enum.Feature.html#variant.NonWord) feature if both are set.
+    /// [`NonWord`](Feature::NonWord) feature if both are set.
     /// Whitespace characters are converted to `\s`, the remaining non-word characters to `\W`.
     Space,
 
@@ -59,11 +62,11 @@ pub enum Feature {
     /// This feature converts any Unicode word character to character class `\w`.
     ///
     /// It takes precedence over the
-    /// [`NonDigit`](./enum.Feature.html#variant.NonDigit) feature if both are set.
+    /// [`NonDigit`](Feature::NonDigit) feature if both are set.
     /// Word characters are converted to `\w`, the remaining non-digit characters to `\D`.
     ///
     /// It takes precedence over the
-    /// [`NonSpace`](./enum.Feature.html#variant.NonSpace) feature if both are set.
+    /// [`NonSpace`](Feature::NonSpace) feature if both are set.
     /// Word characters are converted to `\w`, the remaining non-space characters to `\S`.
     Word,
 
@@ -71,7 +74,7 @@ pub enum Feature {
     /// a Unicode word character to character class `\W`.
     ///
     /// It takes precedence over the
-    /// [`NonSpace`](./enum.Feature.html#variant.NonSpace) feature if both are set.
+    /// [`NonSpace`](Feature::NonSpace) feature if both are set.
     /// Non-words which are also non-space characters are converted to `\W`.
     NonWord,
 

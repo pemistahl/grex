@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+#![allow(deprecated)]
+
 mod builder;
 mod component;
 mod config;

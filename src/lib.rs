@@ -99,10 +99,11 @@
 //! ### 4.2 Convert to character classes
 //!
 //! ```
-//! use grex::{Feature, RegExpBuilder};
+//! use grex::RegExpBuilder;
 //!
 //! let regexp = RegExpBuilder::from(&["a", "aa", "123"])
-//!     .with_conversion_of(&[Feature::Digit, Feature::Word])
+//!     .with_conversion_of_digits()
+//!     .with_conversion_of_words()
 //!     .build();
 //! assert_eq!(regexp, "^(?:\\d\\d\\d|\\w(?:\\w)?)$");
 //! ```
@@ -110,10 +111,10 @@
 //! ### 4.3 Convert repeated substrings
 //!
 //! ```
-//! use grex::{Feature, RegExpBuilder};
+//! use grex::RegExpBuilder;
 //!
 //! let regexp = RegExpBuilder::from(&["aa", "bcbc", "defdefdef"])
-//!     .with_conversion_of(&[Feature::Repetition])
+//!     .with_conversion_of_repetitions()
 //!     .build();
 //! assert_eq!(regexp, "^(?:a{2}|(?:bc){2}|(?:def){3})$");
 //! ```
@@ -126,10 +127,10 @@
 //! substring `a` has a length of 1, but the minimum substring length has been set to 2.
 //!
 //! ```
-//! use grex::{Feature, RegExpBuilder};
+//! use grex::RegExpBuilder;
 //!
 //! let regexp = RegExpBuilder::from(&["aa", "bcbc", "defdefdef"])
-//!     .with_conversion_of(&[Feature::Repetition])
+//!     .with_conversion_of_repetitions()
 //!     .with_minimum_substring_length(2)
 //!     .build();
 //! assert_eq!(regexp, "^(?:aa|(?:bc){2}|(?:def){3})$");
@@ -139,10 +140,10 @@
 //! will be converted because it is the only one that is repeated twice.
 //!
 //! ```
-//! use grex::{Feature, RegExpBuilder};
+//! use grex::RegExpBuilder;
 //!
 //! let regexp = RegExpBuilder::from(&["aa", "bcbc", "defdefdef"])
-//!     .with_conversion_of(&[Feature::Repetition])
+//!     .with_conversion_of_repetitions()
 //!     .with_minimum_repetitions(2)
 //!     .build();
 //! assert_eq!(regexp, "^(?:bcbc|aa|(?:def){3})$");
@@ -180,10 +181,10 @@
 //! Case-insensitive matching can be enabled like so:
 //!
 //! ```
-//! use grex::{Feature, RegExpBuilder};
+//! use grex::RegExpBuilder;
 //!
 //! let regexp = RegExpBuilder::from(&["big", "BIGGER"])
-//!     .with_conversion_of(&[Feature::CaseInsensitivity])
+//!     .with_case_insensitive_matching()
 //!     .build();
 //! assert_eq!(regexp, "(?i)^big(?:ger)?$");
 //! ```
@@ -194,10 +195,11 @@
 //! Extending the previous example, you can switch to capturing groups instead.
 //!
 //! ```
-//! use grex::{Feature, RegExpBuilder};
+//! use grex::RegExpBuilder;
 //!
 //! let regexp = RegExpBuilder::from(&["big", "BIGGER"])
-//!     .with_conversion_of(&[Feature::CaseInsensitivity, Feature::CapturingGroup])
+//!     .with_case_insensitive_matching()
+//!     .with_capturing_groups()
 //!     .build();
 //! assert_eq!(regexp, "(?i)^big(ger)?$");
 //! ```
@@ -231,6 +233,22 @@
 //! ));
 //! ```
 //!
+//! ### 4.8 Disable anchors
+//!
+//! By default, the anchors `^` and `$` are put around every generated regular expression in order
+//! to ensure that it matches only the test cases given as input. Often enough, however, it is
+//! desired to use the generated pattern as part of a larger one. For this purpose, the anchors
+//! can be disabled, either separately or both of them.
+//!
+//! ```
+//! use grex::RegExpBuilder;
+//!
+//! let regexp = RegExpBuilder::from(&["a", "aa", "aaa"])
+//!     .without_anchors()
+//!     .build();
+//! assert_eq!(regexp, "a(?:aa?)?");
+//! ```
+//!
 //! ### 5. How does it work?
 //!
 //! 1. A [deterministic finite automaton](https://en.wikipedia.org/wiki/Deterministic_finite_automaton) (DFA)
@@ -252,5 +270,6 @@ mod fsm;
 mod regexp;
 mod unicode_tables;
 
+#[allow(deprecated)]
 pub use regexp::Feature;
 pub use regexp::RegExpBuilder;

@@ -3,19 +3,19 @@
 <br>
 
 [![build](https://github.com/pemistahl/grex/actions/workflows/build.yml/badge.svg)](https://github.com/pemistahl/grex/actions/workflows/build.yml)
-[![dependency status](https://deps.rs/crate/grex/1.2.0/status.svg)](https://deps.rs/crate/grex/1.2.0)
+[![dependency status](https://deps.rs/crate/grex/1.3.0/status.svg)](https://deps.rs/crate/grex/1.3.0)
 [![codecov](https://codecov.io/gh/pemistahl/grex/branch/main/graph/badge.svg)](https://codecov.io/gh/pemistahl/grex)
 [![lines of code](https://tokei.rs/b1/github/pemistahl/grex?category=code)](https://github.com/XAMPPRocky/tokei)
 [![Downloads](https://img.shields.io/crates/d/grex.svg)](https://crates.io/crates/grex)
 
 [![Docs.rs](https://docs.rs/grex/badge.svg)](https://docs.rs/grex)
 [![Crates.io](https://img.shields.io/crates/v/grex.svg)](https://crates.io/crates/grex)
-[![Lib.rs](https://img.shields.io/badge/lib.rs-v1.2.0-blue)](https://lib.rs/crates/grex)
+[![Lib.rs](https://img.shields.io/badge/lib.rs-v1.3.0-blue)](https://lib.rs/crates/grex)
 [![license](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0)
 
-[![Linux Download](https://img.shields.io/badge/Linux%20Download-v1.2.0-blue?logo=Linux)](https://github.com/pemistahl/grex/releases/download/v1.2.0/grex-v1.2.0-x86_64-unknown-linux-musl.tar.gz)
-[![MacOS Download](https://img.shields.io/badge/macOS%20Download-v1.2.0-blue?logo=Apple)](https://github.com/pemistahl/grex/releases/download/v1.2.0/grex-v1.2.0-x86_64-apple-darwin.tar.gz)
-[![Windows Download](https://img.shields.io/badge/Windows%20Download-v1.2.0-blue?logo=Windows)](https://github.com/pemistahl/grex/releases/download/v1.2.0/grex-v1.2.0-x86_64-pc-windows-msvc.zip)
+[![Linux Download](https://img.shields.io/badge/Linux%20Download-v1.3.0-blue?logo=Linux)](https://github.com/pemistahl/grex/releases/download/v1.3.0/grex-v1.3.0-x86_64-unknown-linux-musl.tar.gz)
+[![MacOS Download](https://img.shields.io/badge/macOS%20Download-v1.3.0-blue?logo=Apple)](https://github.com/pemistahl/grex/releases/download/v1.3.0/grex-v1.3.0-x86_64-apple-darwin.tar.gz)
+[![Windows Download](https://img.shields.io/badge/Windows%20Download-v1.3.0-blue?logo=Windows)](https://github.com/pemistahl/grex/releases/download/v1.3.0/grex-v1.3.0-x86_64-pc-windows-msvc.zip)
 
 <br>
 
@@ -114,7 +114,7 @@ toolchain installed, you can install by compiling from source using
 So the summary of your installation options is:
 
 ```
-( choco | scoop | brew | cargo | huber | port ) install grex
+( brew | cargo | choco | huber | port | scoop ) install grex
 ```
 
 ### 4.2 <a name="how-to-install-library"></a> The library <sup>[Top ▲](#table-of-contents)</sup>
@@ -123,7 +123,7 @@ In order to use *grex* as a library, simply add it as a dependency to your `Carg
 
 ```toml
 [dependencies]
-grex = "1.2.0"
+grex = "1.3.0"
 ```
 
 ## 5. <a name="how-to-use"></a> How to use? <sup>[Top ▲](#table-of-contents)</sup>
@@ -133,10 +133,15 @@ All settings can be freely combined with each other.
 
 ### 5.1 <a name="how-to-use-cli"></a> The command-line tool <sup>[Top ▲](#table-of-contents)</sup>
 
+Test cases are passed either directly (`grex a b c`) or from a file (`grex -f test_cases.txt`).
+*grex* is able to receive its input from Unix pipelines as well, e.g. `cat test_cases.txt | grex -`.
+
+The following table shows all available flags and options:
+
 ```
 $ grex -h
 
-grex 1.2.0
+grex 1.3.0
 © 2019-today Peter M. Stahl <pemistahl@gmail.com>
 Licensed under the Apache License, Version 2.0
 Downloadable from https://crates.io/crates/grex
@@ -161,6 +166,9 @@ FLAGS:
     -i, --ignore-case        Performs case-insensitive matching, letters match both upper and lower case
     -g, --capture-groups     Replaces non-capturing groups by capturing ones
     -x, --verbose            Produces a nicer looking regular expression in verbose mode
+        --no-start-anchor    Removes the caret anchor '^' from the resulting regular expression
+        --no-end-anchor      Removes the dollar sign anchor '$' from the resulting regular expression
+        --no-anchors         Removes the caret and dollar sign anchors from the resulting regular expression
     -c, --colorize           Provides syntax highlighting for the resulting regular expression
     -h, --help               Prints help information
     -v, --version            Prints version information
@@ -180,8 +188,8 @@ ARGS:
 
 #### 5.2.1 Default settings
 
-Test cases are passed either from a collection via [`RegExpBuilder::from()`](https://docs.rs/grex/1.2.0/grex/struct.RegExpBuilder.html#method.from) 
-or from a file via [`RegExpBuilder::from_file()`](https://docs.rs/grex/1.2.0/grex/struct.RegExpBuilder.html#method.from_file).
+Test cases are passed either from a collection via [`RegExpBuilder::from()`](https://docs.rs/grex/1.3.0/grex/struct.RegExpBuilder.html#method.from) 
+or from a file via [`RegExpBuilder::from_file()`](https://docs.rs/grex/1.3.0/grex/struct.RegExpBuilder.html#method.from_file).
 If read from a file, each test case must be on a separate line. Lines may be ended with either a newline `\n` or a carriage
 return with a line feed `\r\n`.
 
@@ -195,10 +203,11 @@ assert_eq!(regexp, "^a(?:aa?)?$");
 #### 5.2.2 Convert to character classes
 
 ```rust
-use grex::{Feature, RegExpBuilder};
+use grex::RegExpBuilder;
 
 let regexp = RegExpBuilder::from(&["a", "aa", "123"])
-    .with_conversion_of(&[Feature::Digit, Feature::Word])
+    .with_conversion_of_digits()
+    .with_conversion_of_words()
     .build();
 assert_eq!(regexp, "^(\\d\\d\\d|\\w(?:\\w)?)$");
 ```
@@ -206,10 +215,10 @@ assert_eq!(regexp, "^(\\d\\d\\d|\\w(?:\\w)?)$");
 #### 5.2.3 Convert repeated substrings
 
 ```rust
-use grex::{Feature, RegExpBuilder};
+use grex::RegExpBuilder;
 
 let regexp = RegExpBuilder::from(&["aa", "bcbc", "defdefdef"])
-    .with_conversion_of(&[Feature::Repetition])
+    .with_conversion_of_repetitions()
     .build();
 assert_eq!(regexp, "^(?:a{2}|(?:bc){2}|(?:def){3})$");
 ```
@@ -221,10 +230,10 @@ In the following example, the test case `aa` is not converted to `a{2}` because 
 `a` has a length of 1, but the minimum substring length has been set to 2.
 
 ```rust
-use grex::{Feature, RegExpBuilder};
+use grex::RegExpBuilder;
 
 let regexp = RegExpBuilder::from(&["aa", "bcbc", "defdefdef"])
-    .with_conversion_of(&[Feature::Repetition])
+    .with_conversion_of_repetitions()
     .with_minimum_substring_length(2)
     .build();
 assert_eq!(regexp, "^(?:aa|(?:bc){2}|(?:def){3})$");
@@ -234,10 +243,10 @@ Setting a minimum number of 2 repetitions in the next example, only the test cas
 converted because it is the only one that is repeated twice.
 
 ```rust
-use grex::{Feature, RegExpBuilder};
+use grex::RegExpBuilder;
 
 let regexp = RegExpBuilder::from(&["aa", "bcbc", "defdefdef"])
-    .with_conversion_of(&[Feature::Repetition])
+    .with_conversion_of_repetitions()
     .with_minimum_repetitions(2)
     .build();
 assert_eq!(regexp, "^(?:bcbc|aa|(?:def){3})$");
@@ -274,10 +283,10 @@ The regular expressions that *grex* generates are case-sensitive by default.
 Case-insensitive matching can be enabled like so:
 
 ```rust
-use grex::{Feature, RegExpBuilder};
+use grex::RegExpBuilder;
 
 let regexp = RegExpBuilder::from(&["big", "BIGGER"])
-    .with_conversion_of(&[Feature::CaseInsensitivity])
+    .with_case_insensitive_matching()
     .build();
 assert_eq!(regexp, "(?i)^big(?:ger)?$");
 ```
@@ -288,10 +297,11 @@ Non-capturing groups are used by default.
 Extending the previous example, you can switch to capturing groups instead.
 
 ```rust
-use grex::{Feature, RegExpBuilder};
+use grex::RegExpBuilder;
 
 let regexp = RegExpBuilder::from(&["big", "BIGGER"])
-    .with_conversion_of(&[Feature::CaseInsensitivity, Feature::CapturingGroup])
+    .with_case_insensitive_matching()
+    .with_capturing_groups()
     .build();
 assert_eq!(regexp, "(?i)^big(ger)?$");
 ```
@@ -325,7 +335,23 @@ assert_eq!(regexp, indoc!(
 ));
 ```
 
-#### 5.2.8 Syntax highlighting
+#### 5.2.8 Disable anchors
+
+By default, the anchors `^` and `$` are put around every generated regular expression in order
+to ensure that it matches only the test cases given as input. Often enough, however, it is
+desired to use the generated pattern as part of a larger one. For this purpose, the anchors
+can be disabled, either separately or both of them.
+
+```rust
+use grex::RegExpBuilder;
+
+let regexp = RegExpBuilder::from(&["a", "aa", "aaa"])
+    .without_anchors()
+    .build();
+assert_eq!(regexp, "a(?:aa?)?");
+```
+
+#### 5.2.9 Syntax highlighting
 
 ⚠ The method `with_syntax_highlighting()` may only be used if the resulting regular expression is meant to
 be printed to the console. It is mainly meant to be used for the command-line tool output. 
@@ -463,20 +489,10 @@ cargo build
 ```
 
 The source code is accompanied by an extensive test suite consisting of unit tests, integration 
-tests and property tests. For running the unit and integration tests, simply say:
+tests and property tests. For running them, simply say:
 
 ```
 cargo test
-```
-
-Property tests are disabled by default with the `#[ignore]` annotation because they are 
-very long-running. They are used for automatically generating test cases for regular 
-expression conversion. If a test case is found that produces a wrong conversion, it is 
-shrinked to the shortest test case possible that still produces a wrong result. 
-This is a very useful tool for finding bugs. If you want to run these tests, say:
-
-```
-cargo test -- --ignored
 ```
 
 ## 7. <a name="how-does-it-work"></a> How does it work? <sup>[Top ▲](#table-of-contents)</sup>
