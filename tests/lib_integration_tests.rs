@@ -308,13 +308,13 @@ mod no_conversion {
         }
 
         #[rstest(test_cases, expected_output,
-            case(vec!["bab", "b", "cb", "bba"], "(?:(?:ba|c)b|b(?:ba)?)"),
+            case(vec!["bab", "b", "cb", "bba"], "(?:b(?:ba|ab)?|cb)"),
             case(vec!["a", "aba", "baaa", "aaab"], "(?:baaa|a(?:aab|ba)?)"),
             case(vec!["a", "abab", "bbb", "aaac"], "(?:a(?:bab|aac)?|bbb)"),
             case(
                 // https://github.com/pemistahl/grex/issues/31
                 vec!["agbhd", "eibcd", "egbcd", "fbjbf", "agbh", "eibc", "egbc", "ebc", "fbc", "cd", "f", "c", "abcd", "ebcd", "fbcd"], 
-                "(?:(?:e(?:[gi])?bc|(?:fb)?c)d?|a(?:gbhd?|bcd)|f(?:bjbf)?)")
+                "(?:a(?:gbhd?|bcd)|e(?:ibcd?|gbcd?|bcd?)|f(?:b(?:jbf|cd?))?|cd?)")
         )]
         fn succeeds_without_anchors(test_cases: Vec<&str>, expected_output: &str) {
             let regexp = RegExpBuilder::from(&test_cases).without_anchors().build();

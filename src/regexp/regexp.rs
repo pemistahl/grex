@@ -42,7 +42,7 @@ impl RegExp {
 
         if config.is_start_anchor_disabled
             && config.is_end_anchor_disabled
-            && !Self::is_each_test_case_matched(&mut ast, test_cases)
+            && !Self::is_each_test_case_matched(&mut ast, test_cases, config)
         {
             dfa = Dfa::from(&grapheme_clusters, false, config);
             ast = Expression::from(dfa, config);
@@ -88,9 +88,19 @@ impl RegExp {
         clusters
     }
 
-    fn is_each_test_case_matched(expr: &mut Expression, test_cases: &[String]) -> bool {
+    fn is_each_test_case_matched(
+        expr: &mut Expression,
+        test_cases: &[String],
+        config: &RegExpConfig,
+    ) -> bool {
+        let regex = if config.is_output_colorized {
+            let color_replace_regex = Regex::new("\u{1b}\\[(?:\\d+;\\d+|0)m").unwrap();
+            Regex::new(&*color_replace_regex.replace_all(&expr.to_string(), "")).unwrap()
+        } else {
+            Regex::new(&expr.to_string()).unwrap()
+        };
+
         for _ in 1..test_cases.len() {
-            let regex = Regex::new(&expr.to_string()).unwrap();
             if test_cases
                 .iter()
                 .all(|test_case| regex.find_iter(test_case).count() == 1)
