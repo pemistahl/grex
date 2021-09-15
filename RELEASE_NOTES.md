@@ -1,4 +1,4 @@
-## grex 1.3.0 (released on 14 Sep 2021)
+## grex 1.3.0 (released on 15 Sep 2021)
 
 ### Features
 - anchors can now be disabled so that the generated expression can be used as part of a larger one (#30)
@@ -8,7 +8,7 @@
 - Additional methods have been added to `RegExpBuilder` in order to replace the enum `Feature` and make the library API more consistent. (#47)
 
 ### Bug Fixes
-- Under rare circumstances, the conversion of repetitions did not work. This has been fixed.
+- Under rare circumstances, the conversion of repetitions did not work. This has been fixed. (#36)
 
 ## grex 1.2.0 (released on 28 Mar 2021)
 
