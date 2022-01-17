@@ -32,7 +32,7 @@ keywords = ["pattern", "regex", "regexp"]
 atty = "0.2.14"
 itertools = "0.10.1"
 lazy_static = "1.4.0"
-ndarray = "0.15.3"
+ndarray = "0.15.4"
 petgraph = {version = "0.6.0", default-features = false, features = ["stable_graph"]}
 regex = "1.5.4"
 structopt = "0.3.23"
