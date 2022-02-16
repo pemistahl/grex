@@ -161,7 +161,7 @@ impl Display for RegExp {
                     "{}{}{}{}",
                     ignore_case_flag,
                     caret,
-                    self.ast.to_string(),
+                    self.ast,
                     dollar_sign
                 )
             }
