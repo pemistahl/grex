@@ -441,8 +441,8 @@ impl Expression {
         b: &Expression,
         substring: &Substring,
     ) -> Option<Vec<Grapheme>> {
-        let mut graphemes_a = a.value(Some(substring)).unwrap_or_else(Vec::new);
-        let mut graphemes_b = b.value(Some(substring)).unwrap_or_else(Vec::new);
+        let mut graphemes_a = a.value(Some(substring)).unwrap_or_default();
+        let mut graphemes_b = b.value(Some(substring)).unwrap_or_default();
         let mut common_graphemes = vec![];
 
         if let Substring::Suffix = substring {

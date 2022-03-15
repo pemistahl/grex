@@ -123,7 +123,7 @@ proptest! {
         let test_cases_vec = test_cases.iter().cloned().collect::<Vec<_>>();
         let regexp = RegExpBuilder::from(&test_cases_vec).build();
         if let Ok(compiled_regexp) = compile_regexp(&regexp) {
-            prop_assert!(test_cases.iter().all(|test_case| compiled_regexp.is_match(&test_case)));
+            prop_assert!(test_cases.iter().all(|test_case| compiled_regexp.is_match(test_case)));
         }
     }
 
@@ -136,7 +136,7 @@ proptest! {
             .with_escaping_of_non_ascii_chars(false)
             .build();
         if let Ok(compiled_regexp) = compile_regexp(&regexp) {
-            prop_assert!(test_cases.iter().all(|test_case| compiled_regexp.is_match(&test_case)));
+            prop_assert!(test_cases.iter().all(|test_case| compiled_regexp.is_match(test_case)));
         }
     }
 
@@ -149,7 +149,7 @@ proptest! {
             .with_verbose_mode()
             .build();
         if let Ok(compiled_regexp) = compile_regexp(&regexp) {
-            prop_assert!(test_cases.iter().all(|test_case| compiled_regexp.is_match(&test_case)));
+            prop_assert!(test_cases.iter().all(|test_case| compiled_regexp.is_match(test_case)));
         }
     }
 
@@ -163,7 +163,7 @@ proptest! {
             .with_verbose_mode()
             .build();
         if let Ok(compiled_regexp) = compile_regexp(&regexp) {
-            prop_assert!(test_cases.iter().all(|test_case| compiled_regexp.is_match(&test_case)));
+            prop_assert!(test_cases.iter().all(|test_case| compiled_regexp.is_match(test_case)));
         }
     }
 
@@ -181,7 +181,7 @@ proptest! {
             .with_minimum_substring_length(minimum_substring_length)
             .build();
         if let Ok(compiled_regexp) = compile_regexp(&regexp) {
-            prop_assert!(test_cases.iter().all(|test_case| compiled_regexp.is_match(&test_case)));
+            prop_assert!(test_cases.iter().all(|test_case| compiled_regexp.is_match(test_case)));
         }
     }
 
@@ -200,7 +200,7 @@ proptest! {
             .with_escaping_of_non_ascii_chars(false)
             .build();
         if let Ok(compiled_regexp) = compile_regexp(&regexp) {
-            prop_assert!(test_cases.iter().all(|test_case| compiled_regexp.is_match(&test_case)));
+            prop_assert!(test_cases.iter().all(|test_case| compiled_regexp.is_match(test_case)));
         }
     }
 
@@ -219,7 +219,7 @@ proptest! {
             .with_verbose_mode()
             .build();
         if let Ok(compiled_regexp) = compile_regexp(&regexp) {
-            prop_assert!(test_cases.iter().all(|test_case| compiled_regexp.is_match(&test_case)));
+            prop_assert!(test_cases.iter().all(|test_case| compiled_regexp.is_match(test_case)));
         }
     }
 
@@ -298,7 +298,7 @@ proptest! {
             let test_cases_vec = test_cases.iter().cloned().collect::<Vec<_>>();
             let regexp = RegExpBuilder::from(&test_cases_vec).build();
             if let Ok(compiled_regexp) = compile_regexp(&regexp) {
-                prop_assert!(other_strings.iter().all(|other_string| !compiled_regexp.is_match(&other_string)));
+                prop_assert!(other_strings.iter().all(|other_string| !compiled_regexp.is_match(other_string)));
             }
         }
     }
@@ -314,7 +314,7 @@ proptest! {
                 .with_escaping_of_non_ascii_chars(false)
                 .build();
             if let Ok(compiled_regexp) = compile_regexp(&regexp) {
-                prop_assert!(other_strings.iter().all(|other_string| !compiled_regexp.is_match(&other_string)));
+                prop_assert!(other_strings.iter().all(|other_string| !compiled_regexp.is_match(other_string)));
             }
         }
     }

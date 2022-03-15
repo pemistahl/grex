@@ -161,14 +161,14 @@ impl Display for RegExp {
                     "{}{}{}{}",
                     ignore_case_flag,
                     caret,
-                    self.ast.to_string(),
+                    self.ast,
                     dollar_sign
                 )
             }
         };
 
         if regexp.contains('\u{b}') {
-            regexp = regexp.replace("\u{b}", "\\v"); // U+000B Line Tabulation
+            regexp = regexp.replace('\u{b}', "\\v"); // U+000B Line Tabulation
         }
 
         write!(
@@ -300,35 +300,35 @@ fn apply_verbose_mode(regexp: String, config: &RegExpConfig) -> String {
             &Component::IgnoreCaseFlag.to_repr(config.is_output_colorized),
             "",
         )
-        .replace("#", "\\#")
-        .replace(" ", "\\s")
-        .replace(" ", "\\s")
-        .replace(" ", "\\s")
-        .replace(" ", "\\s")
-        .replace(" ", "\\s")
-        .replace(" ", "\\s")
-        .replace(" ", "\\s")
-        .replace("\u{85}", "\\s")
-        .replace("\u{a0}", "\\s")
-        .replace("\u{1680}", "\\s")
-        .replace("\u{2000}", "\\s")
-        .replace("\u{2001}", "\\s")
-        .replace("\u{2002}", "\\s")
-        .replace("\u{2003}", "\\s")
-        .replace("\u{2004}", "\\s")
-        .replace("\u{2005}", "\\s")
-        .replace("\u{2006}", "\\s")
-        .replace("\u{2007}", "\\s")
-        .replace("\u{2008}", "\\s")
-        .replace("\u{2009}", "\\s")
-        .replace("\u{200a}", "\\s")
-        .replace("\u{200b}", "\\s")
-        .replace("\u{2028}", "\\s")
-        .replace("\u{2029}", "\\s")
-        .replace("\u{202f}", "\\s")
-        .replace("\u{205f}", "\\s")
-        .replace("\u{3000}", "\\s")
-        .replace(" ", "\\ ");
+        .replace('#', "\\#")
+        .replace(' ', "\\s")
+        .replace(' ', "\\s")
+        .replace(' ', "\\s")
+        .replace(' ', "\\s")
+        .replace(' ', "\\s")
+        .replace(' ', "\\s")
+        .replace(' ', "\\s")
+        .replace('\u{85}', "\\s")
+        .replace('\u{a0}', "\\s")
+        .replace('\u{1680}', "\\s")
+        .replace('\u{2000}', "\\s")
+        .replace('\u{2001}', "\\s")
+        .replace('\u{2002}', "\\s")
+        .replace('\u{2003}', "\\s")
+        .replace('\u{2004}', "\\s")
+        .replace('\u{2005}', "\\s")
+        .replace('\u{2006}', "\\s")
+        .replace('\u{2007}', "\\s")
+        .replace('\u{2008}', "\\s")
+        .replace('\u{2009}', "\\s")
+        .replace('\u{200a}', "\\s")
+        .replace('\u{200b}', "\\s")
+        .replace('\u{2028}', "\\s")
+        .replace('\u{2029}', "\\s")
+        .replace('\u{202f}', "\\s")
+        .replace('\u{205f}', "\\s")
+        .replace('\u{3000}', "\\s")
+        .replace(' ', "\\ ");
 
     if config.is_output_colorized {
         for regexp_match in COLOR_MODE_REGEX.find_iter(&regexp_with_replacements) {
