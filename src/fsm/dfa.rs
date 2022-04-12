@@ -281,7 +281,7 @@ mod tests {
     fn test_is_final_state() {
         let config = RegExpConfig::new();
         let dfa = Dfa::from(
-            &vec![GraphemeCluster::from("abcd", &RegExpConfig::new())],
+            &[GraphemeCluster::from("abcd", &RegExpConfig::new())],
             true,
             &config,
         );
@@ -297,10 +297,8 @@ mod tests {
     fn test_outgoing_edges() {
         let config = RegExpConfig::new();
         let dfa = Dfa::from(
-            &vec![
-                GraphemeCluster::from("abcd", &RegExpConfig::new()),
-                GraphemeCluster::from("abxd", &RegExpConfig::new()),
-            ],
+            &[GraphemeCluster::from("abcd", &RegExpConfig::new()),
+                GraphemeCluster::from("abxd", &RegExpConfig::new())],
             true,
             &config,
         );
@@ -329,10 +327,8 @@ mod tests {
     fn test_states_in_depth_first_order() {
         let config = RegExpConfig::new();
         let dfa = Dfa::from(
-            &vec![
-                GraphemeCluster::from("abcd", &RegExpConfig::new()),
-                GraphemeCluster::from("axyz", &RegExpConfig::new()),
-            ],
+            &[GraphemeCluster::from("abcd", &RegExpConfig::new()),
+                GraphemeCluster::from("axyz", &RegExpConfig::new())],
             true,
             &config,
         );
@@ -420,10 +416,8 @@ mod tests {
     fn test_dfa_constructor() {
         let config = RegExpConfig::new();
         let dfa = Dfa::from(
-            &vec![
-                GraphemeCluster::from("abcd", &RegExpConfig::new()),
-                GraphemeCluster::from("abxd", &RegExpConfig::new()),
-            ],
+            &[GraphemeCluster::from("abcd", &RegExpConfig::new()),
+                GraphemeCluster::from("abxd", &RegExpConfig::new())],
             true,
             &config,
         );
