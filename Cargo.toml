@@ -25,17 +25,17 @@ documentation = "https://docs.rs/grex"
 license = "Apache-2.0"
 readme = "README.md"
 edition = "2018"
-categories = ["command-line-utilities"]
+categories = ["command-line-utilities", "parsing"]
 keywords = ["pattern", "regex", "regexp"]
 
 [dependencies]
-atty = "0.2.14"
+atty = { version = "0.2.14", optional = true }
 itertools = "0.10.3"
 lazy_static = "1.4.0"
 ndarray = "0.15.4"
 petgraph = {version = "0.6.0", default-features = false, features = ["stable_graph"]}
 regex = "1.5.5"
-structopt = "0.3.26"
+structopt = { version = "0.3.26", optional = true }
 unic-char-range = "0.9.0"
 unic-ucd-category = "0.9.0"
 unicode-segmentation = "1.9.0"
@@ -47,3 +47,7 @@ predicates = "2.1.1"
 proptest = "1.0.0"
 rstest = "0.12.0"
 tempfile = "3.3.0"
+
+[features]
+default = ["cli"]
+cli = ["atty", "structopt"]
