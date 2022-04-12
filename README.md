@@ -123,7 +123,7 @@ In order to use *grex* as a library, simply add it as a dependency to your `Carg
 
 ```toml
 [dependencies]
-grex = { version = "1.3.0", default-features = false }
+grex = "1.3.0"
 ```
 
 ## 5. <a name="how-to-use"></a> How to use? <sup>[Top ▲](#table-of-contents)</sup>
