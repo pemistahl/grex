@@ -34,7 +34,7 @@ itertools = "0.10.3"
 lazy_static = "1.4.0"
 ndarray = "0.15.4"
 petgraph = {version = "0.6.0", default-features = false, features = ["stable_graph"]}
-regex = "1.5.4"
+regex = "1.5.5"
 structopt = { version = "0.3.26", optional = true }
 unic-char-range = "0.9.0"
 unic-ucd-category = "0.9.0"
@@ -42,7 +42,7 @@ unicode-segmentation = "1.9.0"
 
 [dev-dependencies]
 assert_cmd = "2.0.4"
-indoc = "1.0.3"
+indoc = "1.0.4"
 predicates = "2.1.1"
 proptest = "1.0.0"
 rstest = "0.12.0"

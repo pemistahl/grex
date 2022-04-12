@@ -124,9 +124,9 @@ impl Grapheme {
             }
 
             character = character
-                .replace("\n", "\\n")
-                .replace("\r", "\\r")
-                .replace("\t", "\\t");
+                .replace('\n', "\\n")
+                .replace('\r', "\\r")
+                .replace('\t', "\\t");
 
             if character == "\\" {
                 character = "\\\\".to_string();
