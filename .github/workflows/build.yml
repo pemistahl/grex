@@ -78,7 +78,7 @@ jobs:
           echo "/usr/local/opt/gnu-tar/libexec/gnubin" >> $GITHUB_PATH
 
       - name: Store or retrieve cargo caches
-        uses: actions/cache@v3.0.1
+        uses: actions/cache@v3.0.2
         with:
           path: |
             ~/.cargo/registry
