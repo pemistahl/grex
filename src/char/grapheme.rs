@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-use crate::regexp::{Component, RegExpConfig};
+use crate::regexp::Component;
 use itertools::Itertools;
 use std::fmt::{Display, Formatter, Result};
 
@@ -30,27 +30,40 @@ pub struct Grapheme {
     pub(crate) repetitions: Vec<Grapheme>,
     min: u32,
     max: u32,
-    config: RegExpConfig,
+    is_capturing_group_enabled: bool,
+    is_output_colorized: bool,
 }
 
 impl Grapheme {
-    pub(crate) fn from(s: &str, config: &RegExpConfig) -> Self {
+    pub(crate) fn from(
+        s: &str,
+        is_capturing_group_enabled: bool,
+        is_output_colorized: bool,
+    ) -> Self {
         Self {
             chars: vec![s.to_string()],
             repetitions: vec![],
             min: 1,
             max: 1,
-            config: config.clone(),
+            is_capturing_group_enabled,
+            is_output_colorized,
         }
     }
 
-    pub(crate) fn new(chars: Vec<String>, min: u32, max: u32, config: &RegExpConfig) -> Self {
+    pub(crate) fn new(
+        chars: Vec<String>,
+        min: u32,
+        max: u32,
+        is_capturing_group_enabled: bool,
+        is_output_colorized: bool,
+    ) -> Self {
         Self {
             chars,
             repetitions: vec![],
             min,
             max,
-            config: config.clone(),
+            is_capturing_group_enabled,
+            is_output_colorized,
         }
     }
 
@@ -170,49 +183,47 @@ impl Display for Grapheme {
             self.repetitions.iter().map(|it| it.to_string()).join("")
         };
         value = Component::CharClass(value.clone())
-            .to_repr(self.config.is_output_colorized && CHAR_CLASSES.contains(&&*value));
+            .to_repr(self.is_output_colorized && CHAR_CLASSES.contains(&&*value));
 
         if !is_range && is_repetition && is_single_char {
             write!(
                 f,
                 "{}{}",
                 value,
-                Component::Repetition(self.min).to_repr(self.config.is_output_colorized)
+                Component::Repetition(self.min).to_repr(self.is_output_colorized)
             )
         } else if !is_range && is_repetition && !is_single_char {
             write!(
                 f,
                 "{}{}",
-                if self.config.is_capturing_group_enabled() {
+                if self.is_capturing_group_enabled {
                     Component::CapturedParenthesizedExpression(value)
-                        .to_repr(self.config.is_output_colorized)
+                        .to_repr(self.is_output_colorized)
                 } else {
                     Component::UncapturedParenthesizedExpression(value)
-                        .to_repr(self.config.is_output_colorized)
+                        .to_repr(self.is_output_colorized)
                 },
-                Component::Repetition(self.min).to_repr(self.config.is_output_colorized)
+                Component::Repetition(self.min).to_repr(self.is_output_colorized)
             )
         } else if is_range && is_single_char {
             write!(
                 f,
                 "{}{}",
                 value,
-                Component::RepetitionRange(self.min, self.max)
-                    .to_repr(self.config.is_output_colorized)
+                Component::RepetitionRange(self.min, self.max).to_repr(self.is_output_colorized)
             )
         } else if is_range && !is_single_char {
             write!(
                 f,
                 "{}{}",
-                if self.config.is_capturing_group_enabled() {
+                if self.is_capturing_group_enabled {
                     Component::CapturedParenthesizedExpression(value)
-                        .to_repr(self.config.is_output_colorized)
+                        .to_repr(self.is_output_colorized)
                 } else {
                     Component::UncapturedParenthesizedExpression(value)
-                        .to_repr(self.config.is_output_colorized)
+                        .to_repr(self.is_output_colorized)
                 },
-                Component::RepetitionRange(self.min, self.max)
-                    .to_repr(self.config.is_output_colorized)
+                Component::RepetitionRange(self.min, self.max).to_repr(self.is_output_colorized)
             )
         } else {
             write!(f, "{}", value)

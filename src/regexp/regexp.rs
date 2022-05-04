@@ -106,15 +106,15 @@ impl RegExp {
                 .all(|test_case| regex.find_iter(test_case).count() == 1)
             {
                 return true;
-            } else if let Expression::Alternation(options, _) = expr {
+            } else if let Expression::Alternation(options, _, _) = expr {
                 options.rotate_right(1);
-            } else if let Expression::Concatenation(first, second, _) = expr {
+            } else if let Expression::Concatenation(first, second, _, _) = expr {
                 let a: &mut Expression = first;
                 let b: &mut Expression = second;
 
-                if let Expression::Alternation(options, _) = a {
+                if let Expression::Alternation(options, _, _) = a {
                     options.rotate_right(1);
-                } else if let Expression::Alternation(options, _) = b {
+                } else if let Expression::Alternation(options, _, _) = b {
                     options.rotate_right(1);
                 }
             }
@@ -141,7 +141,7 @@ impl Display for RegExp {
             Component::DollarSign.to_repr(self.config.is_output_colorized)
         };
         let mut regexp = match self.ast {
-            Expression::Alternation(_, _) => {
+            Expression::Alternation(_, _, _) => {
                 format!(
                     "{}{}{}{}",
                     ignore_case_flag,
@@ -157,13 +157,7 @@ impl Display for RegExp {
                 )
             }
             _ => {
-                format!(
-                    "{}{}{}{}",
-                    ignore_case_flag,
-                    caret,
-                    self.ast,
-                    dollar_sign
-                )
+                format!("{}{}{}{}", ignore_case_flag, caret, self.ast, dollar_sign)
             }
         };
 

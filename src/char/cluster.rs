@@ -42,10 +42,20 @@ impl GraphemeCluster {
 
                     if starts_with_backslash || contains_combining_mark {
                         it.chars()
-                            .map(|c| Grapheme::from(&c.to_string(), config))
+                            .map(|c| {
+                                Grapheme::from(
+                                    &c.to_string(),
+                                    config.is_capturing_group_enabled,
+                                    config.is_output_colorized,
+                                )
+                            })
                             .collect_vec()
                     } else {
-                        vec![Grapheme::from(it, config)]
+                        vec![Grapheme::from(
+                            it,
+                            config.is_capturing_group_enabled,
+                            config.is_output_colorized,
+                        )]
                     }
                 })
                 .collect_vec(),
@@ -282,9 +292,15 @@ fn replace_graphemes_with_repetitions(
 
         repetitions.splice(
             range.clone(),
-            [Grapheme::new(substr.clone(), count, count, config)]
-                .iter()
-                .cloned(),
+            [Grapheme::new(
+                substr.clone(),
+                count,
+                count,
+                config.is_capturing_group_enabled,
+                config.is_output_colorized,
+            )]
+            .iter()
+            .cloned(),
         );
     }
 
@@ -293,7 +309,13 @@ fn replace_graphemes_with_repetitions(
             &new_grapheme
                 .chars
                 .iter()
-                .map(|it| Grapheme::from(it, config))
+                .map(|it| {
+                    Grapheme::from(
+                        it,
+                        config.is_capturing_group_enabled,
+                        config.is_output_colorized,
+                    )
+                })
                 .collect_vec(),
             new_grapheme.repetitions.as_mut(),
             config,

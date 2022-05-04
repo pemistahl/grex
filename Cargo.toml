@@ -56,3 +56,6 @@ cli = ["atty", "structopt"]
 [[bench]]
 name = "benchmark"
 harness = false
+
+[profile.bench]
+debug = true

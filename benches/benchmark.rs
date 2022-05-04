@@ -18,13 +18,12 @@ use criterion::{criterion_group, criterion_main, Criterion};
 use grex::RegExpBuilder;
 use itertools::Itertools;
 use std::fs::File;
-use std::io;
 use std::io::Read;
 
 fn load_test_cases() -> Vec<String> {
     let mut f = File::open("./benches/testcases.txt").expect("Test cases could not be loaded");
     let mut s = String::new();
-    f.read_to_string(&mut s);
+    f.read_to_string(&mut s).unwrap();
     s.split("\n")
         .map(|test_case| test_case.to_string())
         .collect_vec()
