@@ -28,19 +28,19 @@ type State = NodeIndex<u32>;
 type StateLabel = String;
 type EdgeLabel = Grapheme;
 
-pub struct Dfa {
+pub struct Dfa<'a> {
     alphabet: BTreeSet<Grapheme>,
     graph: StableGraph<StateLabel, EdgeLabel>,
     initial_state: State,
     final_state_indices: HashSet<usize>,
-    config: RegExpConfig,
+    config: &'a RegExpConfig,
 }
 
-impl Dfa {
+impl<'a> Dfa<'a> {
     pub(crate) fn from(
         grapheme_clusters: &[GraphemeCluster],
         is_minimized: bool,
-        config: &RegExpConfig,
+        config: &'a RegExpConfig,
     ) -> Self {
         let mut dfa = Self::new(config);
         for cluster in grapheme_clusters {
@@ -73,7 +73,7 @@ impl Dfa {
         self.final_state_indices.contains(&state.index())
     }
 
-    fn new(config: &RegExpConfig) -> Self {
+    fn new(config: &'a RegExpConfig) -> Self {
         let mut graph = StableGraph::new();
         let initial_state = graph.add_node("".to_string());
         Self {
@@ -81,7 +81,7 @@ impl Dfa {
             graph,
             initial_state,
             final_state_indices: HashSet::new(),
-            config: config.clone(),
+            config,
         }
     }
 

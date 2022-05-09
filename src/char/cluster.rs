@@ -26,13 +26,13 @@ use unic_ucd_category::GeneralCategory;
 use unicode_segmentation::UnicodeSegmentation;
 
 #[derive(Clone, Debug, Eq, PartialEq)]
-pub struct GraphemeCluster {
+pub struct GraphemeCluster<'a> {
     graphemes: Vec<Grapheme>,
-    config: RegExpConfig,
+    config: &'a RegExpConfig,
 }
 
-impl GraphemeCluster {
-    pub(crate) fn from(s: &str, config: &RegExpConfig) -> Self {
+impl<'a> GraphemeCluster<'a> {
+    pub(crate) fn from(s: &str, config: &'a RegExpConfig) -> Self {
         Self {
             graphemes: UnicodeSegmentation::graphemes(s, true)
                 .flat_map(|it| {
@@ -59,21 +59,18 @@ impl GraphemeCluster {
                     }
                 })
                 .collect_vec(),
-            config: config.clone(),
+            config,
         }
     }
 
-    pub(crate) fn from_graphemes(graphemes: Vec<Grapheme>, config: &RegExpConfig) -> Self {
-        Self {
-            graphemes,
-            config: config.clone(),
-        }
+    pub(crate) fn from_graphemes(graphemes: Vec<Grapheme>, config: &'a RegExpConfig) -> Self {
+        Self { graphemes, config }
     }
 
-    pub(crate) fn new(grapheme: Grapheme, config: &RegExpConfig) -> Self {
+    pub(crate) fn new(grapheme: Grapheme, config: &'a RegExpConfig) -> Self {
         Self {
             graphemes: vec![grapheme],
-            config: config.clone(),
+            config,
         }
     }
 
@@ -127,7 +124,7 @@ impl GraphemeCluster {
 
     pub(crate) fn convert_repetitions(&mut self) {
         let mut repetitions = vec![];
-        convert_repetitions(self.graphemes(), repetitions.as_mut(), &self.config);
+        convert_repetitions(self.graphemes(), repetitions.as_mut(), self.config);
         if !repetitions.is_empty() {
             self.graphemes = repetitions;
         }
@@ -136,15 +133,12 @@ impl GraphemeCluster {
     pub(crate) fn merge(
         first: &GraphemeCluster,
         second: &GraphemeCluster,
-        config: &RegExpConfig,
+        config: &'a RegExpConfig,
     ) -> Self {
         let mut graphemes = vec![];
         graphemes.extend_from_slice(&first.graphemes);
         graphemes.extend_from_slice(&second.graphemes);
-        Self {
-            graphemes,
-            config: config.clone(),
-        }
+        Self { graphemes, config }
     }
 
     pub(crate) fn graphemes(&self) -> &Vec<Grapheme> {

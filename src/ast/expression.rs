@@ -26,16 +26,16 @@ use std::cmp::Reverse;
 use std::collections::BTreeSet;
 
 #[derive(Clone, Debug, Eq, PartialEq)]
-pub enum Expression {
-    Alternation(Vec<Expression>, bool, bool),
+pub enum Expression<'a> {
+    Alternation(Vec<Expression<'a>>, bool, bool),
     CharacterClass(BTreeSet<char>, bool),
-    Concatenation(Box<Expression>, Box<Expression>, bool, bool),
-    Literal(GraphemeCluster, bool, bool),
-    Repetition(Box<Expression>, Quantifier, bool, bool),
+    Concatenation(Box<Expression<'a>>, Box<Expression<'a>>, bool, bool),
+    Literal(GraphemeCluster<'a>, bool, bool),
+    Repetition(Box<Expression<'a>>, Quantifier, bool, bool),
 }
 
-impl Expression {
-    pub(crate) fn from(dfa: Dfa, config: &RegExpConfig) -> Self {
+impl<'a> Expression<'a> {
+    pub(crate) fn from(dfa: Dfa, config: &'a RegExpConfig) -> Self {
         let states = dfa.states_in_depth_first_order();
         let state_count = dfa.state_count();
 
@@ -103,7 +103,11 @@ impl Expression {
         }
     }
 
-    fn new_alternation(expr1: Expression, expr2: Expression, config: &RegExpConfig) -> Self {
+    fn new_alternation(
+        expr1: Expression<'a>,
+        expr2: Expression<'a>,
+        config: &RegExpConfig,
+    ) -> Self {
         let mut options: Vec<Expression> = vec![];
         Self::flatten_alternations(&mut options, vec![expr1, expr2]);
         options.sort_by_key(|option| Reverse(option.len()));
@@ -123,7 +127,11 @@ impl Expression {
         Expression::CharacterClass(union_set, config.is_output_colorized)
     }
 
-    fn new_concatenation(expr1: Expression, expr2: Expression, config: &RegExpConfig) -> Self {
+    fn new_concatenation(
+        expr1: Expression<'a>,
+        expr2: Expression<'a>,
+        config: &RegExpConfig,
+    ) -> Self {
         Expression::Concatenation(
             Box::from(expr1),
             Box::from(expr2),
@@ -132,7 +140,7 @@ impl Expression {
         )
     }
 
-    fn new_literal(cluster: GraphemeCluster, config: &RegExpConfig) -> Self {
+    fn new_literal(cluster: GraphemeCluster<'a>, config: &RegExpConfig) -> Self {
         Expression::Literal(
             cluster,
             config.is_non_ascii_char_escaped,
@@ -140,7 +148,7 @@ impl Expression {
         )
     }
 
-    fn new_repetition(expr: Expression, quantifier: Quantifier, config: &RegExpConfig) -> Self {
+    fn new_repetition(expr: Expression<'a>, quantifier: Quantifier, config: &RegExpConfig) -> Self {
         Expression::Repetition(
             Box::from(expr),
             quantifier,
@@ -227,18 +235,18 @@ impl Expression {
     }
 
     fn repeat_zero_or_more_times(
-        expr: &Option<Expression>,
-        config: &RegExpConfig,
-    ) -> Option<Expression> {
+        expr: &Option<Expression<'a>>,
+        config: &'a RegExpConfig,
+    ) -> Option<Expression<'a>> {
         expr.as_ref()
             .map(|value| Expression::new_repetition(value.clone(), Quantifier::KleeneStar, config))
     }
 
     fn concatenate(
-        a: &Option<Expression>,
-        b: &Option<Expression>,
-        config: &RegExpConfig,
-    ) -> Option<Expression> {
+        a: &Option<Expression<'a>>,
+        b: &Option<Expression<'a>>,
+        config: &'a RegExpConfig,
+    ) -> Option<Expression<'a>> {
         if a.is_none() || b.is_none() {
             return None;
         }
@@ -306,10 +314,10 @@ impl Expression {
     }
 
     fn union(
-        a: &Option<Expression>,
-        b: &Option<Expression>,
-        config: &RegExpConfig,
-    ) -> Option<Expression> {
+        a: &Option<Expression<'a>>,
+        b: &Option<Expression<'a>>,
+        config: &'a RegExpConfig,
+    ) -> Option<Expression<'a>> {
         if let (Some(mut expr1), Some(mut expr2)) = (a.clone(), b.clone()) {
             if expr1 != expr2 {
                 let common_prefix =
@@ -415,8 +423,8 @@ impl Expression {
     }
 
     fn flatten_alternations(
-        flattened_options: &mut Vec<Expression>,
-        current_options: Vec<Expression>,
+        flattened_options: &mut Vec<Expression<'a>>,
+        current_options: Vec<Expression<'a>>,
     ) {
         for option in current_options {
             if let Expression::Alternation(expr_options, _, _) = option {

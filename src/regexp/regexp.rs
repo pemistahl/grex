@@ -25,13 +25,13 @@ use regex::Regex;
 use std::cmp::Ordering;
 use std::fmt::{Display, Formatter, Result};
 
-pub struct RegExp {
-    ast: Expression,
-    config: RegExpConfig,
+pub struct RegExp<'a> {
+    ast: Expression<'a>,
+    config: &'a RegExpConfig,
 }
 
-impl RegExp {
-    pub(crate) fn from(test_cases: &mut Vec<String>, config: &RegExpConfig) -> Self {
+impl<'a> RegExp<'a> {
+    pub(crate) fn from(test_cases: &'a mut Vec<String>, config: &'a RegExpConfig) -> Self {
         if config.is_case_insensitive_matching() {
             Self::convert_to_lowercase(test_cases);
         }
@@ -48,10 +48,7 @@ impl RegExp {
             ast = Expression::from(dfa, config);
         }
 
-        Self {
-            ast,
-            config: config.clone(),
-        }
+        Self { ast, config }
     }
 
     fn convert_to_lowercase(test_cases: &mut Vec<String>) {
@@ -67,7 +64,10 @@ impl RegExp {
         });
     }
 
-    fn grapheme_clusters(test_cases: &[String], config: &RegExpConfig) -> Vec<GraphemeCluster> {
+    fn grapheme_clusters(
+        test_cases: &'a [String],
+        config: &'a RegExpConfig,
+    ) -> Vec<GraphemeCluster<'a>> {
         let mut clusters = test_cases
             .iter()
             .map(|it| GraphemeCluster::from(it, config))
@@ -123,7 +123,7 @@ impl RegExp {
     }
 }
 
-impl Display for RegExp {
+impl Display for RegExp<'_> {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         let ignore_case_flag = if self.config.is_case_insensitive_matching() {
             Component::IgnoreCaseFlag.to_repr(self.config.is_output_colorized)
@@ -169,7 +169,7 @@ impl Display for RegExp {
             f,
             "{}",
             if self.config.is_verbose_mode_enabled {
-                apply_verbose_mode(regexp, &self.config)
+                apply_verbose_mode(regexp, self.config)
             } else {
                 regexp
             }
