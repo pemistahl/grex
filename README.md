@@ -354,7 +354,7 @@ let regexp = RegExpBuilder::from(&["a", "aa", "123"])
 
 The following examples show the various supported regex syntax features:
 
-```
+```shell
 $ grex a b c
 ^[a-c]$
 
@@ -395,7 +395,7 @@ surrounded by quotation marks.
 
 The string `"I ♥♥♥ 36 and ٣ and 💩💩."` serves as input for the following examples using the command-line notation:
 
-```
+```shell
 $ grex <INPUT>
 ^I ♥♥♥ 36 and ٣ and 💩💩\.$
 
@@ -466,7 +466,7 @@ In order to build the source code yourself, you need the
 [stable Rust toolchain](https://www.rust-lang.org/tools/install) installed on your machine 
 so that [*cargo*](https://doc.rust-lang.org/cargo/), the Rust package manager is available.
 
-```
+```shell
 git clone https://github.com/pemistahl/grex.git
 cd grex
 cargo build
@@ -475,13 +475,17 @@ cargo build
 The source code is accompanied by an extensive test suite consisting of unit tests, integration 
 tests and property tests. For running them, simply say:
 
-```
+```shell
+# unit and integration tests
 cargo test
+
+# property tests (expensive, skipped by default)
+cargo test -- --ignored
 ```
 
 Benchmarks measuring the performance of several settings can be run with:
 
-```
+```shell
 cargo bench
 ```
 
