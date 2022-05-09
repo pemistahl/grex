@@ -43,7 +43,7 @@ unicode-segmentation = "1.9.0"
 [dev-dependencies]
 assert_cmd = "2.0.4"
 criterion = "0.3.5"
-indoc = "1.0.4"
+indoc = "1.0.6"
 predicates = "2.1.1"
 proptest = "1.0.0"
 rstest = "0.12.0"
