@@ -18,6 +18,7 @@ use crate::char::Grapheme;
 use crate::regexp::RegExpConfig;
 use crate::unicode_tables::{DECIMAL_NUMBER, WHITE_SPACE, WORD};
 use itertools::Itertools;
+use lazy_static::lazy_static;
 use std::cmp::Ordering;
 use std::collections::HashMap;
 use std::ops::Range;
@@ -82,10 +83,6 @@ impl<'a> GraphemeCluster<'a> {
         let is_word_converted = self.config.is_word_converted;
         let is_non_word_converted = self.config.is_non_word_converted;
 
-        let valid_numeric_chars = convert_chars_to_range(DECIMAL_NUMBER);
-        let valid_alphanumeric_chars = convert_chars_to_range(WORD);
-        let valid_space_chars = convert_chars_to_range(WHITE_SPACE);
-
         for grapheme in self.graphemes.iter_mut() {
             grapheme.chars = grapheme
                 .chars
@@ -93,24 +90,17 @@ impl<'a> GraphemeCluster<'a> {
                 .map(|it| {
                     it.chars()
                         .map(|c| {
-                            let is_digit =
-                                valid_numeric_chars.iter().any(|range| range.contains(c));
-                            let is_word = valid_alphanumeric_chars
-                                .iter()
-                                .any(|range| range.contains(c));
-                            let is_space = valid_space_chars.iter().any(|range| range.contains(c));
-
-                            if is_digit_converted && is_digit {
+                            if is_digit_converted && is_digit(c) {
                                 "\\d".to_string()
-                            } else if is_word_converted && is_word {
+                            } else if is_word_converted && is_word(c) {
                                 "\\w".to_string()
-                            } else if is_space_converted && is_space {
+                            } else if is_space_converted && is_space(c) {
                                 "\\s".to_string()
-                            } else if is_non_digit_converted && !is_digit {
+                            } else if is_non_digit_converted && !is_digit(c) {
                                 "\\D".to_string()
-                            } else if is_non_word_converted && !is_word {
+                            } else if is_non_word_converted && !is_word(c) {
                                 "\\W".to_string()
-                            } else if is_non_space_converted && !is_space {
+                            } else if is_non_space_converted && !is_space(c) {
                                 "\\S".to_string()
                             } else {
                                 c.to_string()
@@ -163,6 +153,29 @@ impl<'a> GraphemeCluster<'a> {
     pub(crate) fn is_empty(&self) -> bool {
         self.graphemes.is_empty()
     }
+}
+
+fn is_digit(c: char) -> bool {
+    lazy_static! {
+        static ref VALID_NUMERIC_CHARS: Vec<CharRange> = convert_chars_to_range(DECIMAL_NUMBER);
+    }
+    VALID_NUMERIC_CHARS.iter().any(|range| range.contains(c))
+}
+
+fn is_word(c: char) -> bool {
+    lazy_static! {
+        static ref VALID_ALPHANUMERIC_CHARS: Vec<CharRange> = convert_chars_to_range(WORD);
+    }
+    VALID_ALPHANUMERIC_CHARS
+        .iter()
+        .any(|range| range.contains(c))
+}
+
+fn is_space(c: char) -> bool {
+    lazy_static! {
+        static ref VALID_SPACE_CHARS: Vec<CharRange> = convert_chars_to_range(WHITE_SPACE);
+    }
+    VALID_SPACE_CHARS.iter().any(|range| range.contains(c))
 }
 
 fn convert_repetitions(
