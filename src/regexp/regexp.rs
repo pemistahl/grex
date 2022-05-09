@@ -32,7 +32,7 @@ pub struct RegExp<'a> {
 
 impl<'a> RegExp<'a> {
     pub(crate) fn from(test_cases: &'a mut Vec<String>, config: &'a RegExpConfig) -> Self {
-        if config.is_case_insensitive_matching() {
+        if config.is_case_insensitive_matching {
             Self::convert_to_lowercase(test_cases);
         }
         Self::sort(test_cases);
@@ -79,7 +79,7 @@ impl<'a> RegExp<'a> {
             }
         }
 
-        if config.is_repetition_converted() {
+        if config.is_repetition_converted {
             for cluster in clusters.iter_mut() {
                 cluster.convert_repetitions();
             }
@@ -125,7 +125,7 @@ impl<'a> RegExp<'a> {
 
 impl Display for RegExp<'_> {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
-        let ignore_case_flag = if self.config.is_case_insensitive_matching() {
+        let ignore_case_flag = if self.config.is_case_insensitive_matching {
             Component::IgnoreCaseFlag.to_repr(self.config.is_output_colorized)
         } else {
             String::new()
@@ -146,7 +146,7 @@ impl Display for RegExp<'_> {
                     "{}{}{}{}",
                     ignore_case_flag,
                     caret,
-                    if self.config.is_capturing_group_enabled() {
+                    if self.config.is_capturing_group_enabled {
                         Component::CapturedParenthesizedExpression(self.ast.to_string())
                             .to_repr(self.config.is_output_colorized)
                     } else {
@@ -276,7 +276,7 @@ fn apply_verbose_mode(regexp: String, config: &RegExpConfig) -> String {
         .unwrap();
     }
 
-    let verbose_mode_flag = if config.is_case_insensitive_matching() {
+    let verbose_mode_flag = if config.is_case_insensitive_matching {
         Component::IgnoreCaseAndVerboseModeFlag.to_repr(config.is_output_colorized)
     } else {
         Component::VerboseModeFlag.to_repr(config.is_output_colorized)

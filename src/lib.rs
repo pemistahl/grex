@@ -270,6 +270,4 @@ mod fsm;
 mod regexp;
 mod unicode_tables;
 
-#[allow(deprecated)]
-pub use regexp::Feature;
 pub use regexp::RegExpBuilder;

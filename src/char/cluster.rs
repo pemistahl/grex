@@ -75,12 +75,12 @@ impl<'a> GraphemeCluster<'a> {
     }
 
     pub(crate) fn convert_to_char_classes(&mut self) {
-        let is_digit_converted = self.config.is_digit_converted();
-        let is_non_digit_converted = self.config.is_non_digit_converted();
-        let is_space_converted = self.config.is_space_converted();
-        let is_non_space_converted = self.config.is_non_space_converted();
-        let is_word_converted = self.config.is_word_converted();
-        let is_non_word_converted = self.config.is_non_word_converted();
+        let is_digit_converted = self.config.is_digit_converted;
+        let is_non_digit_converted = self.config.is_non_digit_converted;
+        let is_space_converted = self.config.is_space_converted;
+        let is_non_space_converted = self.config.is_non_space_converted;
+        let is_word_converted = self.config.is_word_converted;
+        let is_non_word_converted = self.config.is_non_word_converted;
 
         let valid_numeric_chars = convert_chars_to_range(DECIMAL_NUMBER);
         let valid_alphanumeric_chars = convert_chars_to_range(WORD);
