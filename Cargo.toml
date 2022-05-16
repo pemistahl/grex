@@ -46,7 +46,7 @@ criterion = "0.3.5"
 indoc = "1.0.6"
 predicates = "2.1.1"
 proptest = "1.0.0"
-rstest = "0.12.0"
+rstest = "0.13.0"
 tempfile = "3.3.0"
 
 [features]
