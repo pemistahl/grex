@@ -25,14 +25,14 @@ use regex::Regex;
 use std::cmp::Ordering;
 use std::fmt::{Display, Formatter, Result};
 
-pub struct RegExp {
-    ast: Expression,
-    config: RegExpConfig,
+pub struct RegExp<'a> {
+    ast: Expression<'a>,
+    config: &'a RegExpConfig,
 }
 
-impl RegExp {
-    pub(crate) fn from(test_cases: &mut Vec<String>, config: &RegExpConfig) -> Self {
-        if config.is_case_insensitive_matching() {
+impl<'a> RegExp<'a> {
+    pub(crate) fn from(test_cases: &'a mut Vec<String>, config: &'a RegExpConfig) -> Self {
+        if config.is_case_insensitive_matching {
             Self::convert_to_lowercase(test_cases);
         }
         Self::sort(test_cases);
@@ -48,10 +48,7 @@ impl RegExp {
             ast = Expression::from(dfa, config);
         }
 
-        Self {
-            ast,
-            config: config.clone(),
-        }
+        Self { ast, config }
     }
 
     fn convert_to_lowercase(test_cases: &mut Vec<String>) {
@@ -67,7 +64,10 @@ impl RegExp {
         });
     }
 
-    fn grapheme_clusters(test_cases: &[String], config: &RegExpConfig) -> Vec<GraphemeCluster> {
+    fn grapheme_clusters(
+        test_cases: &'a [String],
+        config: &'a RegExpConfig,
+    ) -> Vec<GraphemeCluster<'a>> {
         let mut clusters = test_cases
             .iter()
             .map(|it| GraphemeCluster::from(it, config))
@@ -79,7 +79,7 @@ impl RegExp {
             }
         }
 
-        if config.is_repetition_converted() {
+        if config.is_repetition_converted {
             for cluster in clusters.iter_mut() {
                 cluster.convert_repetitions();
             }
@@ -106,15 +106,15 @@ impl RegExp {
                 .all(|test_case| regex.find_iter(test_case).count() == 1)
             {
                 return true;
-            } else if let Expression::Alternation(options, _) = expr {
+            } else if let Expression::Alternation(options, _, _) = expr {
                 options.rotate_right(1);
-            } else if let Expression::Concatenation(first, second, _) = expr {
+            } else if let Expression::Concatenation(first, second, _, _) = expr {
                 let a: &mut Expression = first;
                 let b: &mut Expression = second;
 
-                if let Expression::Alternation(options, _) = a {
+                if let Expression::Alternation(options, _, _) = a {
                     options.rotate_right(1);
-                } else if let Expression::Alternation(options, _) = b {
+                } else if let Expression::Alternation(options, _, _) = b {
                     options.rotate_right(1);
                 }
             }
@@ -123,9 +123,9 @@ impl RegExp {
     }
 }
 
-impl Display for RegExp {
+impl Display for RegExp<'_> {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
-        let ignore_case_flag = if self.config.is_case_insensitive_matching() {
+        let ignore_case_flag = if self.config.is_case_insensitive_matching {
             Component::IgnoreCaseFlag.to_repr(self.config.is_output_colorized)
         } else {
             String::new()
@@ -141,12 +141,12 @@ impl Display for RegExp {
             Component::DollarSign.to_repr(self.config.is_output_colorized)
         };
         let mut regexp = match self.ast {
-            Expression::Alternation(_, _) => {
+            Expression::Alternation(_, _, _) => {
                 format!(
                     "{}{}{}{}",
                     ignore_case_flag,
                     caret,
-                    if self.config.is_capturing_group_enabled() {
+                    if self.config.is_capturing_group_enabled {
                         Component::CapturedParenthesizedExpression(self.ast.to_string())
                             .to_repr(self.config.is_output_colorized)
                     } else {
@@ -157,25 +157,19 @@ impl Display for RegExp {
                 )
             }
             _ => {
-                format!(
-                    "{}{}{}{}",
-                    ignore_case_flag,
-                    caret,
-                    self.ast.to_string(),
-                    dollar_sign
-                )
+                format!("{}{}{}{}", ignore_case_flag, caret, self.ast, dollar_sign)
             }
         };
 
         if regexp.contains('\u{b}') {
-            regexp = regexp.replace("\u{b}", "\\v"); // U+000B Line Tabulation
+            regexp = regexp.replace('\u{b}', "\\v"); // U+000B Line Tabulation
         }
 
         write!(
             f,
             "{}",
             if self.config.is_verbose_mode_enabled {
-                apply_verbose_mode(regexp, &self.config)
+                apply_verbose_mode(regexp, self.config)
             } else {
                 regexp
             }
@@ -282,7 +276,7 @@ fn apply_verbose_mode(regexp: String, config: &RegExpConfig) -> String {
         .unwrap();
     }
 
-    let verbose_mode_flag = if config.is_case_insensitive_matching() {
+    let verbose_mode_flag = if config.is_case_insensitive_matching {
         Component::IgnoreCaseAndVerboseModeFlag.to_repr(config.is_output_colorized)
     } else {
         Component::VerboseModeFlag.to_repr(config.is_output_colorized)
@@ -300,35 +294,35 @@ fn apply_verbose_mode(regexp: String, config: &RegExpConfig) -> String {
             &Component::IgnoreCaseFlag.to_repr(config.is_output_colorized),
             "",
         )
-        .replace("#", "\\#")
-        .replace(" ", "\\s")
-        .replace(" ", "\\s")
-        .replace(" ", "\\s")
-        .replace(" ", "\\s")
-        .replace(" ", "\\s")
-        .replace(" ", "\\s")
-        .replace(" ", "\\s")
-        .replace("\u{85}", "\\s")
-        .replace("\u{a0}", "\\s")
-        .replace("\u{1680}", "\\s")
-        .replace("\u{2000}", "\\s")
-        .replace("\u{2001}", "\\s")
-        .replace("\u{2002}", "\\s")
-        .replace("\u{2003}", "\\s")
-        .replace("\u{2004}", "\\s")
-        .replace("\u{2005}", "\\s")
-        .replace("\u{2006}", "\\s")
-        .replace("\u{2007}", "\\s")
-        .replace("\u{2008}", "\\s")
-        .replace("\u{2009}", "\\s")
-        .replace("\u{200a}", "\\s")
-        .replace("\u{200b}", "\\s")
-        .replace("\u{2028}", "\\s")
-        .replace("\u{2029}", "\\s")
-        .replace("\u{202f}", "\\s")
-        .replace("\u{205f}", "\\s")
-        .replace("\u{3000}", "\\s")
-        .replace(" ", "\\ ");
+        .replace('#', "\\#")
+        .replace(' ', "\\s")
+        .replace(' ', "\\s")
+        .replace(' ', "\\s")
+        .replace(' ', "\\s")
+        .replace(' ', "\\s")
+        .replace(' ', "\\s")
+        .replace(' ', "\\s")
+        .replace('\u{85}', "\\s")
+        .replace('\u{a0}', "\\s")
+        .replace('\u{1680}', "\\s")
+        .replace('\u{2000}', "\\s")
+        .replace('\u{2001}', "\\s")
+        .replace('\u{2002}', "\\s")
+        .replace('\u{2003}', "\\s")
+        .replace('\u{2004}', "\\s")
+        .replace('\u{2005}', "\\s")
+        .replace('\u{2006}', "\\s")
+        .replace('\u{2007}', "\\s")
+        .replace('\u{2008}', "\\s")
+        .replace('\u{2009}', "\\s")
+        .replace('\u{200a}', "\\s")
+        .replace('\u{200b}', "\\s")
+        .replace('\u{2028}', "\\s")
+        .replace('\u{2029}', "\\s")
+        .replace('\u{202f}', "\\s")
+        .replace('\u{205f}', "\\s")
+        .replace('\u{3000}', "\\s")
+        .replace(' ', "\\ ");
 
     if config.is_output_colorized {
         for regexp_match in COLOR_MODE_REGEX.find_iter(&regexp_with_replacements) {

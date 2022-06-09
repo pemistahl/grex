@@ -147,7 +147,7 @@ impl Display for Component {
                 Component::CapturedParenthesizedExpression(expr) => format!(
                     "{}{}{}",
                     Component::CapturedLeftParenthesis,
-                    expr.to_string(),
+                    expr,
                     Component::RightParenthesis
                 ),
                 Component::Caret => "^".to_string(),

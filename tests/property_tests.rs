@@ -14,9 +14,7 @@
  * limitations under the License.
  */
 
-#![allow(deprecated)]
-
-use grex::{Feature, RegExpBuilder};
+use grex::RegExpBuilder;
 use proptest::prelude::*;
 use regex::{Error, Regex, RegexBuilder};
 
@@ -24,6 +22,7 @@ proptest! {
     #![proptest_config(ProptestConfig::with_cases(500))]
 
     #[test]
+    #[ignore]
     fn valid_regexes_with_default_settings(
         test_cases in prop::collection::hash_set(".{1,10}", 1..=5)
     ) {
@@ -33,6 +32,32 @@ proptest! {
     }
 
     #[test]
+    #[ignore]
+    fn valid_regexes_with_case_insensitive_matching(
+        test_cases in prop::collection::hash_set(".{1,10}", 1..=5)
+    ) {
+        let test_cases_vec = test_cases.iter().cloned().collect::<Vec<_>>();
+        let regexp = RegExpBuilder::from(&test_cases_vec)
+            .with_case_insensitive_matching()
+            .build();
+        prop_assert!(compile_regexp(&regexp).is_ok());
+    }
+
+    #[test]
+    #[ignore]
+    fn valid_regexes_with_case_insensitive_matching_and_verbose_mode(
+        test_cases in prop::collection::hash_set(".{1,10}", 1..=5)
+    ) {
+        let test_cases_vec = test_cases.iter().cloned().collect::<Vec<_>>();
+        let regexp = RegExpBuilder::from(&test_cases_vec)
+            .with_case_insensitive_matching()
+            .with_verbose_mode()
+            .build();
+        prop_assert!(compile_regexp(&regexp).is_ok());
+    }
+
+    #[test]
+    #[ignore]
     fn valid_regexes_with_escape_sequences(
         test_cases in prop::collection::hash_set(".{1,10}", 1..=5)
     ) {
@@ -44,6 +69,7 @@ proptest! {
     }
 
     #[test]
+    #[ignore]
     fn valid_regexes_with_verbose_mode(
         test_cases in prop::collection::hash_set(".{1,10}", 1..=5)
     ) {
@@ -55,6 +81,7 @@ proptest! {
     }
 
     #[test]
+    #[ignore]
     fn valid_regexes_with_escape_sequences_and_verbose_mode(
         test_cases in prop::collection::hash_set(".{1,10}", 1..=5)
     ) {
@@ -67,15 +94,165 @@ proptest! {
     }
 
     #[test]
-    fn valid_regexes_with_conversion_features(
+    #[ignore]
+    fn valid_regexes_with_conversion_of_digits(
+        test_cases in prop::collection::hash_set(".{1,10}", 1..=5)
+    ) {
+        let test_cases_vec = test_cases.iter().cloned().collect::<Vec<_>>();
+        let regexp = RegExpBuilder::from(&test_cases_vec)
+            .with_conversion_of_digits()
+            .build();
+        prop_assert!(compile_regexp(&regexp).is_ok());
+    }
+
+    #[test]
+    #[ignore]
+    fn valid_regexes_with_conversion_of_digits_and_verbose_mode(
+        test_cases in prop::collection::hash_set(".{1,10}", 1..=5)
+    ) {
+        let test_cases_vec = test_cases.iter().cloned().collect::<Vec<_>>();
+        let regexp = RegExpBuilder::from(&test_cases_vec)
+            .with_conversion_of_digits()
+            .with_verbose_mode()
+            .build();
+        prop_assert!(compile_regexp(&regexp).is_ok());
+    }
+
+    #[test]
+    #[ignore]
+    fn valid_regexes_with_conversion_of_non_digits(
+        test_cases in prop::collection::hash_set(".{1,10}", 1..=5)
+    ) {
+        let test_cases_vec = test_cases.iter().cloned().collect::<Vec<_>>();
+        let regexp = RegExpBuilder::from(&test_cases_vec)
+            .with_conversion_of_non_digits()
+            .build();
+        prop_assert!(compile_regexp(&regexp).is_ok());
+    }
+
+    #[test]
+    #[ignore]
+    fn valid_regexes_with_conversion_of_non_digits_and_verbose_mode(
+        test_cases in prop::collection::hash_set(".{1,10}", 1..=5)
+    ) {
+        let test_cases_vec = test_cases.iter().cloned().collect::<Vec<_>>();
+        let regexp = RegExpBuilder::from(&test_cases_vec)
+            .with_conversion_of_non_digits()
+            .with_verbose_mode()
+            .build();
+        prop_assert!(compile_regexp(&regexp).is_ok());
+    }
+
+    #[test]
+    #[ignore]
+    fn valid_regexes_with_conversion_of_whitespace(
+        test_cases in prop::collection::hash_set(".{1,10}", 1..=5)
+    ) {
+        let test_cases_vec = test_cases.iter().cloned().collect::<Vec<_>>();
+        let regexp = RegExpBuilder::from(&test_cases_vec)
+            .with_conversion_of_whitespace()
+            .build();
+        prop_assert!(compile_regexp(&regexp).is_ok());
+    }
+
+    #[test]
+    #[ignore]
+    fn valid_regexes_with_conversion_of_whitespace_and_verbose_mode(
+        test_cases in prop::collection::hash_set(".{1,10}", 1..=5)
+    ) {
+        let test_cases_vec = test_cases.iter().cloned().collect::<Vec<_>>();
+        let regexp = RegExpBuilder::from(&test_cases_vec)
+            .with_conversion_of_whitespace()
+            .with_verbose_mode()
+            .build();
+        prop_assert!(compile_regexp(&regexp).is_ok());
+    }
+
+    #[test]
+    #[ignore]
+    fn valid_regexes_with_conversion_of_non_whitespace(
+        test_cases in prop::collection::hash_set(".{1,10}", 1..=5)
+    ) {
+        let test_cases_vec = test_cases.iter().cloned().collect::<Vec<_>>();
+        let regexp = RegExpBuilder::from(&test_cases_vec)
+            .with_conversion_of_non_whitespace()
+            .build();
+        prop_assert!(compile_regexp(&regexp).is_ok());
+    }
+
+    #[test]
+    #[ignore]
+    fn valid_regexes_with_conversion_of_non_whitespace_and_verbose_mode(
+        test_cases in prop::collection::hash_set(".{1,10}", 1..=5)
+    ) {
+        let test_cases_vec = test_cases.iter().cloned().collect::<Vec<_>>();
+        let regexp = RegExpBuilder::from(&test_cases_vec)
+            .with_conversion_of_non_whitespace()
+            .with_verbose_mode()
+            .build();
+        prop_assert!(compile_regexp(&regexp).is_ok());
+    }
+
+    #[test]
+    #[ignore]
+    fn valid_regexes_with_conversion_of_words(
+        test_cases in prop::collection::hash_set(".{1,10}", 1..=5)
+    ) {
+        let test_cases_vec = test_cases.iter().cloned().collect::<Vec<_>>();
+        let regexp = RegExpBuilder::from(&test_cases_vec)
+            .with_conversion_of_words()
+            .build();
+        prop_assert!(compile_regexp(&regexp).is_ok());
+    }
+
+    #[test]
+    #[ignore]
+    fn valid_regexes_with_conversion_of_words_and_verbose_mode(
+        test_cases in prop::collection::hash_set(".{1,10}", 1..=5)
+    ) {
+        let test_cases_vec = test_cases.iter().cloned().collect::<Vec<_>>();
+        let regexp = RegExpBuilder::from(&test_cases_vec)
+            .with_conversion_of_words()
+            .with_verbose_mode()
+            .build();
+        prop_assert!(compile_regexp(&regexp).is_ok());
+    }
+
+    #[test]
+    #[ignore]
+    fn valid_regexes_with_conversion_of_non_words(
+        test_cases in prop::collection::hash_set(".{1,10}", 1..=5)
+    ) {
+        let test_cases_vec = test_cases.iter().cloned().collect::<Vec<_>>();
+        let regexp = RegExpBuilder::from(&test_cases_vec)
+            .with_conversion_of_non_words()
+            .build();
+        prop_assert!(compile_regexp(&regexp).is_ok());
+    }
+
+    #[test]
+    #[ignore]
+    fn valid_regexes_with_conversion_of_non_words_and_verbose_mode(
+        test_cases in prop::collection::hash_set(".{1,10}", 1..=5)
+    ) {
+        let test_cases_vec = test_cases.iter().cloned().collect::<Vec<_>>();
+        let regexp = RegExpBuilder::from(&test_cases_vec)
+            .with_conversion_of_non_words()
+            .with_verbose_mode()
+            .build();
+        prop_assert!(compile_regexp(&regexp).is_ok());
+    }
+
+    #[test]
+    #[ignore]
+    fn valid_regexes_with_conversion_of_repetitions(
         test_cases in prop::collection::hash_set(".{1,10}", 1..=5),
-        conversion_features in prop::collection::hash_set(conversion_feature_strategy(), 1..=9),
         minimum_repetitions in 1..100u32,
         minimum_substring_length in 1..100u32
     ) {
         let test_cases_vec = test_cases.iter().cloned().collect::<Vec<_>>();
         let regexp = RegExpBuilder::from(&test_cases_vec)
-            .with_conversion_of(&conversion_features.into_iter().collect::<Vec<_>>())
+            .with_conversion_of_repetitions()
             .with_minimum_repetitions(minimum_repetitions)
             .with_minimum_substring_length(minimum_substring_length)
             .build();
@@ -83,32 +260,15 @@ proptest! {
     }
 
     #[test]
-    fn valid_regexes_with_conversion_features_and_escape_sequences(
+    #[ignore]
+    fn valid_regexes_with_conversion_of_repetitions_and_verbose_mode(
         test_cases in prop::collection::hash_set(".{1,10}", 1..=5),
-        conversion_features in prop::collection::hash_set(conversion_feature_strategy(), 1..=9),
         minimum_repetitions in 1..100u32,
         minimum_substring_length in 1..100u32
     ) {
         let test_cases_vec = test_cases.iter().cloned().collect::<Vec<_>>();
         let regexp = RegExpBuilder::from(&test_cases_vec)
-            .with_conversion_of(&conversion_features.into_iter().collect::<Vec<_>>())
-            .with_minimum_repetitions(minimum_repetitions)
-            .with_minimum_substring_length(minimum_substring_length)
-            .with_escaping_of_non_ascii_chars(false)
-            .build();
-        prop_assert!(compile_regexp(&regexp).is_ok());
-    }
-
-    #[test]
-    fn valid_regexes_with_conversion_features_and_verbose_mode(
-        test_cases in prop::collection::hash_set(".{1,10}", 1..=5),
-        conversion_features in prop::collection::hash_set(conversion_feature_strategy(), 1..=9),
-        minimum_repetitions in 1..100u32,
-        minimum_substring_length in 1..100u32
-    ) {
-        let test_cases_vec = test_cases.iter().cloned().collect::<Vec<_>>();
-        let regexp = RegExpBuilder::from(&test_cases_vec)
-            .with_conversion_of(&conversion_features.into_iter().collect::<Vec<_>>())
+            .with_conversion_of_repetitions()
             .with_minimum_repetitions(minimum_repetitions)
             .with_minimum_substring_length(minimum_substring_length)
             .with_verbose_mode()
@@ -117,17 +277,48 @@ proptest! {
     }
 
     #[test]
+    #[ignore]
     fn matching_regexes_with_default_settings(
         test_cases in prop::collection::hash_set(".{1,10}", 1..=5)
     ) {
         let test_cases_vec = test_cases.iter().cloned().collect::<Vec<_>>();
         let regexp = RegExpBuilder::from(&test_cases_vec).build();
         if let Ok(compiled_regexp) = compile_regexp(&regexp) {
-            prop_assert!(test_cases.iter().all(|test_case| compiled_regexp.is_match(&test_case)));
+            prop_assert!(test_cases.iter().all(|test_case| compiled_regexp.is_match(test_case)));
         }
     }
 
     #[test]
+    #[ignore]
+    fn matching_regexes_with_case_insensitive_matching(
+        test_cases in prop::collection::hash_set(".{1,10}", 1..=5)
+    ) {
+        let test_cases_vec = test_cases.iter().cloned().collect::<Vec<_>>();
+        let regexp = RegExpBuilder::from(&test_cases_vec)
+            .with_case_insensitive_matching()
+            .build();
+        if let Ok(compiled_regexp) = compile_regexp(&regexp) {
+            prop_assert!(test_cases.iter().all(|test_case| compiled_regexp.is_match(test_case)));
+        }
+    }
+
+    #[test]
+    #[ignore]
+    fn matching_regexes_with_case_insensitive_matching_and_verbose_mode(
+        test_cases in prop::collection::hash_set(".{1,10}", 1..=5)
+    ) {
+        let test_cases_vec = test_cases.iter().cloned().collect::<Vec<_>>();
+        let regexp = RegExpBuilder::from(&test_cases_vec)
+            .with_case_insensitive_matching()
+            .with_verbose_mode()
+            .build();
+        if let Ok(compiled_regexp) = compile_regexp(&regexp) {
+            prop_assert!(test_cases.iter().all(|test_case| compiled_regexp.is_match(test_case)));
+        }
+    }
+
+    #[test]
+    #[ignore]
     fn matching_regexes_with_escape_sequences(
         test_cases in prop::collection::hash_set(".{1,10}", 1..=5)
     ) {
@@ -136,11 +327,12 @@ proptest! {
             .with_escaping_of_non_ascii_chars(false)
             .build();
         if let Ok(compiled_regexp) = compile_regexp(&regexp) {
-            prop_assert!(test_cases.iter().all(|test_case| compiled_regexp.is_match(&test_case)));
+            prop_assert!(test_cases.iter().all(|test_case| compiled_regexp.is_match(test_case)));
         }
     }
 
     #[test]
+    #[ignore]
     fn matching_regexes_with_verbose_mode(
         test_cases in prop::collection::hash_set(".{1,10}", 1..=5)
     ) {
@@ -149,11 +341,12 @@ proptest! {
             .with_verbose_mode()
             .build();
         if let Ok(compiled_regexp) = compile_regexp(&regexp) {
-            prop_assert!(test_cases.iter().all(|test_case| compiled_regexp.is_match(&test_case)));
+            prop_assert!(test_cases.iter().all(|test_case| compiled_regexp.is_match(test_case)));
         }
     }
 
     #[test]
+    #[ignore]
     fn matching_regexes_with_escape_sequences_and_verbose_mode(
         test_cases in prop::collection::hash_set(".{1,10}", 1..=5)
     ) {
@@ -163,67 +356,223 @@ proptest! {
             .with_verbose_mode()
             .build();
         if let Ok(compiled_regexp) = compile_regexp(&regexp) {
-            prop_assert!(test_cases.iter().all(|test_case| compiled_regexp.is_match(&test_case)));
+            prop_assert!(test_cases.iter().all(|test_case| compiled_regexp.is_match(test_case)));
         }
     }
 
     #[test]
-    fn matching_regexes_with_conversion_features(
+    #[ignore]
+    fn matching_regexes_with_conversion_of_digits(
+        test_cases in prop::collection::hash_set(".{1,10}", 1..=5)
+    ) {
+        let test_cases_vec = test_cases.iter().cloned().collect::<Vec<_>>();
+        let regexp = RegExpBuilder::from(&test_cases_vec)
+            .with_conversion_of_digits()
+            .build();
+        if let Ok(compiled_regexp) = compile_regexp(&regexp) {
+            prop_assert!(test_cases.iter().all(|test_case| compiled_regexp.is_match(test_case)));
+        }
+    }
+
+    #[test]
+    #[ignore]
+    fn matching_regexes_with_conversion_of_digits_and_verbose_mode(
+        test_cases in prop::collection::hash_set(".{1,10}", 1..=5)
+    ) {
+        let test_cases_vec = test_cases.iter().cloned().collect::<Vec<_>>();
+        let regexp = RegExpBuilder::from(&test_cases_vec)
+            .with_conversion_of_digits()
+            .with_verbose_mode()
+            .build();
+        if let Ok(compiled_regexp) = compile_regexp(&regexp) {
+            prop_assert!(test_cases.iter().all(|test_case| compiled_regexp.is_match(test_case)));
+        }
+    }
+
+    #[test]
+    #[ignore]
+    fn matching_regexes_with_conversion_of_non_digits(
+        test_cases in prop::collection::hash_set(".{1,10}", 1..=5)
+    ) {
+        let test_cases_vec = test_cases.iter().cloned().collect::<Vec<_>>();
+        let regexp = RegExpBuilder::from(&test_cases_vec)
+            .with_conversion_of_digits()
+            .build();
+        if let Ok(compiled_regexp) = compile_regexp(&regexp) {
+            prop_assert!(test_cases.iter().all(|test_case| compiled_regexp.is_match(test_case)));
+        }
+    }
+
+    #[test]
+    #[ignore]
+    fn matching_regexes_with_conversion_of_non_digits_and_verbose_mode(
+        test_cases in prop::collection::hash_set(".{1,10}", 1..=5)
+    ) {
+        let test_cases_vec = test_cases.iter().cloned().collect::<Vec<_>>();
+        let regexp = RegExpBuilder::from(&test_cases_vec)
+            .with_conversion_of_digits()
+            .with_verbose_mode()
+            .build();
+        if let Ok(compiled_regexp) = compile_regexp(&regexp) {
+            prop_assert!(test_cases.iter().all(|test_case| compiled_regexp.is_match(test_case)));
+        }
+    }
+
+    #[test]
+    #[ignore]
+    fn matching_regexes_with_conversion_of_whitespace(
+        test_cases in prop::collection::hash_set(".{1,10}", 1..=5)
+    ) {
+        let test_cases_vec = test_cases.iter().cloned().collect::<Vec<_>>();
+        let regexp = RegExpBuilder::from(&test_cases_vec)
+            .with_conversion_of_whitespace()
+            .build();
+        if let Ok(compiled_regexp) = compile_regexp(&regexp) {
+            prop_assert!(test_cases.iter().all(|test_case| compiled_regexp.is_match(test_case)));
+        }
+    }
+
+    #[test]
+    #[ignore]
+    fn matching_regexes_with_conversion_of_whitespace_and_verbose_mode(
+        test_cases in prop::collection::hash_set(".{1,10}", 1..=5)
+    ) {
+        let test_cases_vec = test_cases.iter().cloned().collect::<Vec<_>>();
+        let regexp = RegExpBuilder::from(&test_cases_vec)
+            .with_conversion_of_whitespace()
+            .with_verbose_mode()
+            .build();
+        if let Ok(compiled_regexp) = compile_regexp(&regexp) {
+            prop_assert!(test_cases.iter().all(|test_case| compiled_regexp.is_match(test_case)));
+        }
+    }
+
+    #[test]
+    #[ignore]
+    fn matching_regexes_with_conversion_of_non_whitespace(
+        test_cases in prop::collection::hash_set(".{1,10}", 1..=5)
+    ) {
+        let test_cases_vec = test_cases.iter().cloned().collect::<Vec<_>>();
+        let regexp = RegExpBuilder::from(&test_cases_vec)
+            .with_conversion_of_non_whitespace()
+            .build();
+        if let Ok(compiled_regexp) = compile_regexp(&regexp) {
+            prop_assert!(test_cases.iter().all(|test_case| compiled_regexp.is_match(test_case)));
+        }
+    }
+
+    #[test]
+    #[ignore]
+    fn matching_regexes_with_conversion_of_non_whitespace_and_verbose_mode(
+        test_cases in prop::collection::hash_set(".{1,10}", 1..=5)
+    ) {
+        let test_cases_vec = test_cases.iter().cloned().collect::<Vec<_>>();
+        let regexp = RegExpBuilder::from(&test_cases_vec)
+            .with_conversion_of_non_whitespace()
+            .with_verbose_mode()
+            .build();
+        if let Ok(compiled_regexp) = compile_regexp(&regexp) {
+            prop_assert!(test_cases.iter().all(|test_case| compiled_regexp.is_match(test_case)));
+        }
+    }
+
+    #[test]
+    #[ignore]
+    fn matching_regexes_with_conversion_of_words(
+        test_cases in prop::collection::hash_set(".{1,10}", 1..=5)
+    ) {
+        let test_cases_vec = test_cases.iter().cloned().collect::<Vec<_>>();
+        let regexp = RegExpBuilder::from(&test_cases_vec)
+            .with_conversion_of_words()
+            .build();
+        if let Ok(compiled_regexp) = compile_regexp(&regexp) {
+            prop_assert!(test_cases.iter().all(|test_case| compiled_regexp.is_match(test_case)));
+        }
+    }
+
+    #[test]
+    #[ignore]
+    fn matching_regexes_with_conversion_of_words_and_verbose_mode(
+        test_cases in prop::collection::hash_set(".{1,10}", 1..=5)
+    ) {
+        let test_cases_vec = test_cases.iter().cloned().collect::<Vec<_>>();
+        let regexp = RegExpBuilder::from(&test_cases_vec)
+            .with_conversion_of_words()
+            .with_verbose_mode()
+            .build();
+        if let Ok(compiled_regexp) = compile_regexp(&regexp) {
+            prop_assert!(test_cases.iter().all(|test_case| compiled_regexp.is_match(test_case)));
+        }
+    }
+
+    #[test]
+    #[ignore]
+    fn matching_regexes_with_conversion_of_non_words(
+        test_cases in prop::collection::hash_set(".{1,10}", 1..=5)
+    ) {
+        let test_cases_vec = test_cases.iter().cloned().collect::<Vec<_>>();
+        let regexp = RegExpBuilder::from(&test_cases_vec)
+            .with_conversion_of_non_words()
+            .build();
+        if let Ok(compiled_regexp) = compile_regexp(&regexp) {
+            prop_assert!(test_cases.iter().all(|test_case| compiled_regexp.is_match(test_case)));
+        }
+    }
+
+    #[test]
+    #[ignore]
+    fn matching_regexes_with_conversion_of_non_words_and_verbose_mode(
+        test_cases in prop::collection::hash_set(".{1,10}", 1..=5)
+    ) {
+        let test_cases_vec = test_cases.iter().cloned().collect::<Vec<_>>();
+        let regexp = RegExpBuilder::from(&test_cases_vec)
+            .with_conversion_of_non_words()
+            .with_verbose_mode()
+            .build();
+        if let Ok(compiled_regexp) = compile_regexp(&regexp) {
+            prop_assert!(test_cases.iter().all(|test_case| compiled_regexp.is_match(test_case)));
+        }
+    }
+
+    #[test]
+    #[ignore]
+    fn matching_regexes_with_conversion_of_repetitions(
         test_cases in prop::collection::hash_set(".{1,10}", 1..=5),
-        conversion_features in prop::collection::hash_set(conversion_feature_strategy(), 1..=9),
         minimum_repetitions in 1..100u32,
         minimum_substring_length in 1..100u32
     ) {
         let test_cases_vec = test_cases.iter().cloned().collect::<Vec<_>>();
         let regexp = RegExpBuilder::from(&test_cases_vec)
-            .with_conversion_of(&conversion_features.into_iter().collect::<Vec<_>>())
+            .with_conversion_of_repetitions()
             .with_minimum_repetitions(minimum_repetitions)
             .with_minimum_substring_length(minimum_substring_length)
             .build();
         if let Ok(compiled_regexp) = compile_regexp(&regexp) {
-            prop_assert!(test_cases.iter().all(|test_case| compiled_regexp.is_match(&test_case)));
+            prop_assert!(test_cases.iter().all(|test_case| compiled_regexp.is_match(test_case)));
         }
     }
 
     #[test]
-    fn matching_regexes_with_conversion_features_and_escape_sequences(
+    #[ignore]
+    fn matching_regexes_with_conversion_of_repetitions_and_verbose_mode(
         test_cases in prop::collection::hash_set(".{1,10}", 1..=5),
-        conversion_features in prop::collection::hash_set(conversion_feature_strategy(), 1..=9),
         minimum_repetitions in 1..100u32,
         minimum_substring_length in 1..100u32
     ) {
         let test_cases_vec = test_cases.iter().cloned().collect::<Vec<_>>();
         let regexp = RegExpBuilder::from(&test_cases_vec)
-            .with_conversion_of(&conversion_features.into_iter().collect::<Vec<_>>())
-            .with_minimum_repetitions(minimum_repetitions)
-            .with_minimum_substring_length(minimum_substring_length)
-            .with_escaping_of_non_ascii_chars(false)
-            .build();
-        if let Ok(compiled_regexp) = compile_regexp(&regexp) {
-            prop_assert!(test_cases.iter().all(|test_case| compiled_regexp.is_match(&test_case)));
-        }
-    }
-
-    #[test]
-    fn matching_regexes_with_conversion_features_and_verbose_mode(
-        test_cases in prop::collection::hash_set(".{1,10}", 1..=5),
-        conversion_features in prop::collection::hash_set(conversion_feature_strategy(), 1..=9),
-        minimum_repetitions in 1..100u32,
-        minimum_substring_length in 1..100u32
-    ) {
-        let test_cases_vec = test_cases.iter().cloned().collect::<Vec<_>>();
-        let regexp = RegExpBuilder::from(&test_cases_vec)
-            .with_conversion_of(&conversion_features.into_iter().collect::<Vec<_>>())
+            .with_conversion_of_repetitions()
             .with_minimum_repetitions(minimum_repetitions)
             .with_minimum_substring_length(minimum_substring_length)
             .with_verbose_mode()
             .build();
         if let Ok(compiled_regexp) = compile_regexp(&regexp) {
-            prop_assert!(test_cases.iter().all(|test_case| compiled_regexp.is_match(&test_case)));
+            prop_assert!(test_cases.iter().all(|test_case| compiled_regexp.is_match(test_case)));
         }
     }
 
     #[test]
+    #[ignore]
     fn matching_regexes_without_start_anchor(
         test_cases in prop::collection::hash_set("[A-C]{1,10}", 1..=5)
     ) {
@@ -246,6 +595,7 @@ proptest! {
     }
 
     #[test]
+    #[ignore]
     fn matching_regexes_without_end_anchor(
         test_cases in prop::collection::hash_set("[A-C]{1,10}", 1..=5)
     ) {
@@ -268,6 +618,7 @@ proptest! {
     }
 
     #[test]
+    #[ignore]
     fn matching_regexes_without_anchors(
         test_cases in prop::collection::hash_set("[A-C]{1,10}", 1..=5)
     ) {
@@ -290,6 +641,7 @@ proptest! {
     }
 
     #[test]
+    #[ignore]
     fn regexes_not_matching_other_strings_with_default_settings(
         test_cases in prop::collection::hash_set(".{1,10}", 1..=5),
         other_strings in prop::collection::hash_set(".{1,10}", 1..=5)
@@ -298,12 +650,13 @@ proptest! {
             let test_cases_vec = test_cases.iter().cloned().collect::<Vec<_>>();
             let regexp = RegExpBuilder::from(&test_cases_vec).build();
             if let Ok(compiled_regexp) = compile_regexp(&regexp) {
-                prop_assert!(other_strings.iter().all(|other_string| !compiled_regexp.is_match(&other_string)));
+                prop_assert!(other_strings.iter().all(|other_string| !compiled_regexp.is_match(other_string)));
             }
         }
     }
 
     #[test]
+    #[ignore]
     fn regexes_not_matching_other_strings_with_escape_sequences(
         test_cases in prop::collection::hash_set(".{1,10}", 1..=5),
         other_strings in prop::collection::hash_set(".{1,10}", 1..=5)
@@ -314,24 +667,10 @@ proptest! {
                 .with_escaping_of_non_ascii_chars(false)
                 .build();
             if let Ok(compiled_regexp) = compile_regexp(&regexp) {
-                prop_assert!(other_strings.iter().all(|other_string| !compiled_regexp.is_match(&other_string)));
+                prop_assert!(other_strings.iter().all(|other_string| !compiled_regexp.is_match(other_string)));
             }
         }
     }
-}
-
-fn conversion_feature_strategy() -> impl Strategy<Value = Feature> {
-    prop_oneof![
-        Just(Feature::Digit),
-        Just(Feature::NonDigit),
-        Just(Feature::Space),
-        Just(Feature::NonSpace),
-        Just(Feature::Word),
-        Just(Feature::NonWord),
-        Just(Feature::Repetition),
-        Just(Feature::CaseInsensitivity),
-        Just(Feature::CapturingGroup)
-    ]
 }
 
 fn compile_regexp(regexp: &str) -> Result<Regex, Error> {

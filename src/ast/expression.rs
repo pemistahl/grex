@@ -26,16 +26,16 @@ use std::cmp::Reverse;
 use std::collections::BTreeSet;
 
 #[derive(Clone, Debug, Eq, PartialEq)]
-pub enum Expression {
-    Alternation(Vec<Expression>, RegExpConfig),
-    CharacterClass(BTreeSet<char>, RegExpConfig),
-    Concatenation(Box<Expression>, Box<Expression>, RegExpConfig),
-    Literal(GraphemeCluster, RegExpConfig),
-    Repetition(Box<Expression>, Quantifier, RegExpConfig),
+pub enum Expression<'a> {
+    Alternation(Vec<Expression<'a>>, bool, bool),
+    CharacterClass(BTreeSet<char>, bool),
+    Concatenation(Box<Expression<'a>>, Box<Expression<'a>>, bool, bool),
+    Literal(GraphemeCluster<'a>, bool, bool),
+    Repetition(Box<Expression<'a>>, Quantifier, bool, bool),
 }
 
-impl Expression {
-    pub(crate) fn from(dfa: Dfa, config: &RegExpConfig) -> Self {
+impl<'a> Expression<'a> {
+    pub(crate) fn from(dfa: Dfa, config: &'a RegExpConfig) -> Self {
         let states = dfa.states_in_depth_first_order();
         let state_count = dfa.state_count();
 
@@ -103,11 +103,19 @@ impl Expression {
         }
     }
 
-    fn new_alternation(expr1: Expression, expr2: Expression, config: &RegExpConfig) -> Self {
+    fn new_alternation(
+        expr1: Expression<'a>,
+        expr2: Expression<'a>,
+        config: &RegExpConfig,
+    ) -> Self {
         let mut options: Vec<Expression> = vec![];
         Self::flatten_alternations(&mut options, vec![expr1, expr2]);
         options.sort_by_key(|option| Reverse(option.len()));
-        Expression::Alternation(options, config.clone())
+        Expression::Alternation(
+            options,
+            config.is_capturing_group_enabled,
+            config.is_output_colorized,
+        )
     }
 
     fn new_character_class(
@@ -116,24 +124,42 @@ impl Expression {
         config: &RegExpConfig,
     ) -> Self {
         let union_set = first_char_set.union(&second_char_set).copied().collect();
-        Expression::CharacterClass(union_set, config.clone())
+        Expression::CharacterClass(union_set, config.is_output_colorized)
     }
 
-    fn new_concatenation(expr1: Expression, expr2: Expression, config: &RegExpConfig) -> Self {
-        Expression::Concatenation(Box::from(expr1), Box::from(expr2), config.clone())
+    fn new_concatenation(
+        expr1: Expression<'a>,
+        expr2: Expression<'a>,
+        config: &RegExpConfig,
+    ) -> Self {
+        Expression::Concatenation(
+            Box::from(expr1),
+            Box::from(expr2),
+            config.is_capturing_group_enabled,
+            config.is_output_colorized,
+        )
     }
 
-    fn new_literal(cluster: GraphemeCluster, config: &RegExpConfig) -> Self {
-        Expression::Literal(cluster, config.clone())
+    fn new_literal(cluster: GraphemeCluster<'a>, config: &RegExpConfig) -> Self {
+        Expression::Literal(
+            cluster,
+            config.is_non_ascii_char_escaped,
+            config.is_astral_code_point_converted_to_surrogate,
+        )
     }
 
-    fn new_repetition(expr: Expression, quantifier: Quantifier, config: &RegExpConfig) -> Self {
-        Expression::Repetition(Box::from(expr), quantifier, config.clone())
+    fn new_repetition(expr: Expression<'a>, quantifier: Quantifier, config: &RegExpConfig) -> Self {
+        Expression::Repetition(
+            Box::from(expr),
+            quantifier,
+            config.is_capturing_group_enabled,
+            config.is_output_colorized,
+        )
     }
 
     fn is_empty(&self) -> bool {
         match self {
-            Expression::Literal(cluster, _) => cluster.is_empty(),
+            Expression::Literal(cluster, _, _) => cluster.is_empty(),
             _ => false,
         }
     }
@@ -141,8 +167,8 @@ impl Expression {
     pub(crate) fn is_single_codepoint(&self) -> bool {
         match self {
             Expression::CharacterClass(_, _) => true,
-            Expression::Literal(cluster, config) => {
-                cluster.char_count(config.is_non_ascii_char_escaped) == 1
+            Expression::Literal(cluster, is_non_ascii_char_escaped, _) => {
+                cluster.char_count(*is_non_ascii_char_escaped) == 1
                     && cluster.graphemes().first().unwrap().maximum() == 1
             }
             _ => false,
@@ -151,37 +177,37 @@ impl Expression {
 
     fn len(&self) -> usize {
         match self {
-            Expression::Alternation(options, _) => options.first().unwrap().len(),
+            Expression::Alternation(options, _, _) => options.first().unwrap().len(),
             Expression::CharacterClass(_, _) => 1,
-            Expression::Concatenation(expr1, expr2, _) => expr1.len() + expr2.len(),
-            Expression::Literal(cluster, _) => cluster.size(),
-            Expression::Repetition(expr, _, _) => expr.len(),
+            Expression::Concatenation(expr1, expr2, _, _) => expr1.len() + expr2.len(),
+            Expression::Literal(cluster, _, _) => cluster.size(),
+            Expression::Repetition(expr, _, _, _) => expr.len(),
         }
     }
 
     pub(crate) fn precedence(&self) -> u8 {
         match self {
-            Expression::Alternation(_, _) | Expression::CharacterClass(_, _) => 1,
-            Expression::Concatenation(_, _, _) | Expression::Literal(_, _) => 2,
-            Expression::Repetition(_, _, _) => 3,
+            Expression::Alternation(_, _, _) | Expression::CharacterClass(_, _) => 1,
+            Expression::Concatenation(_, _, _, _) | Expression::Literal(_, _, _) => 2,
+            Expression::Repetition(_, _, _, _) => 3,
         }
     }
 
     pub(crate) fn remove_substring(&mut self, substring: &Substring, length: usize) {
         match self {
-            Expression::Concatenation(expr1, expr2, _) => match substring {
+            Expression::Concatenation(expr1, expr2, _, _) => match substring {
                 Substring::Prefix => {
-                    if let Expression::Literal(_, _) = **expr1 {
+                    if let Expression::Literal(_, _, _) = **expr1 {
                         expr1.remove_substring(substring, length)
                     }
                 }
                 Substring::Suffix => {
-                    if let Expression::Literal(_, _) = **expr2 {
+                    if let Expression::Literal(_, _, _) = **expr2 {
                         expr2.remove_substring(substring, length)
                     }
                 }
             },
-            Expression::Literal(cluster, _) => match substring {
+            Expression::Literal(cluster, _, _) => match substring {
                 Substring::Prefix => {
                     cluster.graphemes_mut().drain(..length);
                 }
@@ -196,31 +222,31 @@ impl Expression {
 
     pub(crate) fn value(&self, substring: Option<&Substring>) -> Option<Vec<Grapheme>> {
         match self {
-            Expression::Concatenation(expr1, expr2, _) => match substring {
+            Expression::Concatenation(expr1, expr2, _, _) => match substring {
                 Some(value) => match value {
                     Substring::Prefix => expr1.value(None),
                     Substring::Suffix => expr2.value(None),
                 },
                 None => None,
             },
-            Expression::Literal(cluster, _) => Some(cluster.graphemes().clone()),
+            Expression::Literal(cluster, _, _) => Some(cluster.graphemes().clone()),
             _ => None,
         }
     }
 
     fn repeat_zero_or_more_times(
-        expr: &Option<Expression>,
-        config: &RegExpConfig,
-    ) -> Option<Expression> {
+        expr: &Option<Expression<'a>>,
+        config: &'a RegExpConfig,
+    ) -> Option<Expression<'a>> {
         expr.as_ref()
             .map(|value| Expression::new_repetition(value.clone(), Quantifier::KleeneStar, config))
     }
 
     fn concatenate(
-        a: &Option<Expression>,
-        b: &Option<Expression>,
-        config: &RegExpConfig,
-    ) -> Option<Expression> {
+        a: &Option<Expression<'a>>,
+        b: &Option<Expression<'a>>,
+        config: &'a RegExpConfig,
+    ) -> Option<Expression<'a>> {
         if a.is_none() || b.is_none() {
             return None;
         }
@@ -235,7 +261,7 @@ impl Expression {
             return a.clone();
         }
 
-        if let (Expression::Literal(graphemes_a, config), Expression::Literal(graphemes_b, _)) =
+        if let (Expression::Literal(graphemes_a, _, _), Expression::Literal(graphemes_b, _, _)) =
             (&expr1, &expr2)
         {
             return Some(Expression::new_literal(
@@ -244,10 +270,12 @@ impl Expression {
             ));
         }
 
-        if let (Expression::Literal(graphemes_a, _), Expression::Concatenation(first, second, _)) =
-            (&expr1, &expr2)
+        if let (
+            Expression::Literal(graphemes_a, _, _),
+            Expression::Concatenation(first, second, _, _),
+        ) = (&expr1, &expr2)
         {
-            if let Expression::Literal(graphemes_first, config) = &**first {
+            if let Expression::Literal(graphemes_first, _, _) = &**first {
                 let literal = Expression::new_literal(
                     GraphemeCluster::merge(graphemes_a, graphemes_first, config),
                     config,
@@ -260,10 +288,12 @@ impl Expression {
             }
         }
 
-        if let (Expression::Literal(graphemes_b, _), Expression::Concatenation(first, second, _)) =
-            (&expr2, &expr1)
+        if let (
+            Expression::Literal(graphemes_b, _, _),
+            Expression::Concatenation(first, second, _, _),
+        ) = (&expr2, &expr1)
         {
-            if let Expression::Literal(graphemes_second, config) = &**second {
+            if let Expression::Literal(graphemes_second, _, _) = &**second {
                 let literal = Expression::new_literal(
                     GraphemeCluster::merge(graphemes_second, graphemes_b, config),
                     config,
@@ -284,10 +314,10 @@ impl Expression {
     }
 
     fn union(
-        a: &Option<Expression>,
-        b: &Option<Expression>,
-        config: &RegExpConfig,
-    ) -> Option<Expression> {
+        a: &Option<Expression<'a>>,
+        b: &Option<Expression<'a>>,
+        config: &'a RegExpConfig,
+    ) -> Option<Expression<'a>> {
         if let (Some(mut expr1), Some(mut expr2)) = (a.clone(), b.clone()) {
             if expr1 != expr2 {
                 let common_prefix =
@@ -312,7 +342,7 @@ impl Expression {
                 };
 
                 if result.is_none() {
-                    if let Expression::Repetition(expr, quantifier, _) = &expr1 {
+                    if let Expression::Repetition(expr, quantifier, _, _) = &expr1 {
                         if quantifier == &Quantifier::QuestionMark {
                             let alternation =
                                 Expression::new_alternation(*expr.clone(), expr2.clone(), config);
@@ -326,7 +356,7 @@ impl Expression {
                 }
 
                 if result.is_none() {
-                    if let Expression::Repetition(expr, quantifier, _) = &expr2 {
+                    if let Expression::Repetition(expr, quantifier, _, _) = &expr2 {
                         if quantifier == &Quantifier::QuestionMark {
                             let alternation =
                                 Expression::new_alternation(expr1.clone(), *expr.clone(), config);
@@ -393,11 +423,11 @@ impl Expression {
     }
 
     fn flatten_alternations(
-        flattened_options: &mut Vec<Expression>,
-        current_options: Vec<Expression>,
+        flattened_options: &mut Vec<Expression<'a>>,
+        current_options: Vec<Expression<'a>>,
     ) {
         for option in current_options {
-            if let Expression::Alternation(expr_options, _) = option {
+            if let Expression::Alternation(expr_options, _, _) = option {
                 Self::flatten_alternations(flattened_options, expr_options);
             } else {
                 flattened_options.push(option);
@@ -407,7 +437,7 @@ impl Expression {
 
     fn extract_character_set(expr: Expression) -> BTreeSet<char> {
         match expr {
-            Expression::Literal(cluster, _) => {
+            Expression::Literal(cluster, _, _) => {
                 let single_char = cluster
                     .graphemes()
                     .first()
@@ -441,8 +471,8 @@ impl Expression {
         b: &Expression,
         substring: &Substring,
     ) -> Option<Vec<Grapheme>> {
-        let mut graphemes_a = a.value(Some(substring)).unwrap_or_else(Vec::new);
-        let mut graphemes_b = b.value(Some(substring)).unwrap_or_else(Vec::new);
+        let mut graphemes_a = a.value(Some(substring)).unwrap_or_default();
+        let mut graphemes_b = b.value(Some(substring)).unwrap_or_default();
         let mut common_graphemes = vec![];
 
         if let Substring::Suffix = substring {
@@ -543,7 +573,11 @@ mod tests {
             Some(
                 vec!["a", "b", "c", "d", "e", "f"]
                     .iter()
-                    .map(|&it| Grapheme::from(it, &config))
+                    .map(|&it| Grapheme::from(
+                        it,
+                        config.is_capturing_group_enabled,
+                        config.is_output_colorized
+                    ))
                     .collect_vec()
             )
         );
@@ -554,7 +588,11 @@ mod tests {
             Some(
                 vec!["c", "d", "e", "f"]
                     .iter()
-                    .map(|&it| Grapheme::from(it, &config))
+                    .map(|&it| Grapheme::from(
+                        it,
+                        config.is_capturing_group_enabled,
+                        config.is_output_colorized
+                    ))
                     .collect_vec()
             )
         );
@@ -570,7 +608,11 @@ mod tests {
             Some(
                 vec!["a", "b", "c", "d", "e", "f"]
                     .iter()
-                    .map(|&it| Grapheme::from(it, &config))
+                    .map(|&it| Grapheme::from(
+                        it,
+                        config.is_capturing_group_enabled,
+                        config.is_output_colorized
+                    ))
                     .collect_vec()
             )
         );
@@ -581,7 +623,11 @@ mod tests {
             Some(
                 vec!["a", "b", "c", "d"]
                     .iter()
-                    .map(|&it| Grapheme::from(it, &config))
+                    .map(|&it| Grapheme::from(
+                        it,
+                        config.is_capturing_group_enabled,
+                        config.is_output_colorized
+                    ))
                     .collect_vec()
             )
         );

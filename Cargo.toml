@@ -14,7 +14,7 @@
 
 [package]
 name = "grex"
-version = "1.3.0"
+version = "1.4.0-SNAPSHOT"
 authors = ["Peter M. Stahl <pemistahl@gmail.com>"]
 description = """
 grex generates regular expressions from user-provided test cases.
@@ -25,25 +25,37 @@ documentation = "https://docs.rs/grex"
 license = "Apache-2.0"
 readme = "README.md"
 edition = "2018"
-categories = ["command-line-utilities"]
+categories = ["command-line-utilities", "parsing"]
 keywords = ["pattern", "regex", "regexp"]
 
 [dependencies]
-atty = "0.2.14"
+atty = { version = "0.2.14", optional = true }
 clap = { version = "3.1", features = ["derive", "wrap_help"] }
 itertools = "0.10.3"
 lazy_static = "1.4.0"
 ndarray = "0.15.4"
-petgraph = {version = "0.6.0", default-features = false, features = ["stable_graph"]}
-regex = "1.5.4"
+petgraph = {version = "0.6.2", default-features = false, features = ["stable_graph"]}
+regex = "1.5.6"
 unic-char-range = "0.9.0"
 unic-ucd-category = "0.9.0"
 unicode-segmentation = "1.9.0"
 
 [dev-dependencies]
 assert_cmd = "2.0.4"
-indoc = "1.0.3"
+criterion = "0.3.5"
+indoc = "1.0.6"
 predicates = "2.1.1"
 proptest = "1.0.0"
-rstest = "0.12.0"
+rstest = "0.13.0"
 tempfile = "3.3.0"
+
+[features]
+default = ["cli"]
+cli = ["atty", "structopt"]
+
+[[bench]]
+name = "benchmark"
+harness = false
+
+[profile.bench]
+debug = true

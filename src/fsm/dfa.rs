@@ -28,19 +28,19 @@ type State = NodeIndex<u32>;
 type StateLabel = String;
 type EdgeLabel = Grapheme;
 
-pub struct Dfa {
+pub struct Dfa<'a> {
     alphabet: BTreeSet<Grapheme>,
     graph: StableGraph<StateLabel, EdgeLabel>,
     initial_state: State,
     final_state_indices: HashSet<usize>,
-    config: RegExpConfig,
+    config: &'a RegExpConfig,
 }
 
-impl Dfa {
+impl<'a> Dfa<'a> {
     pub(crate) fn from(
         grapheme_clusters: &[GraphemeCluster],
         is_minimized: bool,
-        config: &RegExpConfig,
+        config: &'a RegExpConfig,
     ) -> Self {
         let mut dfa = Self::new(config);
         for cluster in grapheme_clusters {
@@ -73,7 +73,7 @@ impl Dfa {
         self.final_state_indices.contains(&state.index())
     }
 
-    fn new(config: &RegExpConfig) -> Self {
+    fn new(config: &'a RegExpConfig) -> Self {
         let mut graph = StableGraph::new();
         let initial_state = graph.add_node("".to_string());
         Self {
@@ -81,7 +81,7 @@ impl Dfa {
             graph,
             initial_state,
             final_state_indices: HashSet::new(),
-            config: config.clone(),
+            config,
         }
     }
 
@@ -114,7 +114,13 @@ impl Dfa {
             if current_grapheme.maximum() == grapheme.maximum() - 1 {
                 let min = min(current_grapheme.minimum(), grapheme.minimum());
                 let max = max(current_grapheme.maximum(), grapheme.maximum());
-                let new_grapheme = Grapheme::new(grapheme.chars().clone(), min, max, &self.config);
+                let new_grapheme = Grapheme::new(
+                    grapheme.chars().clone(),
+                    min,
+                    max,
+                    self.config.is_capturing_group_enabled,
+                    self.config.is_output_colorized,
+                );
                 self.graph
                     .update_edge(current_state, next_state, new_grapheme);
                 return Some(next_state);
@@ -281,7 +287,7 @@ mod tests {
     fn test_is_final_state() {
         let config = RegExpConfig::new();
         let dfa = Dfa::from(
-            &vec![GraphemeCluster::from("abcd", &RegExpConfig::new())],
+            &[GraphemeCluster::from("abcd", &RegExpConfig::new())],
             true,
             &config,
         );
@@ -297,7 +303,7 @@ mod tests {
     fn test_outgoing_edges() {
         let config = RegExpConfig::new();
         let dfa = Dfa::from(
-            &vec![
+            &[
                 GraphemeCluster::from("abcd", &RegExpConfig::new()),
                 GraphemeCluster::from("abxd", &RegExpConfig::new()),
             ],
@@ -311,14 +317,14 @@ mod tests {
         assert!(first_edge.is_some());
         assert_eq!(
             first_edge.unwrap().weight(),
-            &Grapheme::from("c", &RegExpConfig::new())
+            &Grapheme::from("c", false, false)
         );
 
         let second_edge = edges.next();
         assert!(second_edge.is_some());
         assert_eq!(
             second_edge.unwrap().weight(),
-            &Grapheme::from("x", &RegExpConfig::new())
+            &Grapheme::from("x", false, false)
         );
 
         let third_edge = edges.next();
@@ -329,7 +335,7 @@ mod tests {
     fn test_states_in_depth_first_order() {
         let config = RegExpConfig::new();
         let dfa = Dfa::from(
-            &vec![
+            &[
                 GraphemeCluster::from("abcd", &RegExpConfig::new()),
                 GraphemeCluster::from("axyz", &RegExpConfig::new()),
             ],
@@ -343,7 +349,7 @@ mod tests {
         let mut edges = dfa.outgoing_edges(*first_state);
         assert_eq!(
             edges.next().unwrap().weight(),
-            &Grapheme::from("a", &RegExpConfig::new())
+            &Grapheme::from("a", false, false)
         );
         assert!(edges.next().is_none());
 
@@ -351,11 +357,11 @@ mod tests {
         edges = dfa.outgoing_edges(*second_state);
         assert_eq!(
             edges.next().unwrap().weight(),
-            &Grapheme::from("b", &RegExpConfig::new())
+            &Grapheme::from("b", false, false)
         );
         assert_eq!(
             edges.next().unwrap().weight(),
-            &Grapheme::from("x", &RegExpConfig::new())
+            &Grapheme::from("x", false, false)
         );
         assert!(edges.next().is_none());
 
@@ -363,7 +369,7 @@ mod tests {
         edges = dfa.outgoing_edges(*third_state);
         assert_eq!(
             edges.next().unwrap().weight(),
-            &Grapheme::from("y", &RegExpConfig::new())
+            &Grapheme::from("y", false, false)
         );
         assert!(edges.next().is_none());
 
@@ -371,7 +377,7 @@ mod tests {
         edges = dfa.outgoing_edges(*fourth_state);
         assert_eq!(
             edges.next().unwrap().weight(),
-            &Grapheme::from("z", &RegExpConfig::new())
+            &Grapheme::from("z", false, false)
         );
         assert!(edges.next().is_none());
 
@@ -383,7 +389,7 @@ mod tests {
         edges = dfa.outgoing_edges(*sixth_state);
         assert_eq!(
             edges.next().unwrap().weight(),
-            &Grapheme::from("c", &RegExpConfig::new())
+            &Grapheme::from("c", false, false)
         );
         assert!(edges.next().is_none());
 
@@ -391,7 +397,7 @@ mod tests {
         edges = dfa.outgoing_edges(*seventh_state);
         assert_eq!(
             edges.next().unwrap().weight(),
-            &Grapheme::from("d", &RegExpConfig::new())
+            &Grapheme::from("d", false, false)
         );
         assert!(edges.next().is_none());
     }
@@ -420,7 +426,7 @@ mod tests {
     fn test_dfa_constructor() {
         let config = RegExpConfig::new();
         let dfa = Dfa::from(
-            &vec![
+            &[
                 GraphemeCluster::from("abcd", &RegExpConfig::new()),
                 GraphemeCluster::from("abxd", &RegExpConfig::new()),
             ],

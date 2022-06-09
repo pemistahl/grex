@@ -18,6 +18,7 @@ use crate::char::Grapheme;
 use crate::regexp::RegExpConfig;
 use crate::unicode_tables::{DECIMAL_NUMBER, WHITE_SPACE, WORD};
 use itertools::Itertools;
+use lazy_static::lazy_static;
 use std::cmp::Ordering;
 use std::collections::HashMap;
 use std::ops::Range;
@@ -26,13 +27,13 @@ use unic_ucd_category::GeneralCategory;
 use unicode_segmentation::UnicodeSegmentation;
 
 #[derive(Clone, Debug, Eq, PartialEq)]
-pub struct GraphemeCluster {
+pub struct GraphemeCluster<'a> {
     graphemes: Vec<Grapheme>,
-    config: RegExpConfig,
+    config: &'a RegExpConfig,
 }
 
-impl GraphemeCluster {
-    pub(crate) fn from(s: &str, config: &RegExpConfig) -> Self {
+impl<'a> GraphemeCluster<'a> {
+    pub(crate) fn from(s: &str, config: &'a RegExpConfig) -> Self {
         Self {
             graphemes: UnicodeSegmentation::graphemes(s, true)
                 .flat_map(|it| {
@@ -42,42 +43,45 @@ impl GraphemeCluster {
 
                     if starts_with_backslash || contains_combining_mark {
                         it.chars()
-                            .map(|c| Grapheme::from(&c.to_string(), config))
+                            .map(|c| {
+                                Grapheme::from(
+                                    &c.to_string(),
+                                    config.is_capturing_group_enabled,
+                                    config.is_output_colorized,
+                                )
+                            })
                             .collect_vec()
                     } else {
-                        vec![Grapheme::from(it, config)]
+                        vec![Grapheme::from(
+                            it,
+                            config.is_capturing_group_enabled,
+                            config.is_output_colorized,
+                        )]
                     }
                 })
                 .collect_vec(),
-            config: config.clone(),
+            config,
         }
     }
 
-    pub(crate) fn from_graphemes(graphemes: Vec<Grapheme>, config: &RegExpConfig) -> Self {
-        Self {
-            graphemes,
-            config: config.clone(),
-        }
+    pub(crate) fn from_graphemes(graphemes: Vec<Grapheme>, config: &'a RegExpConfig) -> Self {
+        Self { graphemes, config }
     }
 
-    pub(crate) fn new(grapheme: Grapheme, config: &RegExpConfig) -> Self {
+    pub(crate) fn new(grapheme: Grapheme, config: &'a RegExpConfig) -> Self {
         Self {
             graphemes: vec![grapheme],
-            config: config.clone(),
+            config,
         }
     }
 
     pub(crate) fn convert_to_char_classes(&mut self) {
-        let is_digit_converted = self.config.is_digit_converted();
-        let is_non_digit_converted = self.config.is_non_digit_converted();
-        let is_space_converted = self.config.is_space_converted();
-        let is_non_space_converted = self.config.is_non_space_converted();
-        let is_word_converted = self.config.is_word_converted();
-        let is_non_word_converted = self.config.is_non_word_converted();
-
-        let valid_numeric_chars = convert_chars_to_range(DECIMAL_NUMBER);
-        let valid_alphanumeric_chars = convert_chars_to_range(WORD);
-        let valid_space_chars = convert_chars_to_range(WHITE_SPACE);
+        let is_digit_converted = self.config.is_digit_converted;
+        let is_non_digit_converted = self.config.is_non_digit_converted;
+        let is_space_converted = self.config.is_space_converted;
+        let is_non_space_converted = self.config.is_non_space_converted;
+        let is_word_converted = self.config.is_word_converted;
+        let is_non_word_converted = self.config.is_non_word_converted;
 
         for grapheme in self.graphemes.iter_mut() {
             grapheme.chars = grapheme
@@ -86,24 +90,17 @@ impl GraphemeCluster {
                 .map(|it| {
                     it.chars()
                         .map(|c| {
-                            let is_digit =
-                                valid_numeric_chars.iter().any(|range| range.contains(c));
-                            let is_word = valid_alphanumeric_chars
-                                .iter()
-                                .any(|range| range.contains(c));
-                            let is_space = valid_space_chars.iter().any(|range| range.contains(c));
-
-                            if is_digit_converted && is_digit {
+                            if is_digit_converted && is_digit(c) {
                                 "\\d".to_string()
-                            } else if is_word_converted && is_word {
+                            } else if is_word_converted && is_word(c) {
                                 "\\w".to_string()
-                            } else if is_space_converted && is_space {
+                            } else if is_space_converted && is_space(c) {
                                 "\\s".to_string()
-                            } else if is_non_digit_converted && !is_digit {
+                            } else if is_non_digit_converted && !is_digit(c) {
                                 "\\D".to_string()
-                            } else if is_non_word_converted && !is_word {
+                            } else if is_non_word_converted && !is_word(c) {
                                 "\\W".to_string()
-                            } else if is_non_space_converted && !is_space {
+                            } else if is_non_space_converted && !is_space(c) {
                                 "\\S".to_string()
                             } else {
                                 c.to_string()
@@ -117,7 +114,7 @@ impl GraphemeCluster {
 
     pub(crate) fn convert_repetitions(&mut self) {
         let mut repetitions = vec![];
-        convert_repetitions(self.graphemes(), repetitions.as_mut(), &self.config);
+        convert_repetitions(self.graphemes(), repetitions.as_mut(), self.config);
         if !repetitions.is_empty() {
             self.graphemes = repetitions;
         }
@@ -126,15 +123,12 @@ impl GraphemeCluster {
     pub(crate) fn merge(
         first: &GraphemeCluster,
         second: &GraphemeCluster,
-        config: &RegExpConfig,
+        config: &'a RegExpConfig,
     ) -> Self {
         let mut graphemes = vec![];
         graphemes.extend_from_slice(&first.graphemes);
         graphemes.extend_from_slice(&second.graphemes);
-        Self {
-            graphemes,
-            config: config.clone(),
-        }
+        Self { graphemes, config }
     }
 
     pub(crate) fn graphemes(&self) -> &Vec<Grapheme> {
@@ -159,6 +153,29 @@ impl GraphemeCluster {
     pub(crate) fn is_empty(&self) -> bool {
         self.graphemes.is_empty()
     }
+}
+
+fn is_digit(c: char) -> bool {
+    lazy_static! {
+        static ref VALID_NUMERIC_CHARS: Vec<CharRange> = convert_chars_to_range(DECIMAL_NUMBER);
+    }
+    VALID_NUMERIC_CHARS.iter().any(|range| range.contains(c))
+}
+
+fn is_word(c: char) -> bool {
+    lazy_static! {
+        static ref VALID_ALPHANUMERIC_CHARS: Vec<CharRange> = convert_chars_to_range(WORD);
+    }
+    VALID_ALPHANUMERIC_CHARS
+        .iter()
+        .any(|range| range.contains(c))
+}
+
+fn is_space(c: char) -> bool {
+    lazy_static! {
+        static ref VALID_SPACE_CHARS: Vec<CharRange> = convert_chars_to_range(WHITE_SPACE);
+    }
+    VALID_SPACE_CHARS.iter().any(|range| range.contains(c))
 }
 
 fn convert_repetitions(
@@ -282,9 +299,15 @@ fn replace_graphemes_with_repetitions(
 
         repetitions.splice(
             range.clone(),
-            [Grapheme::new(substr.clone(), count, count, config)]
-                .iter()
-                .cloned(),
+            [Grapheme::new(
+                substr.clone(),
+                count,
+                count,
+                config.is_capturing_group_enabled,
+                config.is_output_colorized,
+            )]
+            .iter()
+            .cloned(),
         );
     }
 
@@ -293,7 +316,13 @@ fn replace_graphemes_with_repetitions(
             &new_grapheme
                 .chars
                 .iter()
-                .map(|it| Grapheme::from(it, config))
+                .map(|it| {
+                    Grapheme::from(
+                        it,
+                        config.is_capturing_group_enabled,
+                        config.is_output_colorized,
+                    )
+                })
                 .collect_vec(),
             new_grapheme.repetitions.as_mut(),
             config,

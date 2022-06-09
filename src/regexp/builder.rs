@@ -14,9 +14,6 @@
  * limitations under the License.
  */
 
-#![allow(deprecated)]
-
-use crate::regexp::feature::Feature;
 use crate::regexp::{RegExp, RegExpConfig};
 use itertools::Itertools;
 use std::io::ErrorKind;
@@ -168,20 +165,6 @@ impl RegExpBuilder {
     /// Tells `RegExpBuilder` to replace non-capturing groups by capturing ones.
     pub fn with_capturing_groups(&mut self) -> &mut Self {
         self.config.is_capturing_group_enabled = true;
-        self
-    }
-
-    /// Tells `RegExpBuilder` which conversions should be performed during
-    /// regular expression generation. The available conversion features
-    /// are listed in the [`Feature`](./enum.Feature.html#variants) enum.
-    ///
-    /// ⚠ Panics if `features` is empty.
-    #[deprecated(since = "1.3.0", note = "This method will be removed in 1.4.0.")]
-    pub fn with_conversion_of(&mut self, features: &[Feature]) -> &mut Self {
-        if features.is_empty() {
-            panic!("No conversion features have been provided for regular expression generation");
-        }
-        self.config.conversion_features = features.to_vec();
         self
     }
 

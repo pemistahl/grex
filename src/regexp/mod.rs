@@ -14,12 +14,9 @@
  * limitations under the License.
  */
 
-#![allow(deprecated)]
-
 mod builder;
 mod component;
 mod config;
-mod feature;
 
 #[allow(clippy::module_inception)]
 mod regexp;
@@ -27,26 +24,16 @@ mod regexp;
 pub use builder::RegExpBuilder;
 pub use component::Component;
 pub use config::RegExpConfig;
-pub use feature::Feature;
 pub use regexp::RegExp;
 
 #[cfg(test)]
 mod tests {
-    use crate::regexp::Feature;
     use crate::regexp::RegExpBuilder;
 
     #[test]
     #[should_panic(expected = "No test cases have been provided for regular expression generation")]
     fn regexp_builder_panics_without_test_cases() {
         RegExpBuilder::from(&Vec::<String>::new());
-    }
-
-    #[test]
-    #[should_panic(
-        expected = "No conversion features have been provided for regular expression generation"
-    )]
-    fn regexp_builder_panics_without_conversion_features() {
-        RegExpBuilder::from(&["abc"]).with_conversion_of(&Vec::<Feature>::new());
     }
 
     #[test]
