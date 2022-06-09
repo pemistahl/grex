@@ -14,264 +14,185 @@
  * limitations under the License.
  */
 
+use clap::{AppSettings, Parser};
 use grex::RegExpBuilder;
 use itertools::Itertools;
 use std::io::{BufRead, Error, ErrorKind, Read};
 use std::path::PathBuf;
-use structopt::clap::AppSettings::{AllowLeadingHyphen, ColoredHelp};
-use structopt::StructOpt;
 
-#[derive(StructOpt)]
-#[structopt(
+#[derive(Parser)]
+#[clap(
     author = "© 2019-today Peter M. Stahl <pemistahl@gmail.com>",
     about = "Licensed under the Apache License, Version 2.0\n\
              Downloadable from https://crates.io/crates/grex\n\
              Source code at https://github.com/pemistahl/grex\n\n\
              grex generates regular expressions from user-provided test cases.",
-    version_short = "v",
-    global_settings = &[AllowLeadingHyphen, ColoredHelp]
+    version,
+    mut_arg("version", |ver| ver.short('v')),
+    allow_hyphen_values = true
 )]
+#[clap(global_setting = AppSettings::DeriveDisplayOrder)]
 struct Cli {
     // --------------------
     // ARGS
     // --------------------
-    #[structopt(
+    /// One or more test cases separated by blank space
+    #[clap(
         value_name = "INPUT",
-        required_unless = "file",
-        conflicts_with = "file",
-        help = "One or more test cases separated by blank space"
+        required_unless_present = "file",
+        conflicts_with = "file"
     )]
     input: Vec<String>,
 
     // --------------------
     // FLAGS
     // --------------------
-    #[structopt(
-        name = "digits",
-        short,
-        long,
-        help = "Converts any Unicode decimal digit to \\d",
-        long_help = "Converts any Unicode decimal digit to \\d.\n\n\
-                     Takes precedence over --words if both are set.\n\
-                     Decimal digits are converted to \\d, remaining word characters to \\w.\n\n\
-                     Takes precedence over --non-spaces if both are set.\n\
-                     Decimal digits are converted to \\d, remaining non-space characters to \\S.",
-        display_order = 1
-    )]
+    /// Converts any Unicode decimal digit to \d
+    ///
+    /// Takes precedence over --words if both are set.
+    /// Decimal digits are converted to \d, remaining word characters to \w.
+    /// Takes precedence over --non-spaces if both are set.
+    /// Decimal digits are converted to \d, remaining non-space characters to \S.
+    #[clap(name = "digits", short, long)]
     is_digit_converted: bool,
 
-    #[structopt(
-        name = "non-digits",
-        short = "D",
-        long,
-        help = "Converts any character which is not a Unicode decimal digit to \\D",
-        long_help = "Converts any character which is not a Unicode decimal digit to \\D.\n\n\
-                     Takes precedence over --non-words if both are set.\n\
-                     Non-digits which are also non-word characters are converted to \\D.\n\n\
-                     Takes precedence over --non-spaces if both are set.\n\
-                     Non-digits which are also non-space characters are converted to \\D.",
-        display_order = 2
-    )]
+    /// Converts any character which is not a Unicode decimal digit to \D
+    ///
+    /// Takes precedence over --non-words if both are set.
+    /// Non-digits which are also non-word characters are converted to \D.
+    /// Takes precedence over --non-spaces if both are set.
+    /// Non-digits which are also non-space characters are converted to \D.
+    #[clap(name = "non-digits", short = 'D', long)]
     is_non_digit_converted: bool,
 
-    #[structopt(
-        name = "spaces",
-        short,
-        long,
-        help = "Converts any Unicode whitespace character to \\s",
-        long_help = "Converts any Unicode whitespace character to \\s.\n\n\
-                     Takes precedence over --non-digits if both are set.\n\
-                     Whitespace is converted to \\s, remaining non-digits to \\D.\n\n\
-                     Takes precedence over --non-words if both are set.\n\
-                     Whitespace is converted to \\s, remaining non-word characters to \\W.",
-        display_order = 3
-    )]
+    /// Converts any Unicode whitespace character to \s
+    ///
+    /// Takes precedence over --non-digits if both are set.
+    /// Whitespace is converted to \s, remaining non-digits to \D.
+    /// Takes precedence over --non-words if both are set.
+    /// Whitespace is converted to \s, remaining non-word characters to \W.
+    #[clap(name = "spaces", short, long)]
     is_space_converted: bool,
 
-    #[structopt(
-        name = "non-spaces",
-        short = "S",
-        long,
-        help = "Converts any character which is not a Unicode whitespace character to \\S",
-        display_order = 4
-    )]
+    /// Converts any character which is not a Unicode whitespace character to \S
+    #[clap(name = "non-spaces", short = 'S', long)]
     is_non_space_converted: bool,
 
-    #[structopt(
-        name = "words",
-        short,
-        long,
-        help = "Converts any Unicode word character to \\w",
-        long_help = "Converts any Unicode word character to \\w.\n\n\
-                     Takes precedence over --non-digits if both are set.\n\
-                     Word characters are converted to \\w, remaining non-digits to \\D.\n\n\
-                     Takes precedence over --non-spaces if both are set.\n\
-                     Word characters are converted to \\w, remaining non-whitespace to \\S.",
-        display_order = 5
-    )]
+    /// Converts any Unicode word character to \w
+    ///
+    /// Takes precedence over --non-digits if both are set.
+    /// Word characters are converted to \w, remaining non-digits to \D.
+    /// Takes precedence over --non-spaces if both are set.
+    /// Word characters are converted to \w, remaining non-whitespace to \S.
+    #[clap(name = "words", short, long)]
     is_word_converted: bool,
 
-    #[structopt(
-        name = "non-words",
-        short = "W",
-        long,
-        help = "Converts any character which is not a Unicode word character to \\W",
-        long_help = "Converts any character which is not a Unicode word character to \\W.\n\n\
-                     Takes precedence over --non-spaces if both are set.\n\
-                     Non-word characters which are also non-whitespace are converted to \\W.",
-        display_order = 6
-    )]
+    /// Converts any character which is not a Unicode word character to \W
+    ///
+    /// Takes precedence over --non-spaces if both are set.
+    /// Non-word characters which are also non-whitespace are converted to \W.
+    #[clap(name = "non-words", short = 'W', long)]
     is_non_word_converted: bool,
 
-    #[structopt(
-        name = "repetitions",
-        short,
-        long,
-        help = "Detects repeated non-overlapping substrings and\n\
-                converts them to {min,max} quantifier notation",
-        display_order = 7
-    )]
+    /// Detects repeated non-overlapping substrings and converts them to {min,max} quantifier notation
+    #[clap(name = "repetitions", short, long)]
     is_repetition_converted: bool,
 
-    #[structopt(
-        name = "escape",
-        short,
-        long,
-        help = "Replaces all non-ASCII characters with unicode escape sequences",
-        display_order = 8
-    )]
+    /// Replaces all non-ASCII characters with unicode escape sequences
+    #[clap(name = "escape", short, long)]
     is_non_ascii_char_escaped: bool,
 
-    #[structopt(
-        name = "with-surrogates",
-        long,
-        requires = "escape",
-        help = "Converts astral code points to surrogate pairs if --escape is set",
-        display_order = 9
-    )]
+    /// Converts astral code points to surrogate pairs if --escape is set
+    #[clap(name = "with-surrogates", long, requires = "escape")]
     is_astral_code_point_converted_to_surrogate: bool,
 
-    #[structopt(
-        name = "ignore-case",
-        short,
-        long,
-        help = "Performs case-insensitive matching, letters match both upper and lower case",
-        display_order = 10
-    )]
+    /// Performs case-insensitive matching, letters match both upper and lower case
+    #[clap(name = "ignore-case", short, long)]
     is_case_ignored: bool,
 
-    #[structopt(
-        name = "capture-groups",
-        short = "g",
-        long,
-        help = "Replaces non-capturing groups by capturing ones",
-        display_order = 11
-    )]
+    /// Replaces non-capturing groups with capturing ones
+    #[clap(name = "capture-groups", short = 'g', long)]
     is_group_captured: bool,
 
-    #[structopt(
-        name = "verbose",
-        short = "x",
-        long,
-        help = "Produces a nicer looking regular expression in verbose mode",
-        display_order = 12
-    )]
+    /// Produces a nicer-looking regular expression in verbose mode
+    #[clap(name = "verbose", short = 'x', long)]
     is_verbose_mode_enabled: bool,
 
-    #[structopt(
-        name = "no-start-anchor",
-        long,
-        help = "Removes the caret anchor '^' from the resulting regular expression",
-        long_help = "Removes the caret anchor '^' from the resulting regular expression.\n\n\
-                     By default, the caret anchor is added to every generated regular\n\
-                     expression which guarantees that the expression matches the test cases\n\
-                     given as input only at the start of a string.\n\
-                     This flag removes the anchor, thereby allowing to match the test cases also\n\
-                     when they do not occur at the start of a string.",
-        display_order = 13
-    )]
+    /// Removes the caret anchor '^' from the resulting regular expression
+    ///
+    /// By default, the caret anchor is added to every generated regular expression
+    /// which guarantees that the expression matches the test cases
+    /// given as input only at the start of a string.
+    /// This flag removes the anchor, thereby allowing to match the test cases
+    /// also when they do not occur at the start of a string.
+    #[clap(name = "no-start-anchor", long)]
     is_caret_anchor_disabled: bool,
 
-    #[structopt(
-        name = "no-end-anchor",
-        long,
-        help = "Removes the dollar sign anchor '$' from the resulting regular expression",
-        long_help = "Removes the dollar sign anchor '$' from the resulting regular expression.\n\n\
-                     By default, the dollar sign anchor is added to every generated regular\n\
-                     expression which guarantees that the expression matches the test cases\n\
-                     given as input only at the end of a string.\n\
-                     This flag removes the anchor, thereby allowing to match the test cases also\n\
-                     when they do not occur at the end of a string.",
-        display_order = 14
-    )]
+    /// Removes the dollar sign anchor '$' from the resulting regular expression
+    ///
+    /// By default, the dollar sign anchor is added to every generated regular expression
+    /// which guarantees that the expression matches the test cases given as input
+    /// only at the end of a string.
+    /// This flag removes the anchor, thereby allowing to match the test cases
+    /// also when they do not occur at the end of a string.
+    #[clap(name = "no-end-anchor", long)]
     is_dollar_sign_anchor_disabled: bool,
 
-    #[structopt(
-        name = "no-anchors",
-        long,
-        help = "Removes the caret and dollar sign anchors from the resulting regular expression",
-        long_help = "Removes the caret and dollar sign anchors from the resulting regular expression.\n\n\
-                     By default, anchors are added to every generated regular expression\n\
-                     which guarantee that the expression exactly matches only the test cases\n\
-                     given as input and nothing else.\n\
-                     This flag removes the anchors, thereby allowing to match the test cases also\n\
-                     when they occur within a larger string that contains other content as well.",
-        display_order = 15
-    )]
+    /// Removes the caret and dollar sign anchors from the resulting regular expression
+    ///
+    /// By default, anchors are added to every generated regular expression
+    /// which guarantees that the expression exactly matches only the test cases given as input
+    /// and nothing else.
+    /// This flag removes the anchors, thereby allowing to match the test cases
+    /// also when they occur within a larger string that contains other content as well.
+    #[clap(name = "no-anchors", long)]
     are_anchors_disabled: bool,
 
-    #[structopt(
-        name = "colorize",
-        short,
-        long,
-        help = "Provides syntax highlighting for the resulting regular expression",
-        display_order = 16
-    )]
+    /// Provides syntax highlighting for the resulting regular expression
+    #[clap(name = "colorize", short, long)]
     is_output_colorized: bool,
 
     // --------------------
     // OPTIONS
     // --------------------
-    #[structopt(
+    /// Reads test cases on separate lines from a file
+    ///
+    /// Lines may be ended with either a newline (`\n`) or a carriage return with a line feed (`\r\n`).
+    /// The final line ending is optional.
+    #[clap(
         name = "file",
         value_name = "FILE",
         short,
         long,
         parse(from_os_str),
-        required_unless = "input",
-        help = "Reads test cases on separate lines from a file",
-        long_help = "Reads test cases on separate lines from a file.\n\n\
-                     Lines may be ended with either a newline (`\\n`) or\n\
-                     a carriage return with a line feed (`\\r\\n`).\n\
-                     The final line ending is optional."
+        required_unless_present = "input"
     )]
     file_path: Option<PathBuf>,
 
-    #[structopt(
+    /// Specifies the minimum quantity of substring repetitions to be converted if --repetitions is set
+    #[clap(
         name = "min-repetitions",
         value_name = "QUANTITY",
         long,
-        default_value = "1",
-        validator = repetition_options_validator,
-        help = "Specifies the minimum quantity of substring repetitions\n\
-                to be converted if --repetitions is set"
+        default_value_t = 1,
+        validator = repetition_options_validator
     )]
     minimum_repetitions: u32,
 
-    #[structopt(
+    /// Specifies the minimum length a repeated substring must have
+    /// in order to be converted if --repetitions is set
+    #[clap(
         name = "min-substring-length",
         value_name = "LENGTH",
         long,
-        default_value = "1",
-        validator = repetition_options_validator,
-        help = "Specifies the minimum length a repeated substring must have\n\
-                in order to be converted if --repetitions is set"
+        default_value_t = 1,
+        validator = repetition_options_validator
     )]
     minimum_substring_length: u32,
 }
 
 fn main() {
-    let cli = Cli::from_args();
+    let cli = Cli::parse();
     handle_input(&cli, obtain_input(&cli));
 }
 
@@ -400,7 +321,7 @@ fn handle_input(cli: &Cli, input: Result<Vec<String>, Error>) {
     }
 }
 
-fn repetition_options_validator(value: String) -> Result<(), String> {
+fn repetition_options_validator(value: &str) -> Result<(), String> {
     match value.parse::<u32>() {
         Ok(parsed_value) => {
             if parsed_value > 0 {

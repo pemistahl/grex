@@ -191,7 +191,7 @@ mod no_conversion {
             let mut grex = init_command();
             grex.args(&[TEST_CASE, "-f", "/path/to/some/file"]);
             grex.assert().failure().stderr(predicate::str::contains(
-                "argument '--file <FILE>' cannot be used with 'input'",
+                "argument '<INPUT>...' cannot be used with '--file <FILE>'",
             ));
         }
     }
