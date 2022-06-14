@@ -95,6 +95,8 @@ jobs:
       - name: Create code coverage report
         if: ${{ matrix.os == 'ubuntu-latest' && github.event_name == 'push' }}
         uses: actions-rs/tarpaulin@v0.1
+        with:
+          timeout: 900 # increase timeout for long-running property tests
 
       - name: Upload code coverage report to Codecov
         if: ${{ matrix.os == 'ubuntu-latest' && github.event_name == 'push' }}
