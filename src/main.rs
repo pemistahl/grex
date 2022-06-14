@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-use clap::{AppSettings, Parser};
+use clap::Parser;
 use grex::RegExpBuilder;
 use itertools::Itertools;
 use std::io::{BufRead, Error, ErrorKind, Read};
@@ -28,141 +28,25 @@ use std::path::PathBuf;
              Source code at https://github.com/pemistahl/grex\n\n\
              grex generates regular expressions from user-provided test cases.",
     version,
-    mut_arg("version", |ver| ver.short('v')),
-    allow_hyphen_values = true
+    allow_hyphen_values = true,
+    mut_arg("help", |help| help.help_heading("MISCELLANEOUS OPTIONS")),
+    mut_arg("version", |version| version.short('v').help_heading("MISCELLANEOUS OPTIONS"))
 )]
-#[clap(global_setting = AppSettings::DeriveDisplayOrder)]
 struct Cli {
     // --------------------
-    // ARGS
+    // INPUT
     // --------------------
     /// One or more test cases separated by blank space
     #[clap(
         value_name = "INPUT",
         required_unless_present = "file",
         conflicts_with = "file",
-        value_parser
+        value_parser,
+        help_heading = "INPUT",
+        display_order = 1
     )]
     input: Vec<String>,
 
-    // --------------------
-    // FLAGS
-    // --------------------
-    /// Converts any Unicode decimal digit to \d.
-    ///
-    /// Takes precedence over --words if both are set.
-    /// Decimal digits are converted to \d, remaining word characters to \w.
-    ///
-    /// Takes precedence over --non-spaces if both are set.
-    /// Decimal digits are converted to \d, remaining non-space characters to \S.
-    #[clap(name = "digits", short, long, value_parser)]
-    is_digit_converted: bool,
-
-    /// Converts any character which is not a Unicode decimal digit to \D.
-    ///
-    /// Takes precedence over --non-words if both are set.
-    /// Non-digits which are also non-word characters are converted to \D.
-    ///
-    /// Takes precedence over --non-spaces if both are set.
-    /// Non-digits which are also non-space characters are converted to \D.
-    #[clap(name = "non-digits", short = 'D', long, value_parser)]
-    is_non_digit_converted: bool,
-
-    /// Converts any Unicode whitespace character to \s.
-    ///
-    /// Takes precedence over --non-digits if both are set.
-    /// Whitespace is converted to \s, remaining non-digits to \D.
-    ///
-    /// Takes precedence over --non-words if both are set.
-    /// Whitespace is converted to \s, remaining non-word characters to \W.
-    #[clap(name = "spaces", short, long, value_parser)]
-    is_space_converted: bool,
-
-    /// Converts any character which is not a Unicode whitespace character to \S
-    #[clap(name = "non-spaces", short = 'S', long, value_parser)]
-    is_non_space_converted: bool,
-
-    /// Converts any Unicode word character to \w.
-    ///
-    /// Takes precedence over --non-digits if both are set.
-    /// Word characters are converted to \w, remaining non-digits to \D.
-    ///
-    /// Takes precedence over --non-spaces if both are set.
-    /// Word characters are converted to \w, remaining non-whitespace to \S.
-    #[clap(name = "words", short, long, value_parser)]
-    is_word_converted: bool,
-
-    /// Converts any character which is not a Unicode word character to \W.
-    ///
-    /// Takes precedence over --non-spaces if both are set.
-    /// Non-word characters which are also non-whitespace are converted to \W.
-    #[clap(name = "non-words", short = 'W', long, value_parser)]
-    is_non_word_converted: bool,
-
-    /// Detects repeated non-overlapping substrings and converts them to {min,max} quantifier notation.
-    #[clap(name = "repetitions", short, long, value_parser)]
-    is_repetition_converted: bool,
-
-    /// Replaces all non-ASCII characters with unicode escape sequences.
-    #[clap(name = "escape", short, long, value_parser)]
-    is_non_ascii_char_escaped: bool,
-
-    /// Converts astral code points to surrogate pairs if --escape is set.
-    #[clap(name = "with-surrogates", long, requires = "escape", value_parser)]
-    is_astral_code_point_converted_to_surrogate: bool,
-
-    /// Performs case-insensitive matching, letters match both upper and lower case.
-    #[clap(name = "ignore-case", short, long, value_parser)]
-    is_case_ignored: bool,
-
-    /// Replaces non-capturing groups with capturing ones.
-    #[clap(name = "capture-groups", short = 'g', long, value_parser)]
-    is_group_captured: bool,
-
-    /// Produces a nicer-looking regular expression in verbose mode.
-    #[clap(name = "verbose", short = 'x', long, value_parser)]
-    is_verbose_mode_enabled: bool,
-
-    /// Removes the caret anchor `^` from the resulting regular expression.
-    ///
-    /// By default, the caret anchor is added to every generated regular expression
-    /// which guarantees that the expression matches the test cases
-    /// given as input only at the start of a string.
-    ///
-    /// This flag removes the anchor, thereby allowing to match the test cases
-    /// also when they do not occur at the start of a string.
-    #[clap(name = "no-start-anchor", long, value_parser)]
-    is_caret_anchor_disabled: bool,
-
-    /// Removes the dollar sign anchor `$` from the resulting regular expression.
-    ///
-    /// By default, the dollar sign anchor is added to every generated regular expression
-    /// which guarantees that the expression matches the test cases given as input
-    /// only at the end of a string.
-    ///
-    /// This flag removes the anchor, thereby allowing to match the test cases
-    /// also when they do not occur at the end of a string.
-    #[clap(name = "no-end-anchor", long, value_parser)]
-    is_dollar_sign_anchor_disabled: bool,
-
-    /// Removes the caret and dollar sign anchors from the resulting regular expression.
-    ///
-    /// By default, anchors are added to every generated regular expression
-    /// which guarantees that the expression exactly matches only the test cases given as input
-    /// and nothing else.
-    ///
-    /// This flag removes the anchors, thereby allowing to match the test cases
-    /// also when they occur within a larger string that contains other content as well.
-    #[clap(name = "no-anchors", long, value_parser)]
-    are_anchors_disabled: bool,
-
-    /// Provides syntax highlighting for the resulting regular expression.
-    #[clap(name = "colorize", short, long, value_parser)]
-    is_output_colorized: bool,
-
-    // --------------------
-    // OPTIONS
-    // --------------------
     /// Reads test cases on separate lines from a file.
     ///
     /// Lines may be ended with either a newline `\n` or a carriage return with a line feed `\r\n`.
@@ -173,9 +57,143 @@ struct Cli {
         short,
         long,
         required_unless_present = "input",
-        value_parser
+        value_parser,
+        help_heading = "INPUT"
     )]
     file_path: Option<PathBuf>,
+
+    // --------------------
+    // DIGIT OPTIONS
+    // --------------------
+    /// Converts any Unicode decimal digit to \d.
+    ///
+    /// Takes precedence over --words if both are set.
+    /// Decimal digits are converted to \d, remaining word characters to \w.
+    ///
+    /// Takes precedence over --non-spaces if both are set.
+    /// Decimal digits are converted to \d, remaining non-space characters to \S.
+    #[clap(
+        name = "digits",
+        short,
+        long,
+        value_parser,
+        help_heading = "DIGIT OPTIONS"
+    )]
+    is_digit_converted: bool,
+
+    /// Converts any character which is not a Unicode decimal digit to \D.
+    ///
+    /// Takes precedence over --non-words if both are set.
+    /// Non-digits which are also non-word characters are converted to \D.
+    ///
+    /// Takes precedence over --non-spaces if both are set.
+    /// Non-digits which are also non-space characters are converted to \D.
+    #[clap(
+        name = "non-digits",
+        short = 'D',
+        long,
+        value_parser,
+        help_heading = "DIGIT OPTIONS"
+    )]
+    is_non_digit_converted: bool,
+
+    // --------------------
+    // WHITESPACE OPTIONS
+    // --------------------
+    /// Converts any Unicode whitespace character to \s.
+    ///
+    /// Takes precedence over --non-digits if both are set.
+    /// Whitespace is converted to \s, remaining non-digits to \D.
+    ///
+    /// Takes precedence over --non-words if both are set.
+    /// Whitespace is converted to \s, remaining non-word characters to \W.
+    #[clap(
+        name = "spaces",
+        short,
+        long,
+        value_parser,
+        help_heading = "WHITESPACE OPTIONS"
+    )]
+    is_space_converted: bool,
+
+    /// Converts any character which is not a Unicode whitespace character to \S
+    #[clap(
+        name = "non-spaces",
+        short = 'S',
+        long,
+        value_parser,
+        help_heading = "WHITESPACE OPTIONS"
+    )]
+    is_non_space_converted: bool,
+
+    // --------------------
+    // WORD OPTIONS
+    // --------------------
+    /// Converts any Unicode word character to \w.
+    ///
+    /// Takes precedence over --non-digits if both are set.
+    /// Word characters are converted to \w, remaining non-digits to \D.
+    ///
+    /// Takes precedence over --non-spaces if both are set.
+    /// Word characters are converted to \w, remaining non-whitespace to \S.
+    #[clap(
+        name = "words",
+        short,
+        long,
+        value_parser,
+        help_heading = "WORD OPTIONS"
+    )]
+    is_word_converted: bool,
+
+    /// Converts any character which is not a Unicode word character to \W.
+    ///
+    /// Takes precedence over --non-spaces if both are set.
+    /// Non-word characters which are also non-whitespace are converted to \W.
+    #[clap(
+        name = "non-words",
+        short = 'W',
+        long,
+        value_parser,
+        help_heading = "WORD OPTIONS"
+    )]
+    is_non_word_converted: bool,
+
+    // --------------------
+    // ESCAPING OPTIONS
+    // --------------------
+    /// Replaces all non-ASCII characters with unicode escape sequences.
+    #[clap(
+        name = "escape",
+        short,
+        long,
+        value_parser,
+        help_heading = "ESCAPING OPTIONS"
+    )]
+    is_non_ascii_char_escaped: bool,
+
+    /// Converts astral code points to surrogate pairs if --escape is set.
+    #[clap(
+        name = "with-surrogates",
+        long,
+        requires = "escape",
+        value_parser,
+        help_heading = "ESCAPING OPTIONS"
+    )]
+    is_astral_code_point_converted_to_surrogate: bool,
+
+    // --------------------
+    // REPETITION OPTIONS
+    // --------------------
+    /// Detects repeated non-overlapping substrings and converts them to {min,max} quantifier notation.
+    #[clap(
+        name = "repetitions",
+        short,
+        long,
+        value_parser,
+        help_heading = "REPETITION OPTIONS",
+        display_order = 1
+    )]
+    is_repetition_converted: bool,
 
     /// Specifies the minimum quantity of substring repetitions to be converted if --repetitions is set.
     #[clap(
@@ -183,7 +201,8 @@ struct Cli {
         value_name = "QUANTITY",
         long,
         default_value_t = 1,
-        value_parser = repetition_options_parser
+        value_parser = repetition_options_parser,
+        help_heading = "REPETITION OPTIONS"
     )]
     minimum_repetitions: u32,
 
@@ -194,9 +213,110 @@ struct Cli {
         value_name = "LENGTH",
         long,
         default_value_t = 1,
-        value_parser = repetition_options_parser
+        value_parser = repetition_options_parser,
+        help_heading = "REPETITION OPTIONS"
     )]
     minimum_substring_length: u32,
+
+    // --------------------
+    // ANCHOR OPTIONS
+    // --------------------
+    /// Removes the caret anchor `^` from the resulting regular expression.
+    ///
+    /// By default, the caret anchor is added to every generated regular expression
+    /// which guarantees that the expression matches the test cases
+    /// given as input only at the start of a string.
+    ///
+    /// This flag removes the anchor, thereby allowing to match the test cases
+    /// also when they do not occur at the start of a string.
+    #[clap(
+        name = "no-start-anchor",
+        long,
+        value_parser,
+        help_heading = "ANCHOR OPTIONS"
+    )]
+    is_caret_anchor_disabled: bool,
+
+    /// Removes the dollar sign anchor `$` from the resulting regular expression.
+    ///
+    /// By default, the dollar sign anchor is added to every generated regular expression
+    /// which guarantees that the expression matches the test cases given as input
+    /// only at the end of a string.
+    ///
+    /// This flag removes the anchor, thereby allowing to match the test cases
+    /// also when they do not occur at the end of a string.
+    #[clap(
+        name = "no-end-anchor",
+        long,
+        value_parser,
+        help_heading = "ANCHOR OPTIONS"
+    )]
+    is_dollar_sign_anchor_disabled: bool,
+
+    /// Removes the caret and dollar sign anchors from the resulting regular expression.
+    ///
+    /// By default, anchors are added to every generated regular expression
+    /// which guarantees that the expression exactly matches only the test cases given as input
+    /// and nothing else.
+    ///
+    /// This flag removes the anchors, thereby allowing to match the test cases
+    /// also when they occur within a larger string that contains other content as well.
+    #[clap(
+        name = "no-anchors",
+        long,
+        value_parser,
+        help_heading = "ANCHOR OPTIONS"
+    )]
+    are_anchors_disabled: bool,
+
+    // --------------------
+    // DISPLAY OPTIONS
+    // --------------------
+    /// Produces a nicer-looking regular expression in verbose mode.
+    #[clap(
+        name = "verbose",
+        short = 'x',
+        long,
+        value_parser,
+        help_heading = "DISPLAY OPTIONS",
+        display_order = 1
+    )]
+    is_verbose_mode_enabled: bool,
+
+    /// Provides syntax highlighting for the resulting regular expression.
+    #[clap(
+        name = "colorize",
+        short,
+        long,
+        value_parser,
+        help_heading = "DISPLAY OPTIONS"
+    )]
+    is_output_colorized: bool,
+
+    // ---------------------
+    // MISCELLANEOUS OPTIONS
+    // ---------------------
+    /// Performs case-insensitive matching, letters match both upper and lower case.
+    #[clap(
+        name = "ignore-case",
+        short,
+        long,
+        value_parser,
+        help_heading = "MISCELLANEOUS OPTIONS",
+        display_order = 1
+    )]
+    is_case_ignored: bool,
+
+    /// Replaces non-capturing groups with capturing ones.
+    #[clap(
+        name = "capture-groups",
+        short = 'g',
+        long,
+        value_parser,
+        help_heading = "MISCELLANEOUS OPTIONS",
+        display_order = 2
+    )]
+    is_group_captured: bool,
 }
 
 fn main() {
