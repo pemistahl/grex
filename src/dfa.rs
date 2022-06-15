@@ -14,8 +14,9 @@
  * limitations under the License.
  */
 
-use crate::char::{Grapheme, GraphemeCluster};
-use crate::regexp::RegExpConfig;
+use crate::cluster::GraphemeCluster;
+use crate::config::RegExpConfig;
+use crate::grapheme::Grapheme;
 use itertools::Itertools;
 use petgraph::graph::NodeIndex;
 use petgraph::stable_graph::{Edges, StableGraph};

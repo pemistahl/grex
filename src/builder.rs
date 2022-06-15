@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-use crate::regexp::{RegExp, RegExpConfig};
+use crate::config::RegExpConfig;
+use crate::regexp::RegExp;
 use itertools::Itertools;
 use std::io::ErrorKind;
 use std::path::PathBuf;

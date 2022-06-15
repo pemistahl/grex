@@ -14,10 +14,12 @@
  * limitations under the License.
  */
 
-use crate::ast::{Quantifier, Substring};
-use crate::char::{Grapheme, GraphemeCluster};
-use crate::fsm::Dfa;
-use crate::regexp::RegExpConfig;
+use crate::cluster::GraphemeCluster;
+use crate::config::RegExpConfig;
+use crate::dfa::Dfa;
+use crate::grapheme::Grapheme;
+use crate::quantifier::Quantifier;
+use crate::substring::Substring;
 use itertools::EitherOrBoth::Both;
 use itertools::Itertools;
 use ndarray::{Array1, Array2};

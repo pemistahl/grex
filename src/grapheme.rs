@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-use crate::regexp::Component;
+use crate::component::Component;
 use itertools::Itertools;
 use std::fmt::{Display, Formatter, Result};
 

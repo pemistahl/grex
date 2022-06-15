@@ -14,9 +14,10 @@
  * limitations under the License.
  */
 
-use crate::ast::{Expression, Quantifier};
-use crate::char::GraphemeCluster;
-use crate::regexp::Component;
+use crate::cluster::GraphemeCluster;
+use crate::component::Component;
+use crate::expression::Expression;
+use crate::quantifier::Quantifier;
 use itertools::Itertools;
 use std::collections::BTreeSet;
 use std::fmt::{Display, Formatter, Result};

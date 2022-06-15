@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-use crate::char::Grapheme;
-use crate::regexp::RegExpConfig;
+use crate::config::RegExpConfig;
+use crate::grapheme::Grapheme;
 use crate::unicode_tables::{DECIMAL_NUMBER, WHITE_SPACE, WORD};
 use itertools::Itertools;
 use lazy_static::lazy_static;

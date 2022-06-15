@@ -264,10 +264,17 @@
 #[macro_use]
 mod macros;
 
-mod ast;
-mod char;
-mod fsm;
+mod builder;
+mod cluster;
+mod component;
+mod config;
+mod dfa;
+mod expression;
+mod format;
+mod grapheme;
+mod quantifier;
 mod regexp;
+mod substring;
 mod unicode_tables;
 
-pub use regexp::RegExpBuilder;
+pub use builder::RegExpBuilder;

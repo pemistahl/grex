@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-use crate::ast::Expression;
-use crate::char::GraphemeCluster;
-use crate::fsm::Dfa;
-use crate::regexp::config::RegExpConfig;
-use crate::regexp::Component;
+use crate::cluster::GraphemeCluster;
+use crate::component::Component;
+use crate::config::RegExpConfig;
+use crate::dfa::Dfa;
+use crate::expression::Expression;
 use itertools::Itertools;
 use lazy_static::lazy_static;
 use regex::Regex;

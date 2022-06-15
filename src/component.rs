@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-use crate::ast::Quantifier;
+use crate::quantifier::Quantifier;
 use std::fmt::{Display, Formatter, Result};
 
 pub enum Component {
