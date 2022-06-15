@@ -96,6 +96,7 @@ jobs:
         if: ${{ matrix.os == 'ubuntu-latest' && github.event_name == 'push' }}
         uses: actions-rs/tarpaulin@v0.1
         with:
+          args: '--ignore-tests'
           timeout: 900 # increase timeout for long-running property tests
 
       - name: Upload code coverage report to Codecov

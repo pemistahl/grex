@@ -476,11 +476,7 @@ The source code is accompanied by an extensive test suite consisting of unit tes
 tests and property tests. For running them, simply say:
 
 ```shell
-# unit and integration tests
 cargo test
-
-# property tests (expensive, skipped by default)
-cargo test -- --ignored
 ```
 
 Benchmarks measuring the performance of several settings can be run with:
