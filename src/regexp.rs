@@ -332,7 +332,10 @@ fn apply_verbose_mode(regexp: String, config: &RegExpConfig) -> String {
             }
 
             let is_colored_element = element.starts_with("\u{1b}[");
-            if is_colored_element && (element.contains('$') || element.contains(')')) {
+            if is_colored_element
+                && (element.contains('$') || element.contains(')'))
+                && nesting_level > 0
+            {
                 nesting_level -= 1;
             }
 
@@ -368,7 +371,7 @@ fn apply_verbose_mode(regexp: String, config: &RegExpConfig) -> String {
             if element.is_empty() {
                 continue;
             }
-            if element == "$" || element.starts_with(')') {
+            if (element == "$" || element.starts_with(')')) && nesting_level > 0 {
                 nesting_level -= 1;
             }
             let indentation = "  ".repeat(nesting_level);
