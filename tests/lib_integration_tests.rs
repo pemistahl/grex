@@ -251,7 +251,35 @@ mod no_conversion {
                     4[,.]5
                   )
                 $"#
-            ))
+            )),
+            case(vec!["Ga", "G)"], indoc!(
+                r#"
+                (?x)
+                ^
+                  G[)a]
+                $"#
+            )),
+            case(vec!["aG", ")G"], indoc!(
+                r#"
+                (?x)
+                ^
+                  [)a]G
+                $"#
+            )),
+            case(vec!["Ga", "G)", "G("], indoc!(
+                r#"
+                (?x)
+                ^
+                  G[()a]
+                $"#
+            )),
+            case(vec!["aG", ")G", "(G"], indoc!(
+                r#"
+                (?x)
+                ^
+                  [()a]G
+                $"#
+            )),
         )]
         fn succeeds_with_verbose_mode_option(test_cases: Vec<&str>, expected_output: &str) {
             let regexp = RegExpBuilder::from(&test_cases).with_verbose_mode().build();

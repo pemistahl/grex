@@ -248,6 +248,8 @@ fn apply_verbose_mode(regexp: String, config: &RegExpConfig) -> String {
         .unwrap();
         static ref FIFTH_INDENT_REVERSAL: Regex =
             Regex::new(r"(?P<component1>\[[^\]]+\])\n\s+(?P<component2>[^\)\s]+)").unwrap();
+        static ref SIXTH_INDENT_REVERSAL: Regex = Regex::new(r"(?P<component1>\[)\n\s*(?P<component2>[()])\n\s*(?P<component3>[^\]]+\])").unwrap();
+        static ref SEVENTH_INDENT_REVERSAL: Regex = Regex::new(r"(?P<component1>\[\(\))\n\s*(?P<component2>[^\]]+\])").unwrap();
         static ref COLOR_MODE_REGEX: Regex =
             Regex::new(r"\u{1b}\[\d+;\d+m[^\u{1b}]+\u{1b}\[0m|[^\u{1b}]+").unwrap();
         static ref VERBOSE_MODE_REGEX: Regex = Regex::new(
@@ -384,8 +386,19 @@ fn apply_verbose_mode(regexp: String, config: &RegExpConfig) -> String {
 
         let joined_regexp = verbose_regexp.join("\n");
 
-        let joined_regexp_with_replacements = FIFTH_INDENT_REVERSAL
+        let mut joined_regexp_with_replacements = FIFTH_INDENT_REVERSAL
             .replace_all(&joined_regexp, "$component1$component2")
+            .to_string();
+
+        joined_regexp_with_replacements = SIXTH_INDENT_REVERSAL
+            .replace_all(
+                &joined_regexp_with_replacements,
+                "$component1$component2$component3",
+            )
+            .to_string();
+
+        joined_regexp_with_replacements = SEVENTH_INDENT_REVERSAL
+            .replace_all(&joined_regexp_with_replacements, "$component1$component2")
             .to_string();
 
         joined_regexp_with_replacements
