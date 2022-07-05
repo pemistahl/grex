@@ -268,7 +268,6 @@ proptest! {
     }
 
     #[test]
-    #[ignore]
     fn matching_regexes_with_case_insensitive_matching(
         test_cases in prop::collection::hash_set(".{1,10}", 1..=5)
     ) {
@@ -282,7 +281,6 @@ proptest! {
     }
 
     #[test]
-    #[ignore]
     fn matching_regexes_with_case_insensitive_matching_and_verbose_mode(
         test_cases in prop::collection::hash_set(".{1,10}", 1..=5)
     ) {
@@ -337,7 +335,6 @@ proptest! {
     }
 
     #[test]
-    #[ignore]
     fn matching_regexes_with_conversion_of_digits(
         test_cases in prop::collection::hash_set(".{1,10}", 1..=5)
     ) {
@@ -351,7 +348,6 @@ proptest! {
     }
 
     #[test]
-    #[ignore]
     fn matching_regexes_with_conversion_of_digits_and_verbose_mode(
         test_cases in prop::collection::hash_set(".{1,10}", 1..=5)
     ) {
@@ -366,7 +362,6 @@ proptest! {
     }
 
     #[test]
-    #[ignore]
     fn matching_regexes_with_conversion_of_non_digits(
         test_cases in prop::collection::hash_set(".{1,10}", 1..=5)
     ) {
@@ -380,7 +375,6 @@ proptest! {
     }
 
     #[test]
-    #[ignore]
     fn matching_regexes_with_conversion_of_non_digits_and_verbose_mode(
         test_cases in prop::collection::hash_set(".{1,10}", 1..=5)
     ) {
@@ -395,7 +389,6 @@ proptest! {
     }
 
     #[test]
-    #[ignore]
     fn matching_regexes_with_conversion_of_whitespace(
         test_cases in prop::collection::hash_set(".{1,10}", 1..=5)
     ) {
@@ -409,7 +402,6 @@ proptest! {
     }
 
     #[test]
-    #[ignore]
     fn matching_regexes_with_conversion_of_whitespace_and_verbose_mode(
         test_cases in prop::collection::hash_set(".{1,10}", 1..=5)
     ) {
@@ -424,7 +416,6 @@ proptest! {
     }
 
     #[test]
-    #[ignore]
     fn matching_regexes_with_conversion_of_non_whitespace(
         test_cases in prop::collection::hash_set(".{1,10}", 1..=5)
     ) {
@@ -438,7 +429,6 @@ proptest! {
     }
 
     #[test]
-    #[ignore]
     fn matching_regexes_with_conversion_of_non_whitespace_and_verbose_mode(
         test_cases in prop::collection::hash_set(".{1,10}", 1..=5)
     ) {
@@ -453,7 +443,6 @@ proptest! {
     }
 
     #[test]
-    #[ignore]
     fn matching_regexes_with_conversion_of_words(
         test_cases in prop::collection::hash_set(".{1,10}", 1..=5)
     ) {
@@ -467,7 +456,6 @@ proptest! {
     }
 
     #[test]
-    #[ignore]
     fn matching_regexes_with_conversion_of_words_and_verbose_mode(
         test_cases in prop::collection::hash_set(".{1,10}", 1..=5)
     ) {
@@ -482,7 +470,6 @@ proptest! {
     }
 
     #[test]
-    #[ignore]
     fn matching_regexes_with_conversion_of_non_words(
         test_cases in prop::collection::hash_set(".{1,10}", 1..=5)
     ) {
@@ -496,7 +483,6 @@ proptest! {
     }
 
     #[test]
-    #[ignore]
     fn matching_regexes_with_conversion_of_non_words_and_verbose_mode(
         test_cases in prop::collection::hash_set(".{1,10}", 1..=5)
     ) {
