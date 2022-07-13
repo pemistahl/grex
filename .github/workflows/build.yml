@@ -77,14 +77,24 @@ jobs:
           brew install gnu-tar
           echo "/usr/local/opt/gnu-tar/libexec/gnubin" >> $GITHUB_PATH
 
+      - name: Install wasm-pack
+        if: ${{ matrix.os == 'macos-latest' }}
+        run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+
+      - name: Enable Safari web driver
+        if: ${{ matrix.os == 'macos-latest' }}
+        run: sudo safaridriver --enable
+
       - name: Store or retrieve cargo caches
-        uses: actions/cache@v3.0.4
+        uses: actions/cache@v3
         with:
           path: |
-            ~/.cargo/registry
-            ~/.cargo/git
-            target
-          key: ${{ runner.os }}-rust-cargo-${{ hashFiles('**/Cargo.lock') }}
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
       - name: Build in debug mode
         run: cargo build --target ${{ matrix.target }} --locked
@@ -92,13 +102,29 @@ jobs:
       - name: Test in debug mode
         run: cargo test --target ${{ matrix.target }}
 
+      - name: Run WASM integration tests on NodeJS
+        if: ${{ matrix.os == 'macos-latest' }}
+        run: wasm-pack test --node
+
+      - name: Run WASM integration tests in Chrome
+        if: ${{ matrix.os == 'macos-latest' }}
+        run: wasm-pack test --headless --chrome
+
+      - name: Run WASM integration tests in Firefox
+        if: ${{ matrix.os == 'macos-latest' }}
+        run: wasm-pack test --headless --firefox
+
+      - name: Run WASM integration tests in Safari
+        if: ${{ matrix.os == 'macos-latest' }}
+        run: wasm-pack test --headless --safari
+
       - name: Create code coverage report
         if: ${{ matrix.os == 'ubuntu-latest' && github.event_name == 'push' }}
         uses: actions-rs/tarpaulin@v0.1
         with:
-          args: '--ignore-tests'
+          args: '--ignore-config --ignore-panics --ignore-tests --exclude-files src/wasm.rs'
           timeout: 900 # increase timeout for long-running property tests
 
       - name: Upload code coverage report to Codecov
         if: ${{ matrix.os == 'ubuntu-latest' && github.event_name == 'push' }}
-        uses: codecov/codecov-action@v3.1.0
+        uses: codecov/codecov-action@v3

@@ -20,10 +20,20 @@ use itertools::Itertools;
 use std::io::ErrorKind;
 use std::path::PathBuf;
 
+pub(crate) const MISSING_TEST_CASES_MESSAGE: &str =
+    "No test cases have been provided for regular expression generation";
+
+pub(crate) const MINIMUM_REPETITIONS_MESSAGE: &str =
+    "Quantity of minimum repetitions must be greater than zero";
+
+pub(crate) const MINIMUM_SUBSTRING_LENGTH_MESSAGE: &str =
+    "Minimum substring length must be greater than zero";
+
 /// This struct builds regular expressions from user-provided test cases.
+#[derive(Clone)]
 pub struct RegExpBuilder {
     test_cases: Vec<String>,
-    config: RegExpConfig,
+    pub(crate) config: RegExpConfig,
 }
 
 impl RegExpBuilder {
@@ -34,7 +44,7 @@ impl RegExpBuilder {
     /// ⚠ Panics if `test_cases` is empty.
     pub fn from<T: Clone + Into<String>>(test_cases: &[T]) -> Self {
         if test_cases.is_empty() {
-            panic!("No test cases have been provided for regular expression generation");
+            panic!("{}", MISSING_TEST_CASES_MESSAGE);
         }
         Self {
             test_cases: test_cases.iter().cloned().map(|it| it.into()).collect_vec(),
@@ -177,7 +187,7 @@ impl RegExpBuilder {
     /// ⚠ Panics if `quantity` is zero.
     pub fn with_minimum_repetitions(&mut self, quantity: u32) -> &mut Self {
         if quantity == 0 {
-            panic!("Quantity of minimum repetitions must not be zero");
+            panic!("{}", MINIMUM_REPETITIONS_MESSAGE);
         }
         self.config.minimum_repetitions = quantity;
         self
@@ -191,7 +201,7 @@ impl RegExpBuilder {
     /// ⚠ Panics if `length` is zero.
     pub fn with_minimum_substring_length(&mut self, length: u32) -> &mut Self {
         if length == 0 {
-            panic!("Minimum substring length must not be zero");
+            panic!("{}", MINIMUM_SUBSTRING_LENGTH_MESSAGE);
         }
         self.config.minimum_substring_length = length;
         self
@@ -248,8 +258,6 @@ impl RegExpBuilder {
     }
 
     /// Builds the actual regular expression using the previously given settings.
-    /// Every generated regular expression is surrounded by the anchors `^` and `$`
-    /// so that substrings not being part of the test cases are not matched accidentally.
     pub fn build(&mut self) -> String {
         RegExp::from(&mut self.test_cases, &self.config).to_string()
     }

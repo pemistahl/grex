@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+/pkg/
 /target/
 **/*.rs.bk
 
@@ -31,6 +32,7 @@ out/
 *.bak
 *.tmp
 *.class
+*.html
 .buildpath
 .classpath
 .vscode/*

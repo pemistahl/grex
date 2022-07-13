@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+#![cfg(not(target_family = "wasm"))]
+
 use grex::RegExpBuilder;
 use indoc::indoc;
 use regex::Regex;

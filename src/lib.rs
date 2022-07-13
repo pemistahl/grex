@@ -277,4 +277,10 @@ mod regexp;
 mod substring;
 mod unicode_tables;
 
+#[cfg(target_family = "wasm")]
+mod wasm;
+
 pub use builder::RegExpBuilder;
+
+#[cfg(target_family = "wasm")]
+pub use wasm::RegExpBuilder as WasmRegExpBuilder;

@@ -24,9 +24,12 @@ repository = "https://github.com/pemistahl/grex"
 documentation = "https://docs.rs/grex"
 license = "Apache-2.0"
 readme = "README.md"
-edition = "2018"
+edition = "2021"
 categories = ["command-line-utilities", "parsing"]
 keywords = ["pattern", "regex", "regexp"]
+
+[lib]
+crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 atty = { version = "0.2.14", optional = true }
@@ -40,14 +43,22 @@ unic-char-range = "0.9.0"
 unic-ucd-category = "0.9.0"
 unicode-segmentation = "1.9.0"
 
+[target.'cfg(target_family = "wasm")'.dependencies]
+wasm-bindgen = "0.2.81"
+
 [dev-dependencies]
+indoc = "1.0.6"
+rstest = "0.15.0"
+
+[target.'cfg(not(target_family = "wasm"))'.dev-dependencies]
 assert_cmd = "2.0.4"
 criterion = "0.3.5"
-indoc = "1.0.6"
 predicates = "2.1.1"
 proptest = "1.0.0"
-rstest = "0.15.0"
 tempfile = "3.3.0"
+
+[target.'cfg(target_family = "wasm")'.dev-dependencies]
+wasm-bindgen-test = "0.3.31"
 
 [features]
 default = ["cli"]

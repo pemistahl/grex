@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+#![cfg(not(target_family = "wasm"))]
+
 use assert_cmd::Command;
 use indoc::indoc;
 use predicates::prelude::*;
