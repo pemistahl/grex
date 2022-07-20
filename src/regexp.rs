@@ -40,12 +40,25 @@ impl<'a> RegExp<'a> {
         let mut dfa = Dfa::from(&grapheme_clusters, true, config);
         let mut ast = Expression::from(dfa, config);
 
-        if config.is_start_anchor_disabled
-            && config.is_end_anchor_disabled
-            && !Self::is_each_test_case_matched(&mut ast, test_cases, config)
-        {
-            dfa = Dfa::from(&grapheme_clusters, false, config);
-            ast = Expression::from(dfa, config);
+        if config.is_start_anchor_disabled && config.is_end_anchor_disabled {
+            let mut regex = Self::convert_expr_to_regex(&ast, config);
+
+            if !Self::is_each_test_case_matched_after_rotating_alternations(
+                &regex, &mut ast, test_cases,
+            ) {
+                dfa = Dfa::from(&grapheme_clusters, false, config);
+                ast = Expression::from(dfa, config);
+                regex = Self::convert_expr_to_regex(&ast, config);
+
+                if !Self::regex_matches_all_test_cases(&regex, test_cases) {
+                    let mut exprs = vec![];
+                    for cluster in grapheme_clusters {
+                        let literal = Expression::new_literal(cluster, config);
+                        exprs.push(literal);
+                    }
+                    ast = Expression::new_alternation(exprs, config);
+                }
+            }
         }
 
         Self { ast, config }
@@ -53,6 +66,21 @@ impl<'a> RegExp<'a> {
 
     fn convert_to_lowercase(test_cases: &mut Vec<String>) {
         *test_cases = test_cases.iter().map(|it| it.to_lowercase()).collect_vec();
+    }
+
+    fn convert_expr_to_regex(expr: &Expression, config: &RegExpConfig) -> Regex {
+        if config.is_output_colorized {
+            let color_replace_regex = Regex::new("\u{1b}\\[(?:\\d+;\\d+|0)m").unwrap();
+            Regex::new(&*color_replace_regex.replace_all(&expr.to_string(), "")).unwrap()
+        } else {
+            Regex::new(&expr.to_string()).unwrap()
+        }
+    }
+
+    fn regex_matches_all_test_cases(regex: &Regex, test_cases: &[String]) -> bool {
+        test_cases
+            .iter()
+            .all(|test_case| regex.find_iter(test_case).count() == 1)
     }
 
     fn sort(test_cases: &mut Vec<String>) {
@@ -88,23 +116,13 @@ impl<'a> RegExp<'a> {
         clusters
     }
 
-    fn is_each_test_case_matched(
+    fn is_each_test_case_matched_after_rotating_alternations(
+        regex: &Regex,
         expr: &mut Expression,
         test_cases: &[String],
-        config: &RegExpConfig,
     ) -> bool {
-        let regex = if config.is_output_colorized {
-            let color_replace_regex = Regex::new("\u{1b}\\[(?:\\d+;\\d+|0)m").unwrap();
-            Regex::new(&*color_replace_regex.replace_all(&expr.to_string(), "")).unwrap()
-        } else {
-            Regex::new(&expr.to_string()).unwrap()
-        };
-
         for _ in 1..test_cases.len() {
-            if test_cases
-                .iter()
-                .all(|test_case| regex.find_iter(test_case).count() == 1)
-            {
+            if Self::regex_matches_all_test_cases(regex, test_cases) {
                 return true;
             } else if let Expression::Alternation(options, _, _) = expr {
                 options.rotate_right(1);

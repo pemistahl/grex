@@ -105,13 +105,9 @@ impl<'a> Expression<'a> {
         }
     }
 
-    fn new_alternation(
-        expr1: Expression<'a>,
-        expr2: Expression<'a>,
-        config: &RegExpConfig,
-    ) -> Self {
+    pub(crate) fn new_alternation(exprs: Vec<Expression<'a>>, config: &RegExpConfig) -> Self {
         let mut options: Vec<Expression> = vec![];
-        Self::flatten_alternations(&mut options, vec![expr1, expr2]);
+        Self::flatten_alternations(&mut options, exprs);
         options.sort_by_key(|option| Reverse(option.len()));
         Expression::Alternation(
             options,
@@ -142,7 +138,7 @@ impl<'a> Expression<'a> {
         )
     }
 
-    fn new_literal(cluster: GraphemeCluster<'a>, config: &RegExpConfig) -> Self {
+    pub(crate) fn new_literal(cluster: GraphemeCluster<'a>, config: &RegExpConfig) -> Self {
         Expression::Literal(
             cluster,
             config.is_non_ascii_char_escaped,
@@ -346,8 +342,10 @@ impl<'a> Expression<'a> {
                 if result.is_none() {
                     if let Expression::Repetition(expr, quantifier, _, _) = &expr1 {
                         if quantifier == &Quantifier::QuestionMark {
-                            let alternation =
-                                Expression::new_alternation(*expr.clone(), expr2.clone(), config);
+                            let alternation = Expression::new_alternation(
+                                vec![*expr.clone(), expr2.clone()],
+                                config,
+                            );
                             result = Some(Expression::new_repetition(
                                 alternation,
                                 Quantifier::QuestionMark,
@@ -360,8 +358,10 @@ impl<'a> Expression<'a> {
                 if result.is_none() {
                     if let Expression::Repetition(expr, quantifier, _, _) = &expr2 {
                         if quantifier == &Quantifier::QuestionMark {
-                            let alternation =
-                                Expression::new_alternation(expr1.clone(), *expr.clone(), config);
+                            let alternation = Expression::new_alternation(
+                                vec![expr1.clone(), *expr.clone()],
+                                config,
+                            );
                             result = Some(Expression::new_repetition(
                                 alternation,
                                 Quantifier::QuestionMark,
@@ -382,7 +382,7 @@ impl<'a> Expression<'a> {
                 }
 
                 if result.is_none() {
-                    result = Some(Expression::new_alternation(expr1, expr2, config));
+                    result = Some(Expression::new_alternation(vec![expr1, expr2], config));
                 }
 
                 if let Some(prefix) = common_prefix {
@@ -516,7 +516,7 @@ mod tests {
         let config = RegExpConfig::new();
         let literal1 = Expression::new_literal(GraphemeCluster::from("abc", &config), &config);
         let literal2 = Expression::new_literal(GraphemeCluster::from("def", &config), &config);
-        let alternation = Expression::new_alternation(literal1, literal2, &config);
+        let alternation = Expression::new_alternation(vec![literal1, literal2], &config);
         assert_eq!(alternation.to_string(), "abc|def");
     }
 
@@ -526,9 +526,8 @@ mod tests {
         let literal1 = Expression::new_literal(GraphemeCluster::from("a", &config), &config);
         let literal2 = Expression::new_literal(GraphemeCluster::from("ab", &config), &config);
         let literal3 = Expression::new_literal(GraphemeCluster::from("abc", &config), &config);
-        let alternation1 = Expression::new_alternation(literal1, literal2, &config);
-        let alternation2 = Expression::new_alternation(alternation1, literal3, &config);
-        assert_eq!(alternation2.to_string(), "abc|ab|a");
+        let alternation = Expression::new_alternation(vec![literal1, literal2, literal3], &config);
+        assert_eq!(alternation.to_string(), "abc|ab|a");
     }
 
     #[test]

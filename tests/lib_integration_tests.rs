@@ -77,6 +77,7 @@ mod no_conversion {
             case(vec!["abxy", "cxy", "efgh"], "^(?:(?:ab|c)xy|efgh)$"),
             case(vec!["abxy", "efgh", "cxy"], "^(?:(?:ab|c)xy|efgh)$"),
             case(vec!["efgh", "abxy", "cxy"], "^(?:(?:ab|c)xy|efgh)$"),
+            case(vec!["aaacaac", "aac"], "^aa(?:acaa)?c$"),
             case(vec!["a", "ä", "o", "ö", "u", "ü"], "^[aouäöü]$"),
             case(vec!["y̆", "a", "z"], "^(?:y̆|[az])$"), // goal: "^[az]|y\\u{306}$"
             case(vec!["a", "b\n", "c"], "^(?:b\\n|[ac])$"),
@@ -282,6 +283,17 @@ mod no_conversion {
                   [()a]G
                 $"#
             )),
+            case(vec!["aaacaac", "aac"], indoc!(
+                r#"
+                (?x)
+                ^
+                  aa
+                  (?:
+                    acaa
+                  )?
+                  c
+                $"#
+            )),
         )]
         fn succeeds_with_verbose_mode_option(test_cases: Vec<&str>, expected_output: &str) {
             let regexp = RegExpBuilder::from(&test_cases).with_verbose_mode().build();
@@ -333,21 +345,6 @@ mod no_conversion {
             let test_cases = vec!["a", "b", "c", "xyz"];
 
             let regexp = RegExpBuilder::from_file(file.path()).build();
-            assert_that_regexp_is_correct(regexp, expected_output, &test_cases);
-            assert_that_regexp_matches_test_cases(expected_output, test_cases);
-        }
-
-        #[rstest(test_cases, expected_output,
-            case(vec!["bab", "b", "cb", "bba"], "(?:b(?:ba|ab)?|cb)"),
-            case(vec!["a", "aba", "baaa", "aaab"], "(?:baaa|a(?:aab|ba)?)"),
-            case(vec!["a", "abab", "bbb", "aaac"], "(?:a(?:bab|aac)?|bbb)"),
-            case(
-                // https://github.com/pemistahl/grex/issues/31
-                vec!["agbhd", "eibcd", "egbcd", "fbjbf", "agbh", "eibc", "egbc", "ebc", "fbc", "cd", "f", "c", "abcd", "ebcd", "fbcd"], 
-                "(?:a(?:gbhd?|bcd)|e(?:ibcd?|gbcd?|bcd?)|f(?:b(?:jbf|cd?))?|cd?)")
-        )]
-        fn succeeds_without_anchors(test_cases: Vec<&str>, expected_output: &str) {
-            let regexp = RegExpBuilder::from(&test_cases).without_anchors().build();
             assert_that_regexp_is_correct(regexp, expected_output, &test_cases);
             assert_that_regexp_matches_test_cases(expected_output, test_cases);
         }
@@ -2066,31 +2063,45 @@ mod anchor_conversion {
         use super::*;
 
         #[rstest(test_cases, expected_output,
+            case(vec!["aaacaac", "aac"], "aa(?:acaa)?c$"),
             case(vec!["My ♥♥♥ and 💩💩 is yours."], "My ♥♥♥ and 💩💩 is yours\\.$"),
         )]
-        fn succeeds_with_no_start_anchor_option(test_cases: Vec<&str>, expected_output: &str) {
+        fn succeeds_without_start_anchor_option(test_cases: Vec<&str>, expected_output: &str) {
             let regexp = RegExpBuilder::from(&test_cases)
                 .without_start_anchor()
                 .build();
             assert_that_regexp_is_correct(regexp, expected_output, &test_cases);
+            assert_that_regexp_matches_test_cases(expected_output, test_cases);
         }
 
         #[rstest(test_cases, expected_output,
+            case(vec!["aaacaac", "aac"], "^aa(?:acaa)?c"),
             case(vec!["My ♥♥♥ and 💩💩 is yours."], "^My ♥♥♥ and 💩💩 is yours\\."),
         )]
-        fn succeeds_with_no_end_anchor_option(test_cases: Vec<&str>, expected_output: &str) {
+        fn succeeds_without_end_anchor_option(test_cases: Vec<&str>, expected_output: &str) {
             let regexp = RegExpBuilder::from(&test_cases)
                 .without_end_anchor()
                 .build();
             assert_that_regexp_is_correct(regexp, expected_output, &test_cases);
+            assert_that_regexp_matches_test_cases(expected_output, test_cases);
         }
 
         #[rstest(test_cases, expected_output,
+            case(vec!["bab", "b", "cb", "bba"], "(?:b(?:ba|ab)?|cb)"),
+            case(vec!["a", "aba", "baaa", "aaab"], "(?:baaa|a(?:aab|ba)?)"),
+            case(vec!["a", "abab", "bbb", "aaac"], "(?:a(?:bab|aac)?|bbb)"),
+            case(vec!["aaacaac", "aac"], "(?:aaacaac|aac)"), // "aa(?:acaa)?c" would not match "aaacaac"
             case(vec!["My ♥♥♥ and 💩💩 is yours."], "My ♥♥♥ and 💩💩 is yours\\."),
+            case(
+                // https://github.com/pemistahl/grex/issues/31
+                vec!["agbhd", "eibcd", "egbcd", "fbjbf", "agbh", "eibc", "egbc", "ebc", "fbc", "cd", "f", "c", "abcd", "ebcd", "fbcd"],
+                "(?:a(?:gbhd?|bcd)|e(?:ibcd?|gbcd?|bcd?)|f(?:b(?:jbf|cd?))?|cd?)"
+            )
         )]
-        fn succeeds_with_no_match_line_option(test_cases: Vec<&str>, expected_output: &str) {
+        fn succeeds_without_anchors(test_cases: Vec<&str>, expected_output: &str) {
             let regexp = RegExpBuilder::from(&test_cases).without_anchors().build();
             assert_that_regexp_is_correct(regexp, expected_output, &test_cases);
+            assert_that_regexp_matches_test_cases(expected_output, test_cases);
         }
     }
 
@@ -2105,7 +2116,7 @@ mod anchor_conversion {
                 $"#
             ))
         )]
-        fn succeeds_with_verbose_mode_and_no_start_anchor_option(
+        fn succeeds_with_verbose_mode_and_without_start_anchor_option(
             test_cases: Vec<&str>,
             expected_output: &str,
         ) {
@@ -2114,6 +2125,7 @@ mod anchor_conversion {
                 .without_start_anchor()
                 .build();
             assert_that_regexp_is_correct(regexp, expected_output, &test_cases);
+            assert_that_regexp_matches_test_cases(expected_output, test_cases);
         }
 
         #[rstest(test_cases, expected_output,
@@ -2124,7 +2136,7 @@ mod anchor_conversion {
                   My\ ♥♥♥\ and\ 💩💩\ is\ yours\."#
             ))
         )]
-        fn succeeds_with_verbose_mode_and_no_end_anchor_option(
+        fn succeeds_with_verbose_mode_and_without_end_anchor_option(
             test_cases: Vec<&str>,
             expected_output: &str,
         ) {
@@ -2133,16 +2145,26 @@ mod anchor_conversion {
                 .without_end_anchor()
                 .build();
             assert_that_regexp_is_correct(regexp, expected_output, &test_cases);
+            assert_that_regexp_matches_test_cases(expected_output, test_cases);
         }
 
         #[rstest(test_cases, expected_output,
+            case(vec!["aaacaac", "aac"], indoc!(
+                r#"
+                (?x)
+                  (?:
+                    aaacaac
+                    |
+                    aac
+                  )"#
+            )),
             case(vec!["My ♥♥♥ and 💩💩 is yours."], indoc!(
                 r#"
                 (?x)
                   My\ ♥♥♥\ and\ 💩💩\ is\ yours\."#
             ))
         )]
-        fn succeeds_with_verbose_mode_and_no_anchors_option(
+        fn succeeds_with_verbose_mode_and_without_anchors_option(
             test_cases: Vec<&str>,
             expected_output: &str,
         ) {
@@ -2151,6 +2173,7 @@ mod anchor_conversion {
                 .without_anchors()
                 .build();
             assert_that_regexp_is_correct(regexp, expected_output, &test_cases);
+            assert_that_regexp_matches_test_cases(expected_output, test_cases);
         }
     }
 }
@@ -2164,14 +2187,21 @@ fn assert_that_regexp_is_correct(regexp: String, expected_output: &str, test_cas
 }
 
 fn assert_that_regexp_matches_test_cases(expected_output: &str, test_cases: Vec<&str>) {
-    let re = Regex::new(expected_output).unwrap();
+    let regexp = Regex::new(expected_output).unwrap();
     for test_case in test_cases {
+        let substrings = regexp
+            .find_iter(test_case)
+            .map(|m| m.as_str())
+            .collect::<Vec<_>>();
+
         assert_eq!(
-            re.find_iter(test_case).count(),
+            substrings.len(),
             1,
-            "\n\n\"{}\" does not match regex {}\n\n",
+            "expression '{}' does not match test case '{}' entirely but {} of its substrings: {:?}",
+            expected_output,
             test_case,
-            expected_output
+            substrings.len(),
+            substrings
         );
     }
 }
