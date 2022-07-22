@@ -93,7 +93,11 @@ mod no_conversion {
             case(vec!["My ♥ is yours.", "My 💩 is yours."], "^My [♥💩] is yours\\.$"),
             case(vec!["[\u{c3e}"], "^\\[\u{c3e}$"),
             case(vec!["\\\u{10376}"], "^\\\\\u{10376}$"),
-            case(vec!["I   ♥♥♥ 36 and ٣ and y̆y̆ and 💩💩."], "^I   ♥♥♥ 36 and ٣ and y̆y̆ and 💩💩\\.$")
+            case(vec!["I   ♥♥♥ 36 and ٣ and y̆y̆ and 💩💩."], "^I   ♥♥♥ 36 and ٣ and y̆y̆ and 💩💩\\.$"),
+            case(vec!["\u{890}\0"], "^\u{890}\0$"),
+            case(vec!["\u{890}\\0"], "^\u{890}\\\\0$"),
+            case(vec!["\u{890}\\\0"], "^\u{890}\\\\\0$"),
+            case(vec!["\u{890}\\\\0"], "^\u{890}\\\\\\\\0$")
         )]
         fn succeeds(test_cases: Vec<&str>, expected_output: &str) {
             let regexp = RegExpBuilder::from(&test_cases).build();
