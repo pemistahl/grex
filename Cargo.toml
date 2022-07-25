@@ -44,7 +44,7 @@ unic-ucd-category = "0.9.0"
 unicode-segmentation = "1.9.0"
 
 [target.'cfg(target_family = "wasm")'.dependencies]
-wasm-bindgen = "0.2.81"
+wasm-bindgen = "0.2.82"
 
 [dev-dependencies]
 indoc = "1.0.6"
