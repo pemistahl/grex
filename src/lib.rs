@@ -35,7 +35,7 @@
 //!
 //! The produced expressions are [Perl-compatible regular expressions](https://www.pcre.org)
 //! which are also compatible with the regular expression parser in Rust's
-//! [*regex crate*](https://lib.rs/crates/regex).
+//! [*regex crate*](https://crates.io/crates/regex).
 //! Other regular expression parsers or respective libraries from other programming languages
 //! have not been tested so far, but they ought to be mostly compatible as well.
 //!
@@ -70,8 +70,9 @@
 //! - escaping of non-ascii characters, with optional conversion of astral code points to surrogate pairs
 //! - case-sensitive or case-insensitive matching
 //! - capturing or non-capturing groups
-//! - fully compliant to newest [Unicode Standard 13.0](https://unicode.org/versions/Unicode13.0.0)
-//! - fully compatible with [*regex* crate 1.3.5+](https://lib.rs/crates/regex)
+//! - optional anchors `^` and `$`
+//! - fully compliant to newest [Unicode Standard 14.0](https://unicode.org/versions/Unicode14.0.0)
+//! - fully compatible with [*regex* crate 1.6.0+](https://crates.io/crates/regex)
 //! - correctly handles graphemes consisting of multiple Unicode symbols
 //! - reads input strings from the command-line or from a file
 //! - produces more readable expressions indented on multiple using optional verbose mode
@@ -81,13 +82,13 @@
 //!
 //! The code snippets below show how to use the public api.
 //!
-//! For [more detailed examples](https://github.com/pemistahl/grex/tree/main#examples), please
+//! For [more detailed examples](https://github.com/pemistahl/grex/tree/main#53-examples), please
 //! take a look at the project's readme file on GitHub.
 //!
 //! ### 4.1 Default settings
 //!
-//! Test cases are passed either from a collection via [`RegExpBuilder::from()`](./struct.RegExpBuilder.html#method.from)
-//! or from a file via [`RegExpBuilder::from_file()`](./struct.RegExpBuilder.html#method.from_file).
+//! Test cases are passed either from a collection via [`RegExpBuilder::from()`]
+//! or from a file via [`RegExpBuilder::from_file()`].
 //!
 //! ```
 //! use grex::RegExpBuilder;

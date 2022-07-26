@@ -23,7 +23,7 @@ use crate::builder::{
 use itertools::Itertools;
 use wasm_bindgen::prelude::*;
 
-/// This struct builds regular expressions from user-provided test cases.
+/// This class builds regular expressions from user-provided test cases.
 #[wasm_bindgen]
 #[derive(Clone)]
 pub struct RegExpBuilder {

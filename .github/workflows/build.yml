@@ -51,6 +51,7 @@ jobs:
           - os: macos-latest
             name: MacOS Binary 64-Bit
             target: x86_64-apple-darwin
+            target2: aarch64-apple-darwin
             env:
               MACOSX_DEPLOYMENT_TARGET: 10.7
 
@@ -62,8 +63,12 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v3
 
-      - name: Add rustup target
+      - name: Add rustup default target
         run: rustup target add ${{ matrix.target }}
+
+      - name: Add rustup Apple ARM64 target
+        if: ${{ matrix.os == 'macos-latest' }}
+        run: rustup target add ${{ matrix.target2 }}
 
       - name: Install apt packages
         if: ${{ matrix.os == 'ubuntu-latest' }}
@@ -96,11 +101,19 @@ jobs:
             target/
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
-      - name: Build in debug mode
+      - name: Build default target in debug mode
         run: cargo build --target ${{ matrix.target }} --locked
 
-      - name: Test in debug mode
+      - name: Build Apple ARM64 target in debug mode
+        if: ${{ matrix.os == 'macos-latest' }}
+        run: cargo build --target ${{ matrix.target2 }} --locked
+
+      - name: Test default target in debug mode
         run: cargo test --target ${{ matrix.target }}
+
+      - name: Test Apple ARM64 target in debug mode
+        if: ${{ matrix.os == 'macos-latest' }}
+        run: cargo test --target ${{ matrix.target2 }}
 
       - name: Run WASM integration tests on NodeJS
         if: ${{ matrix.os == 'macos-latest' }}

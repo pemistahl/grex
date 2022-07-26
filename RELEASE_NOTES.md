@@ -1,3 +1,18 @@
+## grex 1.4.0 (released on 26 Jul 2022)
+
+### Features
+- The library can now be compiled to WebAssembly and be used in any JavaScript project. (#82)
+- The supported character set for regular expression generation has been updated to the current Unicode Standard 14.0.
+- `structopt` has been replaced with `clap` providing much nicer help output for the command-line tool.
+
+### Improvements
+- The regular expression generation performance has been significantly improved, especially for generating very long
+  expressions from a large set of test cases. This has been accomplished by reducing the number of memory allocations,
+  removing deprecated code and applying several minor optimizations.
+
+### Bug Fixes
+- Several bugs have been fixed that caused incorrect expressions to be generated in rare cases.
+
 ## grex 1.3.0 (released on 15 Sep 2021)
 
 ### Features

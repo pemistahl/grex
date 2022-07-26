@@ -3,19 +3,20 @@
 <br>
 
 [![build](https://github.com/pemistahl/grex/actions/workflows/build.yml/badge.svg)](https://github.com/pemistahl/grex/actions/workflows/build.yml)
-[![dependency status](https://deps.rs/crate/grex/1.3.0/status.svg)](https://deps.rs/crate/grex/1.3.0)
+[![dependency status](https://deps.rs/crate/grex/1.4.0/status.svg)](https://deps.rs/crate/grex/1.4.0)
 [![codecov](https://codecov.io/gh/pemistahl/grex/branch/main/graph/badge.svg)](https://codecov.io/gh/pemistahl/grex)
 [![lines of code](https://tokei.rs/b1/github/pemistahl/grex?category=code)](https://github.com/XAMPPRocky/tokei)
 [![Downloads](https://img.shields.io/crates/d/grex.svg)](https://crates.io/crates/grex)
 
 [![Docs.rs](https://docs.rs/grex/badge.svg)](https://docs.rs/grex)
 [![Crates.io](https://img.shields.io/crates/v/grex.svg)](https://crates.io/crates/grex)
-[![Lib.rs](https://img.shields.io/badge/lib.rs-v1.3.0-blue)](https://lib.rs/crates/grex)
+[![Lib.rs](https://img.shields.io/badge/lib.rs-v1.4.0-blue)](https://lib.rs/crates/grex)
 [![license](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0)
 
-[![Linux Download](https://img.shields.io/badge/Linux%20Download-v1.3.0-blue?logo=Linux)](https://github.com/pemistahl/grex/releases/download/v1.3.0/grex-v1.3.0-x86_64-unknown-linux-musl.tar.gz)
-[![MacOS Download](https://img.shields.io/badge/macOS%20Download-v1.3.0-blue?logo=Apple)](https://github.com/pemistahl/grex/releases/download/v1.3.0/grex-v1.3.0-x86_64-apple-darwin.tar.gz)
-[![Windows Download](https://img.shields.io/badge/Windows%20Download-v1.3.0-blue?logo=Windows)](https://github.com/pemistahl/grex/releases/download/v1.3.0/grex-v1.3.0-x86_64-pc-windows-msvc.zip)
+[![Linux Download](https://img.shields.io/badge/Linux%20Download-v1.4.0-blue?logo=Linux)](https://github.com/pemistahl/grex/releases/download/v1.4.0/grex-v1.4.0-x86_64-unknown-linux-musl.tar.gz)
+[![MacOS Download](https://img.shields.io/badge/macOS%20x86%20Download-v1.4.0-blue?logo=Apple)](https://github.com/pemistahl/grex/releases/download/v1.4.0/grex-v1.4.0-x86_64-apple-darwin.tar.gz)
+[![MacOS ARM Download](https://img.shields.io/badge/macOS%20ARM%20Download-v1.4.0-blue?logo=Apple)](https://github.com/pemistahl/grex/releases/download/v1.4.0/grex-v1.4.0-aarch64-apple-darwin.tar.gz)
+[![Windows Download](https://img.shields.io/badge/Windows%20Download-v1.4.0-blue?logo=Windows)](https://github.com/pemistahl/grex/releases/download/v1.4.0/grex-v1.4.0-x86_64-pc-windows-msvc.zip)
 
 <br>
 
@@ -43,7 +44,7 @@ With the use of command-line flags (in the CLI tool) or preprocessing methods
 (in the library), more generalized expressions can be created.
 
 The produced expressions are [Perl-compatible regular expressions](https://www.pcre.org) which are also 
-compatible with the regular expression parser in Rust's [*regex* crate](https://lib.rs/crates/regex).
+compatible with the regular expression parser in Rust's [*regex* crate](https://crates.io/crates/regex).
 Other regular expression parsers or respective libraries from other programming languages 
 have not been tested so far, but they ought to be mostly compatible as well.
 
@@ -75,8 +76,9 @@ an initial correct regex which should be inspected by hand if further optimizati
 - escaping of non-ascii characters, with optional conversion of astral code points to surrogate pairs
 - case-sensitive or case-insensitive matching
 - capturing or non-capturing groups
-- fully compliant to newest [Unicode Standard 13.0](https://unicode.org/versions/Unicode13.0.0)
-- fully compatible with [*regex* crate 1.3.5+](https://lib.rs/crates/regex)
+- optional anchors `^` and `$`
+- fully compliant to newest [Unicode Standard 14.0](https://unicode.org/versions/Unicode14.0.0)
+- fully compatible with [*regex* crate 1.6.0+](https://crates.io/crates/regex)
 - correctly handles graphemes consisting of multiple Unicode symbols
 - reads input strings from the command-line or from a file
 - produces more readable expressions indented on multiple using optional verbose mode 
@@ -107,12 +109,15 @@ In order to use *grex* as a library, simply add it as a dependency to your `Carg
 
 ```toml
 [dependencies]
-grex = "1.3.0"
+grex = { version = "1.4.0", default-features = false }
 ```
+
+The dependencies `clap` and `atty` are only needed for the command-line tool.
+By disabling the default features, the download and compilation of these dependencies is prevented for the library.
 
 ## 5. How to use?
 
-Detailed explanations of the available settings are provided in the [library section](#how-to-install-library).
+Detailed explanations of the available settings are provided in the [library section](#52-the-library).
 All settings can be freely combined with each other.
 
 ### 5.1 The command-line tool
@@ -125,7 +130,7 @@ The following table shows all available flags and options:
 ```
 $ grex -h
 
-grex 1.3.0
+grex 1.4.0
 © 2019-today Peter M. Stahl <pemistahl@gmail.com>
 Licensed under the Apache License, Version 2.0
 Downloadable from https://crates.io/crates/grex
@@ -134,46 +139,56 @@ Source code at https://github.com/pemistahl/grex
 grex generates regular expressions from user-provided test cases.
 
 USAGE:
-    grex [FLAGS] [OPTIONS] <INPUT>... --file <FILE>
+    grex [OPTIONS] [INPUT]...
 
-FLAGS:
-    -d, --digits             Converts any Unicode decimal digit to \d
-    -D, --non-digits         Converts any character which is not a Unicode decimal digit to \D
-    -s, --spaces             Converts any Unicode whitespace character to \s
-    -S, --non-spaces         Converts any character which is not a Unicode whitespace character to \S
-    -w, --words              Converts any Unicode word character to \w
-    -W, --non-words          Converts any character which is not a Unicode word character to \W
-    -r, --repetitions        Detects repeated non-overlapping substrings and
-                             converts them to {min,max} quantifier notation
+INPUT:
+    <INPUT>...          One or more test cases separated by blank space
+    -f, --file <FILE>   Reads test cases on separate lines from a file
+
+DIGIT OPTIONS:
+    -d, --digits        Converts any Unicode decimal digit to \d
+    -D, --non-digits    Converts any character which is not a Unicode decimal digit to \D
+
+WHITESPACE OPTIONS:
+    -s, --spaces        Converts any Unicode whitespace character to \s
+    -S, --non-spaces    Converts any character which is not a Unicode whitespace character to \S
+
+WORD OPTIONS:
+    -w, --words        Converts any Unicode word character to \w
+    -W, --non-words    Converts any character which is not a Unicode word character to \W
+
+ESCAPING OPTIONS:
     -e, --escape             Replaces all non-ASCII characters with unicode escape sequences
         --with-surrogates    Converts astral code points to surrogate pairs if --escape is set
-    -i, --ignore-case        Performs case-insensitive matching, letters match both upper and lower case
-    -g, --capture-groups     Replaces non-capturing groups by capturing ones
-    -x, --verbose            Produces a nicer looking regular expression in verbose mode
-        --no-start-anchor    Removes the caret anchor '^' from the resulting regular expression
-        --no-end-anchor      Removes the dollar sign anchor '$' from the resulting regular expression
+
+REPETITION OPTIONS:
+    -r, --repetitions                      Detects repeated non-overlapping substrings and converts them to {min,max} quantifier notation
+        --min-repetitions <QUANTITY>       Specifies the minimum quantity of substring repetitions to be converted if --repetitions is set [default: 1]
+        --min-substring-length <LENGTH>    Specifies the minimum length a repeated substring must have in order to be converted if --repetitions is set [default: 1]
+
+ANCHOR OPTIONS:
         --no-anchors         Removes the caret and dollar sign anchors from the resulting regular expression
-    -c, --colorize           Provides syntax highlighting for the resulting regular expression
-    -h, --help               Prints help information
-    -v, --version            Prints version information
+        --no-end-anchor      Removes the dollar sign anchor `$` from the resulting regular expression
+        --no-start-anchor    Removes the caret anchor `^` from the resulting regular expression
 
-OPTIONS:
-    -f, --file <FILE>                      Reads test cases on separate lines from a file
-        --min-repetitions <QUANTITY>       Specifies the minimum quantity of substring repetitions
-                                           to be converted if --repetitions is set [default: 1]
-        --min-substring-length <LENGTH>    Specifies the minimum length a repeated substring must have
-                                           in order to be converted if --repetitions is set [default: 1]
+DISPLAY OPTIONS:
+    -x, --verbose     Produces a nicer-looking regular expression in verbose mode
+    -c, --colorize    Provides syntax highlighting for the resulting regular expression
 
-ARGS:
-    <INPUT>...    One or more test cases separated by blank space 
+MISCELLANEOUS OPTIONS:
+    -i, --ignore-case       Performs case-insensitive matching, letters match both upper and lower case
+    -g, --capture-groups    Replaces non-capturing groups with capturing ones
+    -h, --help              Print help information
+    -v, --version           Print version information
+ 
 ```
 
 ### 5.2 The library
 
 #### 5.2.1 Default settings
 
-Test cases are passed either from a collection via [`RegExpBuilder::from()`](https://docs.rs/grex/1.3.0/grex/struct.RegExpBuilder.html#method.from) 
-or from a file via [`RegExpBuilder::from_file()`](https://docs.rs/grex/1.3.0/grex/struct.RegExpBuilder.html#method.from_file).
+Test cases are passed either from a collection via [`RegExpBuilder::from()`](https://docs.rs/grex/1.4.0/grex/struct.RegExpBuilder.html#method.from) 
+or from a file via [`RegExpBuilder::from_file()`](https://docs.rs/grex/1.4.0/grex/struct.RegExpBuilder.html#method.from_file).
 If read from a file, each test case must be on a separate line. Lines may be ended with either a newline `\n` or a carriage
 return with a line feed `\r\n`.
 
@@ -485,7 +500,44 @@ Benchmarks measuring the performance of several settings can be run with:
 cargo bench
 ```
 
-## 7. How does it work?
+## 7. WebAssembly support
+
+This library can be compiled to [WebAssembly (WASM)](https://webassembly.org) which allows to use *grex*
+in any JavaScript-based project, be it in the browser or in the back end running on [Node.js](https://nodejs.org).
+
+The easiest way to compile is to use [`wasm-pack`](https://rustwasm.github.io/wasm-pack). After the installation,
+you can, for instance, build the library with the web target so that it can be directly used in the browser:
+
+    wasm-pack build --target web
+
+This creates a directory named `pkg` on the top-level of this repository, containing the compiled wasm files
+and JavaScript and TypeScript bindings. In an HTML file, you can then call *grex* like the following, for instance:
+
+```html
+<script type="module">
+    import init, { RegExpBuilder } from "./pkg/grex.js";
+
+    init().then(_ => {
+        alert(RegExpBuilder.from(["hello", "world"]).build());
+    });
+</script>
+```
+
+There are also some integration tests available both for Node.js and for the browsers Chrome, Firefox and Safari.
+To run them, simply say:
+
+    wasm-pack test --node --headless --chrome --firefox --safari
+
+If the tests fail to start in Safari, you need to enable Safari's web driver first by running:
+
+    sudo safaridriver --enable
+
+The output of `wasm-pack` will be hosted in a [separate repository](https://github.com/pemistahl/grex-js) which
+allows to add further JavaScript-related configuration, tests and documentation. *grex* will then be added to the
+[npm registry](https://www.npmjs.com) as well, allowing for an easy download and installation within every JavaScript
+or TypeScript project.
+
+## 8. How does it work?
 
 1. A [deterministic finite automaton](https://en.wikipedia.org/wiki/Deterministic_finite_automaton) (DFA) 
 is created from the input strings.
@@ -497,7 +549,11 @@ is created from the input strings.
 [Brzozowski's algebraic method](http://cs.stackexchange.com/questions/2016/how-to-convert-finite-automata-to-regular-expressions#2392), 
 resulting in the final regular expression.
 
-## 8. Contributions
+## 9. What's next for version 1.5.0?
+
+Take a look at the [planned issues](https://github.com/pemistahl/grex/milestone/5).
+
+## 10. Contributions
 
 - [Krzysztof Zawisła](https://github.com/KrzysztofZawisla) has written JavaScript bindings. Check out [grex.js](https://github.com/KrzysztofZawisla/grex.js).
 - [Maciej Gryka](https://github.com/maciejgryka) has created [https://regex.help](https://regex.help) where you can try out *grex* in your browser.

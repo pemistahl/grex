@@ -428,7 +428,7 @@ dependencies = [
 
 [[package]]
 name = "grex"
-version = "1.4.0-SNAPSHOT"
+version = "1.4.0"
 dependencies = [
  "assert_cmd",
  "atty",
