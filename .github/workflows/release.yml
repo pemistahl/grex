@@ -37,6 +37,7 @@ jobs:
           - os: macos-latest
             name: MacOS Binary 64-Bit
             target: x86_64-apple-darwin
+            target2: aarch64-apple-darwin
             env:
               MACOSX_DEPLOYMENT_TARGET: 10.7
 
@@ -48,11 +49,19 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v3
 
-      - name: Add rustup target
+      - name: Add rustup default target
         run: rustup target add ${{ matrix.target }}
 
-      - name: Build in release mode
+      - name: Add rustup Apple ARM64 target
+        if: ${{ matrix.os == 'macos-latest' }}
+        run: rustup target add ${{ matrix.target2 }}
+
+      - name: Build default target in release mode
         run: cargo build --release --target ${{ matrix.target }} --locked
+
+      - name: Build Apple ARM64 target in release mode
+        if: ${{ matrix.os == 'macos-latest' }}
+        run: cargo build --release --target ${{ matrix.target2 }} --locked
 
       - name: Get latest release version number
         id: get_version
@@ -66,8 +75,16 @@ jobs:
           zip grex-${{ steps.get_version.outputs.version }}-${{ matrix.target }}.zip grex.exe
           cd ../../..
 
-      - name: Create tar.gz file on macOS and Linux
-        if: ${{ matrix.os != 'windows-latest' }}
+      - name: Create tar.gz file on macOS
+        if: ${{ matrix.os == 'macos-latest' }}
+        run: |
+          chmod +x target/${{ matrix.target }}/release/grex
+          tar -zcf target/${{ matrix.target }}/release/grex-${{ steps.get_version.outputs.version }}-${{ matrix.target }}.tar.gz -C target/${{ matrix.target }}/release grex
+          chmod +x target/${{ matrix.target2 }}/release/grex
+          tar -zcf target/${{ matrix.target2 }}/release/grex-${{ steps.get_version.outputs.version }}-${{ matrix.target2 }}.tar.gz -C target/${{ matrix.target2 }}/release grex
+
+      - name: Create tar.gz file on Linux
+        if: ${{ matrix.os == 'ubuntu-latest' }}
         run: |
           chmod +x target/${{ matrix.target }}/release/grex
           tar -zcf target/${{ matrix.target }}/release/grex-${{ steps.get_version.outputs.version }}-${{ matrix.target }}.tar.gz -C target/${{ matrix.target }}/release grex
@@ -79,7 +96,7 @@ jobs:
           tag: ${{ github.ref }}
           release_name: grex ${{ steps.get_version.outputs.version }}
           file_glob: true
-          file: target/${{ matrix.target }}/release/grex-${{ steps.get_version.outputs.version }}-${{ matrix.target }}.{zip,tar.gz}
+          file: target/*/release/grex-${{ steps.get_version.outputs.version }}-*.{zip,tar.gz}
 
       - name: Upload release to crates.io
         uses: katyo/publish-crates@v1

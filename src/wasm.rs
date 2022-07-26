@@ -56,7 +56,7 @@ impl RegExpBuilder {
     /// This method takes precedence over `withConversionOfWords` if both are set.
     /// Decimal digits are converted to `\d`, the remaining word characters to `\w`.
     ///
-    /// This method takes precedence over `withConversionOfWhitespace`if both are set.
+    /// This method takes precedence over `withConversionOfWhitespace` if both are set.
     /// Decimal digits are converted to `\d`, the remaining non-whitespace characters to `\S`.
     pub fn withConversionOfDigits(&mut self) -> RegExpBuilder {
         self.builder.config.is_digit_converted = true;
@@ -66,7 +66,7 @@ impl RegExpBuilder {
     /// Tells `RegExpBuilder` to convert any character which is not
     /// a Unicode decimal digit to character class `\D`.
     ///
-    /// This method takes precedence over `withConversionOfNonWords`] if both are set.
+    /// This method takes precedence over `withConversionOfNonWords` if both are set.
     /// Non-digits which are also non-word characters are converted to `\D`.
     ///
     /// This method takes precedence over `withConversionOfNonWhitespace` if both are set.
