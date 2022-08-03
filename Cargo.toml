@@ -47,7 +47,7 @@ unicode-segmentation = "1.9.0"
 wasm-bindgen = "0.2.81"
 
 [dev-dependencies]
-indoc = "1.0.6"
+indoc = "1.0.7"
 rstest = "0.15.0"
 
 [target.'cfg(not(target_family = "wasm"))'.dev-dependencies]
