@@ -20,18 +20,18 @@ on:
     branches:
       - main
     paths:
-      - 'Cargo.lock'
-      - 'Cargo.toml'
-      - 'src/**'
-      - 'tests/**'
+      - "Cargo.lock"
+      - "Cargo.toml"
+      - "src/**"
+      - "tests/**"
   pull_request:
     branches:
       - main
     paths:
-      - 'Cargo.lock'
-      - 'Cargo.toml'
-      - 'src/**'
-      - 'tests/**'
+      - "Cargo.lock"
+      - "Cargo.toml"
+      - "src/**"
+      - "tests/**"
 
 jobs:
   build-and-test:
@@ -131,7 +131,7 @@ jobs:
         if: ${{ matrix.os == 'ubuntu-latest' && github.event_name == 'push' }}
         uses: actions-rs/tarpaulin@v0.1
         with:
-          args: '--ignore-config --ignore-panics --ignore-tests --exclude-files src/main.rs src/wasm.rs'
+          args: "--ignore-config --ignore-panics --ignore-tests --exclude-files src/main.rs src/wasm.rs"
           timeout: 900 # increase timeout for long-running property tests
 
       - name: Upload code coverage report to Codecov

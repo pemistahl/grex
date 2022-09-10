@@ -26,47 +26,48 @@
 
 ## 1. What does this tool do?
 
-*grex* is a library as well as a command-line utility that is meant to simplify the often 
-complicated and tedious task of creating regular expressions. It does so by automatically 
+_grex_ is a library as well as a command-line utility that is meant to simplify the often
+complicated and tedious task of creating regular expressions. It does so by automatically
 generating a single regular expression from user-provided test cases. The resulting
 expression is guaranteed to match the test cases which it was generated from.
 
-This project has started as a Rust port of the JavaScript tool 
-[*regexgen*](https://github.com/devongovett/regexgen) written by 
-[Devon Govett](https://github.com/devongovett). Although a lot of further useful features 
-could be added to it, its development was apparently ceased several years ago. The plan 
-is now to add these new features to *grex* as Rust really shines when it comes to 
-command-line tools. *grex* offers all features that *regexgen* provides, and more.
+This project has started as a Rust port of the JavaScript tool
+[_regexgen_](https://github.com/devongovett/regexgen) written by
+[Devon Govett](https://github.com/devongovett). Although a lot of further useful features
+could be added to it, its development was apparently ceased several years ago. The plan
+is now to add these new features to _grex_ as Rust really shines when it comes to
+command-line tools. _grex_ offers all features that _regexgen_ provides, and more.
 
-The philosophy of this project is to generate the most specific regular expression 
-possible by default which exactly matches the given input only and nothing else. 
-With the use of command-line flags (in the CLI tool) or preprocessing methods 
+The philosophy of this project is to generate the most specific regular expression
+possible by default which exactly matches the given input only and nothing else.
+With the use of command-line flags (in the CLI tool) or preprocessing methods
 (in the library), more generalized expressions can be created.
 
-The produced expressions are [Perl-compatible regular expressions](https://www.pcre.org) which are also 
-compatible with the regular expression parser in Rust's [*regex* crate](https://crates.io/crates/regex).
-Other regular expression parsers or respective libraries from other programming languages 
+The produced expressions are [Perl-compatible regular expressions](https://www.pcre.org) which are also
+compatible with the regular expression parser in Rust's [_regex_ crate](https://crates.io/crates/regex).
+Other regular expression parsers or respective libraries from other programming languages
 have not been tested so far, but they ought to be mostly compatible as well.
 
 ## 2. Do I still need to learn to write regexes then?
 
-**Definitely, yes!** Using the standard settings, *grex* produces a regular expression that is guaranteed
-to match only the test cases given as input and nothing else. 
+**Definitely, yes!** Using the standard settings, _grex_ produces a regular expression that is guaranteed
+to match only the test cases given as input and nothing else.
 This has been verified by [property tests](https://github.com/pemistahl/grex/blob/main/tests/property_tests.rs).
 However, if the conversion to shorthand character classes such as `\w` is enabled, the resulting regex matches
 a much wider scope of test cases. Knowledge about the consequences of this conversion is essential for finding
 a correct regular expression for your business domain.
 
-*grex* uses an algorithm that tries to find the shortest possible regex for the given test cases.
+_grex_ uses an algorithm that tries to find the shortest possible regex for the given test cases.
 Very often though, the resulting expression is still longer or more complex than it needs to be.
 In such cases, a more compact or elegant regex can be created only by hand.
-Also, every regular expression engine has different built-in optimizations. *grex* does not know anything
+Also, every regular expression engine has different built-in optimizations. _grex_ does not know anything
 about those and therefore cannot optimize its regexes for a specific engine.
 
-**So, please learn how to write regular expressions!** The currently best use case for *grex* is to find
-an initial correct regex which should be inspected by hand if further optimizations are possible.  
+**So, please learn how to write regular expressions!** The currently best use case for _grex_ is to find
+an initial correct regex which should be inspected by hand if further optimizations are possible.
 
 ## 3. Current Features
+
 - literals
 - character classes
 - detection of common prefixes and suffixes
@@ -78,25 +79,25 @@ an initial correct regex which should be inspected by hand if further optimizati
 - capturing or non-capturing groups
 - optional anchors `^` and `$`
 - fully compliant to newest [Unicode Standard 14.0](https://unicode.org/versions/Unicode14.0.0)
-- fully compatible with [*regex* crate 1.6.0+](https://crates.io/crates/regex)
+- fully compatible with [_regex_ crate 1.6.0+](https://crates.io/crates/regex)
 - correctly handles graphemes consisting of multiple Unicode symbols
 - reads input strings from the command-line or from a file
-- produces more readable expressions indented on multiple using optional verbose mode 
+- produces more readable expressions indented on multiple using optional verbose mode
 - optional syntax highlighting for nicer output in supported terminals
 
 ## 4. How to install?
 
 ### 4.1 The command-line tool
 
-You can download the self-contained executable for your platform above and put it in a place of your choice. 
-Alternatively, pre-compiled 64-Bit binaries are available within the package managers [Scoop](https://scoop.sh) 
-(for Windows), [Homebrew](https://brew.sh) (for macOS and Linux), [MacPorts](https://www.macports.org) (for macOS), and [Huber](https://github.com/innobead/huber) (for macOS, Linux and Windows). 
+You can download the self-contained executable for your platform above and put it in a place of your choice.
+Alternatively, pre-compiled 64-Bit binaries are available within the package managers [Scoop](https://scoop.sh)
+(for Windows), [Homebrew](https://brew.sh) (for macOS and Linux), [MacPorts](https://www.macports.org) (for macOS), and [Huber](https://github.com/innobead/huber) (for macOS, Linux and Windows).
 [Raúl Piracés](https://github.com/piraces) has contributed a [Chocolatey Windows package](https://community.chocolatey.org/packages/grex).
 
-*grex* is also hosted on [crates.io](https://crates.io/crates/grex), 
-the official Rust package registry. If you are a Rust developer and already have the Rust 
-toolchain installed, you can install by compiling from source using 
-[*cargo*](https://doc.rust-lang.org/cargo/), the Rust package manager.
+_grex_ is also hosted on [crates.io](https://crates.io/crates/grex),
+the official Rust package registry. If you are a Rust developer and already have the Rust
+toolchain installed, you can install by compiling from source using
+[_cargo_](https://doc.rust-lang.org/cargo/), the Rust package manager.
 So the summary of your installation options is:
 
 ```
@@ -105,7 +106,7 @@ So the summary of your installation options is:
 
 ### 4.2 The library
 
-In order to use *grex* as a library, simply add it as a dependency to your `Cargo.toml` file:
+In order to use _grex_ as a library, simply add it as a dependency to your `Cargo.toml` file:
 
 ```toml
 [dependencies]
@@ -123,7 +124,7 @@ All settings can be freely combined with each other.
 ### 5.1 The command-line tool
 
 Test cases are passed either directly (`grex a b c`) or from a file (`grex -f test_cases.txt`).
-*grex* is able to receive its input from Unix pipelines as well, e.g. `cat test_cases.txt | grex -`.
+_grex_ is able to receive its input from Unix pipelines as well, e.g. `cat test_cases.txt | grex -`.
 
 The following table shows all available flags and options:
 
@@ -180,14 +181,14 @@ MISCELLANEOUS OPTIONS:
     -g, --capture-groups    Replaces non-capturing groups with capturing ones
     -h, --help              Print help information
     -v, --version           Print version information
- 
+
 ```
 
 ### 5.2 The library
 
 #### 5.2.1 Default settings
 
-Test cases are passed either from a collection via [`RegExpBuilder::from()`](https://docs.rs/grex/1.4.0/grex/struct.RegExpBuilder.html#method.from) 
+Test cases are passed either from a collection via [`RegExpBuilder::from()`](https://docs.rs/grex/1.4.0/grex/struct.RegExpBuilder.html#method.from)
 or from a file via [`RegExpBuilder::from_file()`](https://docs.rs/grex/1.4.0/grex/struct.RegExpBuilder.html#method.from_file).
 If read from a file, each test case must be on a separate line. Lines may be ended with either a newline `\n` or a carriage
 return with a line feed `\r\n`.
@@ -222,10 +223,10 @@ let regexp = RegExpBuilder::from(&["aa", "bcbc", "defdefdef"])
 assert_eq!(regexp, "^(?:a{2}|(?:bc){2}|(?:def){3})$");
 ```
 
-By default, *grex* converts each substring this way which is at least a single character long 
+By default, _grex_ converts each substring this way which is at least a single character long
 and which is subsequently repeated at least once. You can customize these two parameters if you like.
 
-In the following example, the test case `aa` is not converted to `a{2}` because the repeated substring 
+In the following example, the test case `aa` is not converted to `a{2}` because the repeated substring
 `a` has a length of 1, but the minimum substring length has been set to 2.
 
 ```rust
@@ -262,9 +263,9 @@ let regexp = RegExpBuilder::from(&["You smell like 💩."])
 assert_eq!(regexp, "^You smell like \\u{1f4a9}\\.$");
 ```
 
-Old versions of JavaScript do not support unicode escape sequences for the astral code planes 
-(range `U+010000` to `U+10FFFF`). In order to support these symbols in JavaScript regular 
-expressions, the conversion to surrogate pairs is necessary. More information on that matter 
+Old versions of JavaScript do not support unicode escape sequences for the astral code planes
+(range `U+010000` to `U+10FFFF`). In order to support these symbols in JavaScript regular
+expressions, the conversion to surrogate pairs is necessary. More information on that matter
 can be found [here](https://mathiasbynens.be/notes/javascript-unicode).
 
 ```rust
@@ -278,7 +279,7 @@ assert_eq!(regexp, "^You smell like \\u{d83d}\\u{dca9}\\.$");
 
 #### 5.2.5 Case-insensitive matching
 
-The regular expressions that *grex* generates are case-sensitive by default.
+The regular expressions that _grex_ generates are case-sensitive by default.
 Case-insensitive matching can be enabled like so:
 
 ```rust
@@ -292,7 +293,7 @@ assert_eq!(regexp, "(?i)^big(?:ger)?$");
 
 #### 5.2.6 Capturing Groups
 
-Non-capturing groups are used by default. 
+Non-capturing groups are used by default.
 Extending the previous example, you can switch to capturing groups instead.
 
 ```rust
@@ -353,9 +354,9 @@ assert_eq!(regexp, "a(?:aa?)?");
 #### 5.2.9 Syntax highlighting
 
 ⚠ The method `with_syntax_highlighting()` may only be used if the resulting regular expression is meant to
-be printed to the console. It is mainly meant to be used for the command-line tool output. 
-The regex string representation returned from enabling this setting cannot be fed into the 
-[*regex* crate](https://crates.io/crates/regex).
+be printed to the console. It is mainly meant to be used for the command-line tool output.
+The regex string representation returned from enabling this setting cannot be fed into the
+[_regex_ crate](https://crates.io/crates/regex).
 
 ```rust
 use grex::RegExpBuilder;
@@ -396,7 +397,7 @@ $ grex -r b ba baa baaaa
 
 $ grex y̆ a z
 ^(?:y̆|[az])$
-Note: 
+Note:
 Grapheme y̆ consists of two Unicode symbols:
 U+0079 (Latin Small Letter Y)
 U+0306 (Combining Breve)
@@ -404,7 +405,7 @@ U+0306 (Combining Breve)
 $ grex "I ♥ cake" "I ♥ cookies"
 ^I ♥ c(?:ookies|ake)$
 Note:
-Input containing blank space must be 
+Input containing blank space must be
 surrounded by quotation marks.
 ```
 
@@ -473,13 +474,13 @@ $ grex -drsw <INPUT>
 
 $ grex -drswW <INPUT>
 ^\w\s\W{3}\s\d(?:\d\s\w{3}\s){2}\W{3}$
-```                                                                                                                            
+```
 
 ## 6. How to build?
 
-In order to build the source code yourself, you need the 
-[stable Rust toolchain](https://www.rust-lang.org/tools/install) installed on your machine 
-so that [*cargo*](https://doc.rust-lang.org/cargo/), the Rust package manager is available.
+In order to build the source code yourself, you need the
+[stable Rust toolchain](https://www.rust-lang.org/tools/install) installed on your machine
+so that [_cargo_](https://doc.rust-lang.org/cargo/), the Rust package manager is available.
 
 ```shell
 git clone https://github.com/pemistahl/grex.git
@@ -487,7 +488,7 @@ cd grex
 cargo build
 ```
 
-The source code is accompanied by an extensive test suite consisting of unit tests, integration 
+The source code is accompanied by an extensive test suite consisting of unit tests, integration
 tests and property tests. For running them, simply say:
 
 ```shell
@@ -502,7 +503,7 @@ cargo bench
 
 ## 7. WebAssembly support
 
-This library can be compiled to [WebAssembly (WASM)](https://webassembly.org) which allows to use *grex*
+This library can be compiled to [WebAssembly (WASM)](https://webassembly.org) which allows to use _grex_
 in any JavaScript-based project, be it in the browser or in the back end running on [Node.js](https://nodejs.org).
 
 The easiest way to compile is to use [`wasm-pack`](https://rustwasm.github.io/wasm-pack). After the installation,
@@ -511,15 +512,15 @@ you can, for instance, build the library with the web target so that it can be d
     wasm-pack build --target web
 
 This creates a directory named `pkg` on the top-level of this repository, containing the compiled wasm files
-and JavaScript and TypeScript bindings. In an HTML file, you can then call *grex* like the following, for instance:
+and JavaScript and TypeScript bindings. In an HTML file, you can then call _grex_ like the following, for instance:
 
 ```html
 <script type="module">
-    import init, { RegExpBuilder } from "./pkg/grex.js";
+  import init, { RegExpBuilder } from "./pkg/grex.js";
 
-    init().then(_ => {
-        alert(RegExpBuilder.from(["hello", "world"]).build());
-    });
+  init().then((_) => {
+    alert(RegExpBuilder.from(["hello", "world"]).build());
+  });
 </script>
 ```
 
@@ -533,21 +534,21 @@ If the tests fail to start in Safari, you need to enable Safari's web driver fir
     sudo safaridriver --enable
 
 The output of `wasm-pack` will be hosted in a [separate repository](https://github.com/pemistahl/grex-js) which
-allows to add further JavaScript-related configuration, tests and documentation. *grex* will then be added to the
+allows to add further JavaScript-related configuration, tests and documentation. _grex_ will then be added to the
 [npm registry](https://www.npmjs.com) as well, allowing for an easy download and installation within every JavaScript
 or TypeScript project.
 
 ## 8. How does it work?
 
-1. A [deterministic finite automaton](https://en.wikipedia.org/wiki/Deterministic_finite_automaton) (DFA) 
-is created from the input strings.
+1. A [deterministic finite automaton](https://en.wikipedia.org/wiki/Deterministic_finite_automaton) (DFA)
+   is created from the input strings.
 
-2. The number of states and transitions between states in the DFA is reduced by applying 
-[Hopcroft's DFA minimization algorithm](https://en.wikipedia.org/wiki/DFA_minimization#Hopcroft.27s_algorithm).
+2. The number of states and transitions between states in the DFA is reduced by applying
+   [Hopcroft's DFA minimization algorithm](https://en.wikipedia.org/wiki/DFA_minimization#Hopcroft.27s_algorithm).
 
-3. The minimized DFA is expressed as a system of linear equations which are solved with 
-[Brzozowski's algebraic method](http://cs.stackexchange.com/questions/2016/how-to-convert-finite-automata-to-regular-expressions#2392), 
-resulting in the final regular expression.
+3. The minimized DFA is expressed as a system of linear equations which are solved with
+   [Brzozowski's algebraic method](http://cs.stackexchange.com/questions/2016/how-to-convert-finite-automata-to-regular-expressions#2392),
+   resulting in the final regular expression.
 
 ## 9. What's next for version 1.5.0?
 
@@ -556,8 +557,8 @@ Take a look at the [planned issues](https://github.com/pemistahl/grex/milestone/
 ## 10. Contributions
 
 - [Krzysztof Zawisła](https://github.com/KrzysztofZawisla) has written JavaScript bindings. Check out [grex.js](https://github.com/KrzysztofZawisla/grex.js).
-- [Maciej Gryka](https://github.com/maciejgryka) has created [https://regex.help](https://regex.help) where you can try out *grex* in your browser.
+- [Maciej Gryka](https://github.com/maciejgryka) has created [https://regex.help](https://regex.help) where you can try out _grex_ in your browser.
 
-In case you want to contribute something to *grex*, I encourage you to do so.
-Do you have ideas for cool features? Or have you found any bugs so far? 
+In case you want to contribute something to _grex_, I encourage you to do so.
+Do you have ideas for cool features? Or have you found any bugs so far?
 Feel free to open an issue or send a pull request. It's very much appreciated. :-)
