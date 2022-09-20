@@ -34,7 +34,7 @@ crate-type = ["cdylib", "rlib"]
 [dependencies]
 atty = { version = "0.2.14", optional = true }
 clap = { version = "3.2.17", features = ["derive", "wrap_help"], optional = true }
-itertools = "0.10.3"
+itertools = "0.10.5"
 lazy_static = "1.4.0"
 ndarray = "0.15.6"
 petgraph = {version = "0.6.2", default-features = false, features = ["stable_graph"]}
