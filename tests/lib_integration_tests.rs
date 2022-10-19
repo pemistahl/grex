@@ -97,7 +97,9 @@ mod no_conversion {
             case(vec!["\u{890}\0"], "^\u{890}\0$"),
             case(vec!["\u{890}\\0"], "^\u{890}\\\\0$"),
             case(vec!["\u{890}\\\0"], "^\u{890}\\\\\0$"),
-            case(vec!["\u{890}\\\\0"], "^\u{890}\\\\\\\\0$")
+            case(vec!["\u{890}\\\\0"], "^\u{890}\\\\\\\\0$"),
+            case(vec!["\\𑇂"], "^\\\\𑇂$"),
+            case(vec!["𑇂\\"], "^𑇂\\\\$")
         )]
         fn succeeds(test_cases: Vec<&str>, expected_output: &str) {
             let regexp = RegExpBuilder::from(&test_cases).build();

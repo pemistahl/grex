@@ -37,13 +37,13 @@ impl<'a> GraphemeCluster<'a> {
         Self {
             graphemes: UnicodeSegmentation::graphemes(s, true)
                 .flat_map(|it| {
-                    let starts_with_backslash = it.chars().count() == 2 && it.starts_with('\\');
+                    let contains_backslash = it.chars().count() == 2 && it.contains('\\');
                     let contains_combining_mark_or_unassigned_chars = it.chars().any(|c| {
                         let category = GeneralCategory::of(c);
                         category.is_mark() || category.is_other()
                     });
 
-                    if starts_with_backslash || contains_combining_mark_or_unassigned_chars {
+                    if contains_backslash || contains_combining_mark_or_unassigned_chars {
                         it.chars()
                             .map(|c| {
                                 Grapheme::from(
