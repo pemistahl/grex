@@ -14,13 +14,18 @@
  * limitations under the License.
  */
 
+#[cfg(not(target_family = "wasm"))]
 use clap::ArgAction;
+
+#[cfg(not(target_family = "wasm"))]
 use clap::Parser;
+
 use grex::RegExpBuilder;
 use itertools::Itertools;
 use std::io::{BufRead, Error, ErrorKind, Read};
 use std::path::PathBuf;
 
+#[cfg(not(target_family = "wasm"))]
 #[derive(Parser)]
 #[command(
     author = "© 2019-today Peter M. Stahl <pemistahl@gmail.com>",
@@ -284,11 +289,16 @@ struct Cli {
     version: Option<String>,
 }
 
+#[cfg(not(target_family = "wasm"))]
 fn main() {
     let cli = Cli::parse();
     handle_input(&cli, obtain_input(&cli));
 }
 
+#[cfg(target_family = "wasm")]
+fn main() {}
+
+#[cfg(not(target_family = "wasm"))]
 fn obtain_input(cli: &Cli) -> Result<Vec<String>, Error> {
     let is_stdin_available = atty::isnt(atty::Stream::Stdin);
 
@@ -326,6 +336,7 @@ fn obtain_input(cli: &Cli) -> Result<Vec<String>, Error> {
     }
 }
 
+#[cfg(not(target_family = "wasm"))]
 fn handle_input(cli: &Cli, input: Result<Vec<String>, Error>) {
     match input {
         Ok(test_cases) => {

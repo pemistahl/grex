@@ -113,19 +113,19 @@ jobs:
 
       - name: Run WASM integration tests on NodeJS
         if: ${{ matrix.os == 'macos-latest' }}
-        run: wasm-pack test --node
+        run: wasm-pack test --node -- --no-default-features
 
       - name: Run WASM integration tests in Chrome
         if: ${{ matrix.os == 'macos-latest' }}
-        run: wasm-pack test --headless --chrome
+        run: wasm-pack test --headless --chrome -- --no-default-features
 
       - name: Run WASM integration tests in Firefox
         if: ${{ matrix.os == 'macos-latest' }}
-        run: wasm-pack test --headless --firefox
+        run: wasm-pack test --headless --firefox -- --no-default-features
 
       - name: Run WASM integration tests in Safari
         if: ${{ matrix.os == 'macos-latest' }}
-        run: wasm-pack test --headless --safari
+        run: wasm-pack test --headless --safari -- --no-default-features
 
       - name: Create code coverage report
         if: ${{ matrix.os == 'ubuntu-latest' && github.event_name == 'push' }}
