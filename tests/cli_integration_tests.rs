@@ -189,11 +189,11 @@ mod no_conversion {
         }
 
         #[test]
-        fn fails_with_both_direct_and_file_input() {
+        fn fails_with_first_file_input_and_then_direct_input() {
             let mut grex = init_command();
-            grex.args(&[TEST_CASE, "-f", "/path/to/some/file"]);
+            grex.args(&["-f", "/path/to/some/file", TEST_CASE]);
             grex.assert().failure().stderr(predicate::str::contains(
-                "argument '<INPUT>...' cannot be used with '--file <FILE>'",
+                "The argument '--file <FILE>' cannot be used with '[INPUT]...'",
             ));
         }
     }

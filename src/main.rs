@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+use clap::ArgAction;
 use clap::Parser;
 use grex::RegExpBuilder;
 use itertools::Itertools;
@@ -21,28 +22,31 @@ use std::io::{BufRead, Error, ErrorKind, Read};
 use std::path::PathBuf;
 
 #[derive(Parser)]
-#[clap(
+#[command(
     author = "© 2019-today Peter M. Stahl <pemistahl@gmail.com>",
     about = "Licensed under the Apache License, Version 2.0\n\
              Downloadable from https://crates.io/crates/grex\n\
              Source code at https://github.com/pemistahl/grex\n\n\
              grex generates regular expressions from user-provided test cases.",
     version,
-    allow_hyphen_values = true,
-    mut_arg("help", |help| help.help_heading("MISCELLANEOUS OPTIONS")),
-    mut_arg("version", |version| version.short('v').help_heading("MISCELLANEOUS OPTIONS"))
+    override_usage = "grex [OPTIONS] {INPUT...|--file <FILE>}",
+    help_template = "{name} {version}\n{author}\n{about}\n\n{usage-heading} {usage}\n\n{all-args}",
+    disable_help_flag = true,
+    disable_version_flag = true
 )]
 struct Cli {
     // --------------------
     // INPUT
     // --------------------
     /// One or more test cases separated by blank space
-    #[clap(
+    ///
+    /// Conflicts with --file.
+    #[arg(
         value_name = "INPUT",
+        allow_hyphen_values = true,
         required_unless_present = "file",
         conflicts_with = "file",
-        value_parser,
-        help_heading = "INPUT",
+        help_heading = "Input",
         display_order = 1
     )]
     input: Vec<String>,
@@ -51,14 +55,16 @@ struct Cli {
     ///
     /// Lines may be ended with either a newline `\n` or a carriage return with a line feed `\r\n`.
     /// The final line ending is optional.
-    #[clap(
+    ///
+    /// Conflicts with [INPUT]...
+    #[arg(
         name = "file",
         value_name = "FILE",
         short,
         long,
         required_unless_present = "input",
-        value_parser,
-        help_heading = "INPUT"
+        help_heading = "Input",
+        display_order = 2
     )]
     file_path: Option<PathBuf>,
 
@@ -72,13 +78,7 @@ struct Cli {
     ///
     /// Takes precedence over --non-spaces if both are set.
     /// Decimal digits are converted to \d, remaining non-space characters to \S.
-    #[clap(
-        name = "digits",
-        short,
-        long,
-        value_parser,
-        help_heading = "DIGIT OPTIONS"
-    )]
+    #[arg(name = "digits", short, long, help_heading = "Digit Options")]
     is_digit_converted: bool,
 
     /// Converts any character which is not a Unicode decimal digit to \D.
@@ -88,13 +88,7 @@ struct Cli {
     ///
     /// Takes precedence over --non-spaces if both are set.
     /// Non-digits which are also non-space characters are converted to \D.
-    #[clap(
-        name = "non-digits",
-        short = 'D',
-        long,
-        value_parser,
-        help_heading = "DIGIT OPTIONS"
-    )]
+    #[arg(name = "non-digits", short = 'D', long, help_heading = "Digit Options")]
     is_non_digit_converted: bool,
 
     // --------------------
@@ -107,22 +101,15 @@ struct Cli {
     ///
     /// Takes precedence over --non-words if both are set.
     /// Whitespace is converted to \s, remaining non-word characters to \W.
-    #[clap(
-        name = "spaces",
-        short,
-        long,
-        value_parser,
-        help_heading = "WHITESPACE OPTIONS"
-    )]
+    #[arg(name = "spaces", short, long, help_heading = "Whitespace Options")]
     is_space_converted: bool,
 
     /// Converts any character which is not a Unicode whitespace character to \S
-    #[clap(
+    #[arg(
         name = "non-spaces",
         short = 'S',
         long,
-        value_parser,
-        help_heading = "WHITESPACE OPTIONS"
+        help_heading = "Whitespace Options"
     )]
     is_non_space_converted: bool,
 
@@ -136,48 +123,29 @@ struct Cli {
     ///
     /// Takes precedence over --non-spaces if both are set.
     /// Word characters are converted to \w, remaining non-whitespace to \S.
-    #[clap(
-        name = "words",
-        short,
-        long,
-        value_parser,
-        help_heading = "WORD OPTIONS"
-    )]
+    #[arg(name = "words", short, long, help_heading = "Word Options")]
     is_word_converted: bool,
 
     /// Converts any character which is not a Unicode word character to \W.
     ///
     /// Takes precedence over --non-spaces if both are set.
     /// Non-word characters which are also non-whitespace are converted to \W.
-    #[clap(
-        name = "non-words",
-        short = 'W',
-        long,
-        value_parser,
-        help_heading = "WORD OPTIONS"
-    )]
+    #[arg(name = "non-words", short = 'W', long, help_heading = "Word Options")]
     is_non_word_converted: bool,
 
     // --------------------
     // ESCAPING OPTIONS
     // --------------------
     /// Replaces all non-ASCII characters with unicode escape sequences.
-    #[clap(
-        name = "escape",
-        short,
-        long,
-        value_parser,
-        help_heading = "ESCAPING OPTIONS"
-    )]
+    #[arg(name = "escape", short, long, help_heading = "Escaping Options")]
     is_non_ascii_char_escaped: bool,
 
     /// Converts astral code points to surrogate pairs if --escape is set.
-    #[clap(
+    #[arg(
         name = "with-surrogates",
         long,
         requires = "escape",
-        value_parser,
-        help_heading = "ESCAPING OPTIONS"
+        help_heading = "Escaping Options"
     )]
     is_astral_code_point_converted_to_surrogate: bool,
 
@@ -185,36 +153,35 @@ struct Cli {
     // REPETITION OPTIONS
     // --------------------
     /// Detects repeated non-overlapping substrings and converts them to {min,max} quantifier notation.
-    #[clap(
+    #[arg(
         name = "repetitions",
         short,
         long,
-        value_parser,
-        help_heading = "REPETITION OPTIONS",
+        help_heading = "Repetition Options",
         display_order = 1
     )]
     is_repetition_converted: bool,
 
     /// Specifies the minimum quantity of substring repetitions to be converted if --repetitions is set.
-    #[clap(
+    #[arg(
         name = "min-repetitions",
         value_name = "QUANTITY",
         long,
         default_value_t = 1,
         value_parser = repetition_options_parser,
-        help_heading = "REPETITION OPTIONS"
+        help_heading = "Repetition Options"
     )]
     minimum_repetitions: u32,
 
     /// Specifies the minimum length a repeated substring must have
     /// in order to be converted if --repetitions is set.
-    #[clap(
+    #[arg(
         name = "min-substring-length",
         value_name = "LENGTH",
         long,
         default_value_t = 1,
         value_parser = repetition_options_parser,
-        help_heading = "REPETITION OPTIONS"
+        help_heading = "Repetition Options"
     )]
     minimum_substring_length: u32,
 
@@ -229,12 +196,7 @@ struct Cli {
     ///
     /// This flag removes the anchor, thereby allowing to match the test cases
     /// also when they do not occur at the start of a string.
-    #[clap(
-        name = "no-start-anchor",
-        long,
-        value_parser,
-        help_heading = "ANCHOR OPTIONS"
-    )]
+    #[arg(name = "no-start-anchor", long, help_heading = "Anchor Options")]
     is_caret_anchor_disabled: bool,
 
     /// Removes the dollar sign anchor `$` from the resulting regular expression.
@@ -245,12 +207,7 @@ struct Cli {
     ///
     /// This flag removes the anchor, thereby allowing to match the test cases
     /// also when they do not occur at the end of a string.
-    #[clap(
-        name = "no-end-anchor",
-        long,
-        value_parser,
-        help_heading = "ANCHOR OPTIONS"
-    )]
+    #[arg(name = "no-end-anchor", long, help_heading = "Anchor Options")]
     is_dollar_sign_anchor_disabled: bool,
 
     /// Removes the caret and dollar sign anchors from the resulting regular expression.
@@ -261,62 +218,70 @@ struct Cli {
     ///
     /// This flag removes the anchors, thereby allowing to match the test cases
     /// also when they occur within a larger string that contains other content as well.
-    #[clap(
-        name = "no-anchors",
-        long,
-        value_parser,
-        help_heading = "ANCHOR OPTIONS"
-    )]
+    #[arg(name = "no-anchors", long, help_heading = "Anchor Options")]
     are_anchors_disabled: bool,
 
     // --------------------
     // DISPLAY OPTIONS
     // --------------------
     /// Produces a nicer-looking regular expression in verbose mode.
-    #[clap(
+    #[arg(
         name = "verbose",
         short = 'x',
         long,
-        value_parser,
-        help_heading = "DISPLAY OPTIONS",
+        help_heading = "Display Options",
         display_order = 1
     )]
     is_verbose_mode_enabled: bool,
 
     /// Provides syntax highlighting for the resulting regular expression.
-    #[clap(
-        name = "colorize",
-        short,
-        long,
-        value_parser,
-        help_heading = "DISPLAY OPTIONS"
-    )]
+    #[arg(name = "colorize", short, long, help_heading = "Display Options")]
     is_output_colorized: bool,
 
     // ---------------------
     // MISCELLANEOUS OPTIONS
     // ---------------------
     /// Performs case-insensitive matching, letters match both upper and lower case.
-    #[clap(
+    #[arg(
         name = "ignore-case",
         short,
         long,
-        value_parser,
-        help_heading = "MISCELLANEOUS OPTIONS",
+        help_heading = "Miscellaneous Options",
         display_order = 1
     )]
     is_case_ignored: bool,
 
     /// Replaces non-capturing groups with capturing ones.
-    #[clap(
+    #[arg(
         name = "capture-groups",
         short = 'g',
         long,
-        value_parser,
-        help_heading = "MISCELLANEOUS OPTIONS",
+        help_heading = "Miscellaneous Options",
         display_order = 2
     )]
     is_group_captured: bool,
+
+    /// Prints help information
+    #[arg(
+        name = "help",
+        short = 'h',
+        long,
+        action = ArgAction::Help,
+        help_heading = "Miscellaneous Options",
+        display_order = 3
+    )]
+    help: Option<String>,
+
+    /// Prints version information
+    #[arg(
+        name = "version",
+        short = 'v',
+        long,
+        action = ArgAction::Version,
+        help_heading = "Miscellaneous Options",
+        display_order = 4
+    )]
+    version: Option<String>,
 }
 
 fn main() {
