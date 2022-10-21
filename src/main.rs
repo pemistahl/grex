@@ -27,9 +27,9 @@ mod cli {
     #[command(
         author = "© 2019-today Peter M. Stahl <pemistahl@gmail.com>",
         about = "Licensed under the Apache License, Version 2.0\n\
-             Downloadable from https://crates.io/crates/grex\n\
-             Source code at https://github.com/pemistahl/grex\n\n\
-             grex generates regular expressions from user-provided test cases.",
+                 Downloadable from https://crates.io/crates/grex\n\
+                 Source code at https://github.com/pemistahl/grex\n\n\
+                 grex generates regular expressions from user-provided test cases.",
         version,
         override_usage = "grex [OPTIONS] {INPUT...|--file <FILE>}",
         help_template = "{name} {version}\n{author}\n{about}\n\n{usage-heading} {usage}\n\n{all-args}",
@@ -58,7 +58,7 @@ mod cli {
         /// Lines may be ended with either a newline `\n` or a carriage return with a line feed `\r\n`.
         /// The final line ending is optional.
         ///
-        /// Conflicts with [INPUT]...
+        /// Conflicts with INPUT...
         #[arg(
             name = "file",
             value_name = "FILE",

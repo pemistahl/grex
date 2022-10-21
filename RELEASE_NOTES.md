@@ -1,3 +1,12 @@
+## grex 1.4.1 (released on 21 Oct 2022)
+
+### Changes
+- `clap` has been updated to version 4.0. The help output by `grex -h` now looks a little different.
+
+### Bug Fixes
+- A bug in the grapheme segmentation was fixed that caused test cases which contain backslashes to produce
+  incorrect regular expressions.
+
 ## grex 1.4.0 (released on 26 Jul 2022)
 
 ### Features
