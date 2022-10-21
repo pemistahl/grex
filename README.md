@@ -515,7 +515,7 @@ in any JavaScript-based project, be it in the browser or in the back end running
 The easiest way to compile is to use [`wasm-pack`](https://rustwasm.github.io/wasm-pack). After the installation,
 you can, for instance, build the library with the web target so that it can be directly used in the browser:
 
-    wasm-pack build --target web
+    wasm-pack build --target web -- --no-default-features
 
 This creates a directory named `pkg` on the top-level of this repository, containing the compiled wasm files
 and JavaScript and TypeScript bindings. In an HTML file, you can then call *grex* like the following, for instance:
@@ -533,7 +533,7 @@ and JavaScript and TypeScript bindings. In an HTML file, you can then call *grex
 There are also some integration tests available both for Node.js and for the browsers Chrome, Firefox and Safari.
 To run them, simply say:
 
-    wasm-pack test --node --headless --chrome --firefox --safari
+    wasm-pack test --node --headless --chrome --firefox --safari -- --no-default-features
 
 If the tests fail to start in Safari, you need to enable Safari's web driver first by running:
 
