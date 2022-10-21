@@ -51,7 +51,7 @@ indoc = "1.0.7"
 rstest = "0.15.0"
 
 [target.'cfg(not(target_family = "wasm"))'.dev-dependencies]
-assert_cmd = "2.0.4"
+assert_cmd = "2.0.5"
 criterion = "0.4.0"
 predicates = "2.1.1"
 proptest = "1.0.0"
