@@ -33,7 +33,7 @@ crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 atty = { version = "0.2.14", optional = true }
-clap = { version = "4.0.32", features = ["derive", "wrap_help"], optional = true }
+clap = { version = "4.1.4", features = ["derive", "wrap_help"], optional = true }
 itertools = "0.10.5"
 lazy_static = "1.4.0"
 ndarray = "0.15.6"
