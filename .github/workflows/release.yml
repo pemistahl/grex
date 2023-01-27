@@ -99,7 +99,7 @@ jobs:
           file: target/*/release/grex-${{ steps.get_version.outputs.version }}-*.{zip,tar.gz}
 
       - name: Upload release to crates.io
-        uses: katyo/publish-crates@v1
+        uses: katyo/publish-crates@v2
         if: ${{ matrix.os == 'ubuntu-latest' }}
         with:
           registry-token: ${{ secrets.CARGO_REGISTRY_TOKEN }}
