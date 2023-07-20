@@ -181,7 +181,7 @@ mod no_conversion {
             let mut grex = init_command();
             grex.args(&["-f", "/path/to/non-existing/file"]);
             grex.assert()
-                .success()
+                .failure()
                 .stdout(predicate::str::is_empty())
                 .stderr(predicate::eq(
                     "error: the specified file could not be found\n",

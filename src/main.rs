@@ -323,7 +323,7 @@ mod cli {
         }
     }
 
-    pub(crate) fn handle_input(cli: &Cli, input: Result<Vec<String>, Error>) {
+    pub(crate) fn handle_input(cli: &Cli, input: Result<Vec<String>, Error>) -> Result<(), Box<dyn std::error::Error>> {
         match input {
             Ok(test_cases) => {
                 let mut builder = RegExpBuilder::from(&test_cases);
@@ -397,16 +397,17 @@ mod cli {
                 let regexp = builder.build();
 
                 println!("{}", regexp);
+                Ok(())
             }
             Err(error) => match error.kind() {
-                ErrorKind::NotFound => eprintln!("error: the specified file could not be found"),
+                ErrorKind::NotFound => Err("error: the specified file could not be found".into()),
                 ErrorKind::InvalidData => {
-                    eprintln!("error: the specified file's encoding is not valid UTF-8")
+                    Err("error: the specified file's encoding is not valid UTF-8".into())
                 }
                 ErrorKind::PermissionDenied => {
-                    eprintln!("permission denied: the specified file could not be opened")
+                    Err("permission denied: the specified file could not be opened".into())
                 }
-                _ => eprintln!("error: {}", error),
+                _ => Err(format!("error: {}", error).into()),
             },
         }
     }
@@ -429,7 +430,13 @@ mod cli {
 fn main() {
     use clap::Parser;
     let cli = cli::Cli::parse();
-    cli::handle_input(&cli, cli::obtain_input(&cli));
+    match cli::handle_input(&cli, cli::obtain_input(&cli)) {
+        Ok(_) => {},
+        Err(e) => {
+            eprintln!("{}", e);
+            std::process::exit(1);
+        },
+    }
 }
 
 #[cfg(target_family = "wasm")]
