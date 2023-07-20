@@ -42,6 +42,8 @@ mod cli {
         // --------------------
         /// One or more test cases separated by blank space
         ///
+        /// Use a hyphen `-` to read test cases from standard input.
+        ///
         /// Conflicts with --file.
         #[arg(
             value_name = "INPUT",
@@ -57,6 +59,8 @@ mod cli {
         ///
         /// Lines may be ended with either a newline `\n` or a carriage return with a line feed `\r\n`.
         /// The final line ending is optional.
+        ///
+        /// Use a hyphen `-` to read the filename from standard input.
         ///
         /// Conflicts with INPUT...
         #[arg(
