@@ -14,7 +14,7 @@
 
 [package]
 name = "grex"
-version = "1.4.1"
+version = "1.4.2"
 authors = ["Peter M. Stahl <pemistahl@gmail.com>"]
 description = """
 grex generates regular expressions from user-provided test cases.
@@ -34,31 +34,31 @@ crate-type = ["cdylib", "rlib"]
 [dependencies]
 atty = { version = "0.2.14", optional = true }
 clap = { version = "4.0.32", features = ["derive", "wrap_help"], optional = true }
-itertools = "0.10.5"
+itertools = "0.11.0"
 lazy_static = "1.4.0"
 ndarray = "0.15.6"
-petgraph = {version = "0.6.2", default-features = false, features = ["stable_graph"]}
+petgraph = {version = "0.6.3", default-features = false, features = ["stable_graph"]}
 regex = "1.7.0"
 unic-char-range = "0.9.0"
 unic-ucd-category = "0.9.0"
-unicode-segmentation = "1.10.0"
+unicode-segmentation = "1.10.1"
 
 [target.'cfg(target_family = "wasm")'.dependencies]
-wasm-bindgen = "0.2.81"
+wasm-bindgen = "0.2.87"
 
 [dev-dependencies]
-indoc = "1.0.8"
+indoc = "2.0.3"
 rstest = "0.16.0"
 
 [target.'cfg(not(target_family = "wasm"))'.dev-dependencies]
-assert_cmd = "2.0.5"
-criterion = "0.4.0"
-predicates = "2.1.5"
+assert_cmd = "2.0.12"
+criterion = "0.5.1"
+predicates = "3.0.3"
 proptest = "1.0.0"
-tempfile = "3.3.0"
+tempfile = "3.7.0"
 
 [target.'cfg(target_family = "wasm")'.dev-dependencies]
-wasm-bindgen-test = "0.3.31"
+wasm-bindgen-test = "0.3.37"
 
 [features]
 default = ["cli"]
