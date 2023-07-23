@@ -88,6 +88,7 @@ mod no_conversion {
             case(vec!["\\u{b}"], "^\\\\u\\{b\\}$"),
             case(vec!["\u{c}"], "^\\f$"), // U+000C Form Feed
             case(vec!["\\u{c}"], "^\\\\u\\{c\\}$"),
+            case(vec!["\u{200b}"], "^​$"),
             case(vec!["I ♥ cake"], "^I ♥ cake$"),
             case(vec!["I \u{2665} cake"], "^I ♥ cake$"),
             case(vec!["I \\u{2665} cake"], "^I \\\\u\\{2665\\} cake$"),
@@ -186,6 +187,13 @@ mod no_conversion {
                 (?x)
                 ^
                   \ \ \ 
+                $"#
+            )),
+            case(vec!["\u{200b}"], indoc!(
+                r#"
+                (?x)
+                ^
+                  ​
                 $"#
             )),
             case(vec!["a", "b", "c"], indoc!(
