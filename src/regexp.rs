@@ -71,7 +71,7 @@ impl<'a> RegExp<'a> {
     fn convert_expr_to_regex(expr: &Expression, config: &RegExpConfig) -> Regex {
         if config.is_output_colorized {
             let color_replace_regex = Regex::new("\u{1b}\\[(?:\\d+;\\d+|0)m").unwrap();
-            Regex::new(&*color_replace_regex.replace_all(&expr.to_string(), "")).unwrap()
+            Regex::new(&color_replace_regex.replace_all(&expr.to_string(), "")).unwrap()
         } else {
             Regex::new(&expr.to_string()).unwrap()
         }
@@ -315,33 +315,15 @@ fn apply_verbose_mode(regexp: String, config: &RegExpConfig) -> String {
             "",
         )
         .replace('#', "\\#")
-        .replace(' ', "\\s")
-        .replace(' ', "\\s")
-        .replace(' ', "\\s")
-        .replace(' ', "\\s")
-        .replace(' ', "\\s")
-        .replace(' ', "\\s")
-        .replace(' ', "\\s")
-        .replace('\u{85}', "\\s")
-        .replace('\u{a0}', "\\s")
-        .replace('\u{1680}', "\\s")
-        .replace('\u{2000}', "\\s")
-        .replace('\u{2001}', "\\s")
-        .replace('\u{2002}', "\\s")
-        .replace('\u{2003}', "\\s")
-        .replace('\u{2004}', "\\s")
-        .replace('\u{2005}', "\\s")
-        .replace('\u{2006}', "\\s")
-        .replace('\u{2007}', "\\s")
-        .replace('\u{2008}', "\\s")
-        .replace('\u{2009}', "\\s")
-        .replace('\u{200a}', "\\s")
-        .replace('\u{200b}', "\\s")
-        .replace('\u{2028}', "\\s")
-        .replace('\u{2029}', "\\s")
-        .replace('\u{202f}', "\\s")
-        .replace('\u{205f}', "\\s")
-        .replace('\u{3000}', "\\s")
+        .replace(
+            [
+                ' ', ' ', ' ', ' ', ' ', ' ', ' ', '\u{85}', '\u{a0}', '\u{1680}', '\u{2000}',
+                '\u{2001}', '\u{2002}', '\u{2003}', '\u{2004}', '\u{2005}', '\u{2006}', '\u{2007}',
+                '\u{2008}', '\u{2009}', '\u{200a}', '\u{200b}', '\u{2028}', '\u{2029}', '\u{202f}',
+                '\u{205f}', '\u{3000}',
+            ],
+            "\\s",
+        )
         .replace(' ', "\\ ");
 
     if config.is_output_colorized {

@@ -315,7 +315,7 @@ mod cli {
             } else {
                 file_path.to_path_buf()
             };
-            match std::fs::read_to_string(&path) {
+            match std::fs::read_to_string(path) {
                 Ok(file_content) => Ok(file_content.lines().map(|it| it.to_string()).collect_vec()),
                 Err(error) => Err(error),
             }
@@ -327,7 +327,10 @@ mod cli {
         }
     }
 
-    pub(crate) fn handle_input(cli: &Cli, input: Result<Vec<String>, Error>) -> Result<(), Box<dyn std::error::Error>> {
+    pub(crate) fn handle_input(
+        cli: &Cli,
+        input: Result<Vec<String>, Error>,
+    ) -> Result<(), Box<dyn std::error::Error>> {
         match input {
             Ok(test_cases) => {
                 let mut builder = RegExpBuilder::from(&test_cases);
@@ -434,12 +437,9 @@ mod cli {
 fn main() {
     use clap::Parser;
     let cli = cli::Cli::parse();
-    match cli::handle_input(&cli, cli::obtain_input(&cli)) {
-        Ok(_) => {},
-        Err(e) => {
-            eprintln!("{}", e);
-            std::process::exit(1);
-        },
+    if let Err(e) = cli::handle_input(&cli, cli::obtain_input(&cli)) {
+        eprintln!("{}", e);
+        std::process::exit(1);
     }
 }
 

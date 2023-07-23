@@ -172,7 +172,7 @@ mod no_conversion {
             let mut grex = init_command();
             grex.arg("-f");
             grex.assert().failure().stderr(predicate::str::contains(
-                "argument '--file <FILE>' requires a value but none was supplied",
+                "a value is required for '--file <FILE>' but none was supplied",
             ));
         }
 
@@ -193,7 +193,7 @@ mod no_conversion {
             let mut grex = init_command();
             grex.args(&["-f", "/path/to/some/file", TEST_CASE]);
             grex.assert().failure().stderr(predicate::str::contains(
-                "The argument '--file <FILE>' cannot be used with '[INPUT]...'",
+                "the argument '--file <FILE>' cannot be used with '[INPUT]...'",
             ));
         }
     }
