@@ -86,6 +86,8 @@ mod no_conversion {
             case(vec!["3.5", "4.5", "4,5"], "^(?:3\\.5|4[,.]5)$"),
             case(vec!["\u{b}"], "^\\v$"), // U+000B Line Tabulation
             case(vec!["\\u{b}"], "^\\\\u\\{b\\}$"),
+            case(vec!["\u{c}"], "^\\f$"), // U+000C Form Feed
+            case(vec!["\\u{c}"], "^\\\\u\\{c\\}$"),
             case(vec!["I ♥ cake"], "^I ♥ cake$"),
             case(vec!["I \u{2665} cake"], "^I ♥ cake$"),
             case(vec!["I \\u{2665} cake"], "^I \\\\u\\{2665\\} cake$"),

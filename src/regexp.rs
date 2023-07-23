@@ -183,6 +183,10 @@ impl Display for RegExp<'_> {
             regexp = regexp.replace('\u{b}', "\\v"); // U+000B Line Tabulation
         }
 
+        if regexp.contains('\u{c}') {
+            regexp = regexp.replace('\u{c}', "\\f"); // U+000C Form Feed
+        }
+
         write!(
             f,
             "{}",
