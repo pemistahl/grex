@@ -32,7 +32,6 @@ keywords = ["pattern", "regex", "regexp"]
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-atty = { version = "0.2.14", optional = true } # todo for 1.5: replace with std::io::IsTerminal
 clap = { version = "4.3.19", features = ["derive", "wrap_help"], optional = true }
 itertools = "0.11.0"
 lazy_static = "1.4.0"
@@ -62,7 +61,7 @@ wasm-bindgen-test = "0.3.37"
 
 [features]
 default = ["cli"]
-cli = ["atty", "clap"]
+cli = ["clap"]
 
 [[bench]]
 name = "benchmark"

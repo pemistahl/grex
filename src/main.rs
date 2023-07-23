@@ -20,7 +20,7 @@ mod cli {
     use clap::Parser;
     use grex::RegExpBuilder;
     use itertools::Itertools;
-    use std::io::{BufRead, Error, ErrorKind, Read};
+    use std::io::{stdin, BufRead, Error, ErrorKind, IsTerminal, Read};
     use std::path::PathBuf;
 
     #[derive(Parser)]
@@ -291,14 +291,14 @@ mod cli {
     }
 
     pub(crate) fn obtain_input(cli: &Cli) -> Result<Vec<String>, Error> {
-        let is_stdin_available = atty::isnt(atty::Stream::Stdin);
+        let is_stdin_available = !stdin().is_terminal();
 
         if !cli.input.is_empty() {
             let is_single_item = cli.input.len() == 1;
             let is_hyphen = cli.input.get(0).unwrap() == "-";
 
             if is_single_item && is_hyphen && is_stdin_available {
-                Ok(std::io::stdin()
+                Ok(stdin()
                     .lock()
                     .lines()
                     .map(|line| line.unwrap())
@@ -310,7 +310,7 @@ mod cli {
             let is_hyphen = file_path.as_os_str() == "-";
             let path = if is_hyphen && is_stdin_available {
                 let mut stdin_file_path = String::new();
-                std::io::stdin().read_to_string(&mut stdin_file_path)?;
+                stdin().read_to_string(&mut stdin_file_path)?;
                 PathBuf::from(stdin_file_path.trim())
             } else {
                 file_path.to_path_buf()
