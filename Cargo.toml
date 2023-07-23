@@ -38,7 +38,7 @@ itertools = "0.11.0"
 lazy_static = "1.4.0"
 ndarray = "0.15.6"
 petgraph = {version = "0.6.3", default-features = false, features = ["stable_graph"]}
-regex = "1.7.0"
+regex = "1.9.1"
 unic-char-range = "0.9.0"
 unic-ucd-category = "0.9.0"
 unicode-segmentation = "1.10.1"
@@ -48,13 +48,13 @@ wasm-bindgen = "0.2.87"
 
 [dev-dependencies]
 indoc = "2.0.3"
-rstest = "0.16.0"
+rstest = "0.18.1"
 
 [target.'cfg(not(target_family = "wasm"))'.dev-dependencies]
 assert_cmd = "2.0.12"
 criterion = "0.5.1"
 predicates = "3.0.3"
-proptest = "1.0.0"
+proptest = "1.2.0"
 tempfile = "3.7.0"
 
 [target.'cfg(target_family = "wasm")'.dev-dependencies]

@@ -2096,7 +2096,7 @@ mod anchor_conversion {
             case(vec!["bab", "b", "cb", "bba"], "(?:b(?:ba|ab)?|cb)"),
             case(vec!["a", "aba", "baaa", "aaab"], "(?:baaa|a(?:aab|ba)?)"),
             case(vec!["a", "abab", "bbb", "aaac"], "(?:a(?:bab|aac)?|bbb)"),
-            case(vec!["aaacaac", "aac"], "(?:aaacaac|aac)"), // "aa(?:acaa)?c" would not match "aaacaac"
+            case(vec!["aaacaac", "aac"], "aa(?:acaa)?c"),
             case(vec!["My ♥♥♥ and 💩💩 is yours."], "My ♥♥♥ and 💩💩 is yours\\."),
             case(
                 // https://github.com/pemistahl/grex/issues/31
@@ -2158,11 +2158,11 @@ mod anchor_conversion {
             case(vec!["aaacaac", "aac"], indoc!(
                 r#"
                 (?x)
+                  aa
                   (?:
-                    aaacaac
-                    |
-                    aac
-                  )"#
+                    acaa
+                  )?
+                  c"#
             )),
             case(vec!["My ♥♥♥ and 💩💩 is yours."], indoc!(
                 r#"
