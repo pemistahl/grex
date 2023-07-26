@@ -71,12 +71,11 @@
 //! - case-sensitive or case-insensitive matching
 //! - capturing or non-capturing groups
 //! - optional anchors `^` and `$`
-//! - fully compliant to newest [Unicode Standard 14.0](https://unicode.org/versions/Unicode14.0.0)
-//! - fully compatible with [*regex* crate 1.6.0+](https://crates.io/crates/regex)
+//! - fully compliant to [Unicode Standard 15.0](https://unicode.org/versions/Unicode15.0.0)
+//! - fully compatible with [*regex* crate 1.9.0+](https://crates.io/crates/regex)
 //! - correctly handles graphemes consisting of multiple Unicode symbols
 //! - reads input strings from the command-line or from a file
 //! - produces more readable expressions indented on multiple using optional verbose mode
-//! - optional syntax highlighting for nicer output in supported terminals
 //!
 //! ## 4. How to use?
 //!

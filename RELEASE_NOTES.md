@@ -1,3 +1,20 @@
+## grex 1.4.2 (released on 26 Jul 2023)
+
+### Improvements
+- All characters from the current Unicode standard 15.0 are now fully supported. (#128)
+- A proper exit code is now returned if the provided user input cannot be handled by the CLI.
+  Big thanks to @spenserblack for the respective pull request. (#165)
+
+### Changes
+- It is not possible anymore to call `RegExpBuilder.with_syntax_highlighting()` in the library
+  as it only makes sense for the CLI.
+- The dependency `atty` has been removed in favor of `std::io::IsTerminal` in Rust >= 1.70.0.
+  As a result, Rust >= 1.70.0 is now needed to compile the CLI. 
+- All remaining dependencies have been updated to their latest versions.
+
+### Bug Fixes
+- Several bugs have been fixed that caused incorrect expressions to be generated in rare cases.
+
 ## grex 1.4.1 (released on 21 Oct 2022)
 
 ### Changes

@@ -1,26 +1,29 @@
-![grex](logo.png)
+<div align="center">
+
+  ![grex](https://raw.githubusercontent.com/pemistahl/grex/main/logo.png)
+
+  <br>
+
+  [![build status](https://github.com/pemistahl/grex/actions/workflows/build.yml/badge.svg)](https://github.com/pemistahl/grex/actions/workflows/build.yml)
+  [![docs.rs](https://docs.rs/grex/badge.svg)](https://docs.rs/grex)
+  [![codecov](https://codecov.io/gh/pemistahl/grex/branch/main/graph/badge.svg)](https://codecov.io/gh/pemistahl/grex)
+  [![dependency status](https://deps.rs/crate/grex/1.4.2/status.svg)](https://deps.rs/crate/grex/1.4.2)
+  [![demo](https://img.shields.io/badge/-Demo%20Website-orange?logo=HTML5&labelColor=white)](https://pemistahl.github.io/grex-js/)
+  
+  [![downloads](https://img.shields.io/crates/d/grex.svg)](https://crates.io/crates/grex)
+  [![crates.io](https://img.shields.io/crates/v/grex.svg)](https://crates.io/crates/grex)
+  [![lib.rs](https://img.shields.io/badge/lib.rs-v1.4.2-blue)](https://lib.rs/crates/grex)
+  [![license](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0)
+
+  [![Linux Download](https://img.shields.io/badge/Linux%20Download-v1.4.2-blue?logo=Linux)](https://github.com/pemistahl/grex/releases/download/v1.4.2/grex-v1.4.2-x86_64-unknown-linux-musl.tar.gz)
+  [![MacOS Download](https://img.shields.io/badge/macOS%20x86%20Download-v1.4.2-blue?logo=Apple)](https://github.com/pemistahl/grex/releases/download/v1.4.2/grex-v1.4.2-x86_64-apple-darwin.tar.gz)
+  [![MacOS ARM Download](https://img.shields.io/badge/macOS%20ARM%20Download-v1.4.2-blue?logo=Apple)](https://github.com/pemistahl/grex/releases/download/v1.4.2/grex-v1.4.2-aarch64-apple-darwin.tar.gz)
+  [![Windows Download](https://img.shields.io/badge/Windows%20Download-v1.4.2-blue?logo=Windows)](https://github.com/pemistahl/grex/releases/download/v1.4.2/grex-v1.4.2-x86_64-pc-windows-msvc.zip)
+</div>
 
 <br>
 
-[![build](https://github.com/pemistahl/grex/actions/workflows/build.yml/badge.svg)](https://github.com/pemistahl/grex/actions/workflows/build.yml)
-[![dependency status](https://deps.rs/crate/grex/1.4.1/status.svg)](https://deps.rs/crate/grex/1.4.1)
-[![codecov](https://codecov.io/gh/pemistahl/grex/branch/main/graph/badge.svg)](https://codecov.io/gh/pemistahl/grex)
-[![lines of code](https://tokei.rs/b1/github/pemistahl/grex?category=code)](https://github.com/XAMPPRocky/tokei)
-[![Downloads](https://img.shields.io/crates/d/grex.svg)](https://crates.io/crates/grex)
-
-[![Docs.rs](https://docs.rs/grex/badge.svg)](https://docs.rs/grex)
-[![Crates.io](https://img.shields.io/crates/v/grex.svg)](https://crates.io/crates/grex)
-[![Lib.rs](https://img.shields.io/badge/lib.rs-v1.4.1-blue)](https://lib.rs/crates/grex)
-[![license](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0)
-
-[![Linux Download](https://img.shields.io/badge/Linux%20Download-v1.4.1-blue?logo=Linux)](https://github.com/pemistahl/grex/releases/download/v1.4.1/grex-v1.4.1-x86_64-unknown-linux-musl.tar.gz)
-[![MacOS Download](https://img.shields.io/badge/macOS%20x86%20Download-v1.4.1-blue?logo=Apple)](https://github.com/pemistahl/grex/releases/download/v1.4.1/grex-v1.4.1-x86_64-apple-darwin.tar.gz)
-[![MacOS ARM Download](https://img.shields.io/badge/macOS%20ARM%20Download-v1.4.1-blue?logo=Apple)](https://github.com/pemistahl/grex/releases/download/v1.4.1/grex-v1.4.1-aarch64-apple-darwin.tar.gz)
-[![Windows Download](https://img.shields.io/badge/Windows%20Download-v1.4.1-blue?logo=Windows)](https://github.com/pemistahl/grex/releases/download/v1.4.1/grex-v1.4.1-x86_64-pc-windows-msvc.zip)
-
-<br>
-
-![grex demo](demo.gif)
+![grex demo](https://raw.githubusercontent.com/pemistahl/grex/main/demo.gif)
 
 <br>
 
@@ -77,8 +80,8 @@ an initial correct regex which should be inspected by hand if further optimizati
 - case-sensitive or case-insensitive matching
 - capturing or non-capturing groups
 - optional anchors `^` and `$`
-- fully compliant to newest [Unicode Standard 14.0](https://unicode.org/versions/Unicode14.0.0)
-- fully compatible with [*regex* crate 1.6.0+](https://crates.io/crates/regex)
+- fully compliant to [Unicode Standard 15.0](https://unicode.org/versions/Unicode15.0.0)
+- fully compatible with [*regex* crate 1.9.0+](https://crates.io/crates/regex)
 - correctly handles graphemes consisting of multiple Unicode symbols
 - reads input strings from the command-line or from a file
 - produces more readable expressions indented on multiple using optional verbose mode 
@@ -109,11 +112,11 @@ In order to use *grex* as a library, simply add it as a dependency to your `Carg
 
 ```toml
 [dependencies]
-grex = { version = "1.4.1", default-features = false }
+grex = { version = "1.4.2", default-features = false }
 ```
 
-The dependencies `clap` and `atty` are only needed for the command-line tool.
-By disabling the default features, the download and compilation of these dependencies is prevented for the library.
+The dependency *clap* is only needed for the command-line tool.
+By disabling the default features, the download and compilation of clap is prevented for the library.
 
 ## 5. How to use?
 
@@ -130,7 +133,7 @@ The following table shows all available flags and options:
 ```
 $ grex -h
 
-grex 1.4.1
+grex 1.4.2
 © 2019-today Peter M. Stahl <pemistahl@gmail.com>
 Licensed under the Apache License, Version 2.0
 Downloadable from https://crates.io/crates/grex
@@ -194,8 +197,8 @@ Miscellaneous Options:
 
 #### 5.2.1 Default settings
 
-Test cases are passed either from a collection via [`RegExpBuilder::from()`](https://docs.rs/grex/1.4.1/grex/struct.RegExpBuilder.html#method.from) 
-or from a file via [`RegExpBuilder::from_file()`](https://docs.rs/grex/1.4.1/grex/struct.RegExpBuilder.html#method.from_file).
+Test cases are passed either from a collection via [`RegExpBuilder::from()`](https://docs.rs/grex/1.4.2/grex/struct.RegExpBuilder.html#method.from) 
+or from a file via [`RegExpBuilder::from_file()`](https://docs.rs/grex/1.4.2/grex/struct.RegExpBuilder.html#method.from_file).
 If read from a file, each test case must be on a separate line. Lines may be ended with either a newline `\n` or a carriage
 return with a line feed `\r\n`.
 
@@ -357,21 +360,6 @@ let regexp = RegExpBuilder::from(&["a", "aa", "aaa"])
 assert_eq!(regexp, "a(?:aa?)?");
 ```
 
-#### 5.2.9 Syntax highlighting
-
-⚠ The method `with_syntax_highlighting()` may only be used if the resulting regular expression is meant to
-be printed to the console. It is mainly meant to be used for the command-line tool output. 
-The regex string representation returned from enabling this setting cannot be fed into the 
-[*regex* crate](https://crates.io/crates/regex).
-
-```rust
-use grex::RegExpBuilder;
-
-let regexp = RegExpBuilder::from(&["a", "aa", "123"])
-    .with_syntax_highlighting()
-    .build();
-```
-
 ### 5.3 Examples
 
 The following examples show the various supported regex syntax features:
@@ -487,6 +475,7 @@ $ grex -drswW <INPUT>
 In order to build the source code yourself, you need the 
 [stable Rust toolchain](https://www.rust-lang.org/tools/install) installed on your machine 
 so that [*cargo*](https://doc.rust-lang.org/cargo/), the Rust package manager is available.
+**Please note**: Rust >= 1.70.0 is required to build the CLI. For the library part, Rust < 1.70.0 is sufficient.
 
 ```shell
 git clone https://github.com/pemistahl/grex.git
@@ -515,7 +504,7 @@ in any JavaScript-based project, be it in the browser or in the back end running
 The easiest way to compile is to use [`wasm-pack`](https://rustwasm.github.io/wasm-pack). After the installation,
 you can, for instance, build the library with the web target so that it can be directly used in the browser:
 
-    wasm-pack build --target web -- --no-default-features
+    wasm-pack build --target web
 
 This creates a directory named `pkg` on the top-level of this repository, containing the compiled wasm files
 and JavaScript and TypeScript bindings. In an HTML file, you can then call *grex* like the following, for instance:
@@ -533,7 +522,7 @@ and JavaScript and TypeScript bindings. In an HTML file, you can then call *grex
 There are also some integration tests available both for Node.js and for the browsers Chrome, Firefox and Safari.
 To run them, simply say:
 
-    wasm-pack test --node --headless --chrome --firefox --safari -- --no-default-features
+    wasm-pack test --node --headless --chrome --firefox --safari
 
 If the tests fail to start in Safari, you need to enable Safari's web driver first by running:
 
@@ -543,6 +532,10 @@ The output of `wasm-pack` will be hosted in a [separate repository](https://gith
 allows to add further JavaScript-related configuration, tests and documentation. *grex* will then be added to the
 [npm registry](https://www.npmjs.com) as well, allowing for an easy download and installation within every JavaScript
 or TypeScript project.
+
+There is a [demo website](https://pemistahl.github.io/grex-js/) available where you can give grex a try.
+
+![demo website](https://raw.githubusercontent.com/pemistahl/grex/main/website.jpg)
 
 ## 8. How does it work?
 
@@ -561,9 +554,6 @@ resulting in the final regular expression.
 Take a look at the [planned issues](https://github.com/pemistahl/grex/milestone/5).
 
 ## 10. Contributions
-
-- [Krzysztof Zawisła](https://github.com/KrzysztofZawisla) has written JavaScript bindings. Check out [grex.js](https://github.com/KrzysztofZawisla/grex.js).
-- [Maciej Gryka](https://github.com/maciejgryka) has created [https://regex.help](https://regex.help) where you can try out *grex* in your browser.
 
 In case you want to contribute something to *grex*, I encourage you to do so.
 Do you have ideas for cool features? Or have you found any bugs so far? 

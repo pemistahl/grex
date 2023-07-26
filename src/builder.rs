@@ -252,6 +252,8 @@ impl RegExpBuilder {
     /// ⚠ This method may only be used if the resulting regular expression is meant to
     /// be printed to the console. The regex string representation returned from enabling
     /// this setting cannot be fed into the [*regex*](https://crates.io/crates/regex) crate.
+    #[cfg(feature = "cli")]
+    #[doc(hidden)]
     pub fn with_syntax_highlighting(&mut self) -> &mut Self {
         self.config.is_output_colorized = true;
         self
