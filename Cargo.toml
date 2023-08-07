@@ -36,7 +36,7 @@ itertools = "0.11.0"
 lazy_static = "1.4.0"
 ndarray = "0.15.6"
 petgraph = {version = "0.6.3", default-features = false, features = ["stable_graph"]}
-regex = "1.9.1"
+regex = "1.9.3"
 unic-char-range = "0.9.0"
 unic-ucd-category = "0.9.0"
 unicode-segmentation = "1.10.1"
