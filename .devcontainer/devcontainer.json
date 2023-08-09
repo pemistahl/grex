@@ -1,0 +1,14 @@
+{
+    "name": "Rust",
+    "image": "mcr.microsoft.com/devcontainers/rust:1",
+    "customizations": {
+        "vscode": {
+            "extensions": ["EditorConfig.EditorConfig"]
+        }
+    },
+    // NOTE Initial dependency download and build is slow, se we start it as
+    //      soon as the container is created so that it's hopefully ready
+    //      when the user is ready to check their build.
+    "postCreateCommand": "cargo build",
+    "remoteUser": "vscode"
+}
