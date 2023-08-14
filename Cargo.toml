@@ -49,7 +49,7 @@ wasm-bindgen = "0.2.87"
 
 [dev-dependencies]
 indoc = "2.0.3"
-rstest = "0.18.1"
+rstest = "0.18.2"
 
 [target.'cfg(not(target_family = "wasm"))'.dev-dependencies]
 assert_cmd = "2.0.12"
