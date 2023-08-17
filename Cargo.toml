@@ -42,7 +42,7 @@ unic-ucd-category = "0.9.0"
 unicode-segmentation = "1.10.1"
 
 [target.'cfg(not(target_family = "wasm"))'.dependencies]
-clap = { version = "4.3.21", features = ["derive", "wrap_help"], optional = true }
+clap = { version = "4.3.22", features = ["derive", "wrap_help"], optional = true }
 
 [target.'cfg(target_family = "wasm")'.dependencies]
 wasm-bindgen = "0.2.87"
