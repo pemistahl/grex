@@ -53,7 +53,6 @@ jobs:
           - os: macos-latest
             name: MacOS 64-Bit
             target: x86_64-apple-darwin
-            target2: aarch64-apple-darwin
             env:
               MACOSX_DEPLOYMENT_TARGET: 10.7
 
@@ -65,12 +64,8 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v3
 
-      - name: Add rustup default target
+      - name: Add rustup target
         run: rustup target add ${{ matrix.target }}
-
-      - name: Add rustup Apple ARM64 target
-        if: ${{ matrix.os == 'macos-latest' }}
-        run: rustup target add ${{ matrix.target2 }}
 
       - name: Install apt packages
         if: ${{ matrix.os == 'ubuntu-latest' }}
@@ -103,12 +98,8 @@ jobs:
             target/
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
-      - name: Build default target in debug mode
+      - name: Build target in debug mode
         run: cargo build --target ${{ matrix.target }} --locked
-
-      - name: Build Apple ARM64 target in debug mode
-        if: ${{ matrix.os == 'macos-latest' }}
-        run: cargo build --target ${{ matrix.target2 }} --locked
 
       - name: Test default target in debug mode
         run: cargo test --target ${{ matrix.target }}
@@ -184,29 +175,3 @@ jobs:
 
       - name: Run Python unit tests
         run: pytest tests/python/test_grex.py
-
-      #- name: Create virtual environment for Maturin
-      #  run: python -m venv .venv
-
-      #- name: Activate virtual environment on Linux and MacOS #source .venv/bin/activate
-      #  if: ${{ matrix.os != 'windows-latest' }}
-      #  run: echo "PYTHON_PATH=.venv/bin" >> "$GITHUB_ENV"
-
-      #- name: Activate virtual environment on Windows #.venv\Scripts\activate.bat
-      #  if: ${{ matrix.os == 'windows-latest' }}
-      #  run: echo "PYTHON_PATH=.venv\Scripts" >> "$GITHUB_ENV"
-
-      #- name: Install Maturin
-      #  run: $PYTHON_PATH/pip install maturin
-
-      #- name: Build Python extension and install pytest
-      #  run: $PYTHON_PATH/python -m maturin develop --extras=test
-
-      #- name: Build Python extension and install pytest
-      #  uses: PyO3/maturin-action@v1
-      #  with:
-      #    command: develop
-      #    args: --extras=test
-
-      #- name: Run Python unit tests
-      #  run: $PYTHON_PATH/python -m pytest tests/python/test_grex.py
