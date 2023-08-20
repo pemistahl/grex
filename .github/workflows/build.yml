@@ -36,7 +36,7 @@ on:
       - '**.yml'
 
 jobs:
-  build-and-test:
+  rust-build:
     name: ${{ matrix.name }}
 
     runs-on: ${{ matrix.os }}
@@ -47,18 +47,18 @@ jobs:
         os: [ubuntu-latest, macos-latest, windows-latest]
         include:
           - os: ubuntu-latest
-            name: Linux Binary 64-Bit
+            name: Linux 64-Bit
             target: x86_64-unknown-linux-musl
 
           - os: macos-latest
-            name: MacOS Binary 64-Bit
+            name: MacOS 64-Bit
             target: x86_64-apple-darwin
             target2: aarch64-apple-darwin
             env:
               MACOSX_DEPLOYMENT_TARGET: 10.7
 
           - os: windows-latest
-            name: Windows Binary 64-Bit
+            name: Windows 64-Bit
             target: x86_64-pc-windows-msvc
 
     steps:
@@ -142,3 +142,41 @@ jobs:
       - name: Upload code coverage report to Codecov
         if: ${{ matrix.os == 'ubuntu-latest' && github.event_name == 'push' }}
         uses: codecov/codecov-action@v3
+
+  python-build:
+    name: ${{ matrix.name }}
+
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        python-version: ['3.8', '3.9', '3.10', '3.11']
+        include:
+          - os: ubuntu-latest
+            name: Linux 64-Bit
+
+          - os: macos-latest
+            name: MacOS 64-Bit
+
+          - os: windows-latest
+            name: Windows 64-Bit
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Build Python extension and install pytest
+        uses: PyO3/maturin-action@v1
+        with:
+          command: develop
+          args: --extras=test
+
+      - name: Run Python unit tests
+        run: pytest tests/python/test_grex.py
