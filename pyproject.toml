@@ -1,0 +1,39 @@
+[project]
+name = "grex"
+version = "1.0.0"
+authors = [{name = "Peter M. Stahl", email = "pemistahl@gmail.com"}]
+description = "grex generates regular expressions from user-provided test cases."
+readme = "README_PYPI.md"
+requires-python = ">=3.8"
+license = {file = "LICENSE"}
+keywords = ["pattern", "regex", "regexp"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Information Technology",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Rust",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Text Processing"
+]
+
+[project.urls]
+homepage = "https://github.com/pemistahl/grex"
+repository = "https://github.com/pemistahl/grex"
+
+[project.optional-dependencies]
+test = ["pytest == 7.4.0"]
+
+[tool.maturin]
+no-default-features = true
+features = ["pyo3/extension-module", "python"]
+
+[build-system]
+requires = ["maturin>=1.1,<2.0"]
+build-backend = "maturin"
+
