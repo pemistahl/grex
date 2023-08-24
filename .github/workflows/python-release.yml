@@ -22,14 +22,13 @@ on:
 
 jobs:
   linux:
-    name: Python ${{ matrix.python-version }} on target ${{ matrix.target }}
+    name: Python on Linux and target ${{ matrix.target }}
 
     runs-on: ubuntu-latest
 
     strategy:
       matrix:
         target: [x86_64, x86, aarch64, armv7, s390x, ppc64le]
-        python-version: [ '3.8', '3.9', '3.10', '3.11' ]
 
     steps:
       - name: Check out repository
@@ -38,7 +37,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: '3.11'
           cache: 'pip'
 
       - name: Build wheels
@@ -56,14 +55,13 @@ jobs:
           path: dist
 
   windows:
-    name: Python ${{ matrix.python-version }} on target ${{ matrix.target }}
+    name: Python on Windows and target ${{ matrix.target }}
 
     runs-on: windows-latest
 
     strategy:
       matrix:
         target: [x64, x86]
-        python-version: [ '3.8', '3.9', '3.10', '3.11' ]
 
     steps:
       - name: Check out repository
@@ -72,7 +70,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: '3.11'
           architecture: ${{ matrix.target }}
           cache: 'pip'
 
@@ -90,14 +88,13 @@ jobs:
           path: dist
 
   macos:
-    name: Python ${{ matrix.python-version }} on target ${{ matrix.target }}
+    name: Python on MacOS and target ${{ matrix.target }}
 
     runs-on: macos-latest
 
     strategy:
       matrix:
         target: [x86_64, aarch64]
-        python-version: [ '3.8', '3.9', '3.10', '3.11' ]
 
     steps:
       - name: Check out repository
@@ -106,7 +103,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: '3.11'
           cache: 'pip'
 
       - name: Build wheels

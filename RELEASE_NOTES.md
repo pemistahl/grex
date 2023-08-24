@@ -1,3 +1,9 @@
+## grex 1.4.4 (released on 24 Aug 2023)
+
+### Bug Fixes
+- The Python release workflow was incorrect as it produced too many wheels for upload.
+  This has been fixed.
+
 ## grex 1.4.3 (released on 24 Aug 2023)
 
 ### Features

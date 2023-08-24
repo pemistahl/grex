@@ -84,7 +84,7 @@ an initial correct regex which should be inspected by hand if further optimizati
 pip install grex
 ```
 
-The current version 1.0.0 corresponds to the latest version 1.4.3 of the Rust
+The current version 1.0.0 corresponds to the latest version 1.4.4 of the Rust
 library and command-line tool.
 
 ## 5. How to use?
