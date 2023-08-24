@@ -1,3 +1,11 @@
+## grex 1.4.3 (released on 24 Aug 2023)
+
+### Features
+- Python bindings are now available for the library. Use grex within any Python software. (#172)
+
+### Changes
+- All dependencies have been updated to their latest versions.
+
 ## grex 1.4.2 (released on 26 Jul 2023)
 
 ### Improvements

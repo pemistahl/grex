@@ -4,7 +4,8 @@
 
   <br>
 
-  [![build status](https://github.com/pemistahl/grex/actions/workflows/build.yml/badge.svg)](https://github.com/pemistahl/grex/actions/workflows/build.yml)
+  [![rust build status](https://github.com/pemistahl/grex/actions/workflows/rust-build.yml/badge.svg)](https://github.com/pemistahl/grex/actions/workflows/rust-build.yml)
+  [![python build status](https://github.com/pemistahl/grex/actions/workflows/python-build.yml/badge.svg)](https://github.com/pemistahl/grex/actions/workflows/python-build.yml)
   [![docs.rs](https://docs.rs/grex/badge.svg)](https://docs.rs/grex)
   [![codecov](https://codecov.io/gh/pemistahl/grex/branch/main/graph/badge.svg)](https://codecov.io/gh/pemistahl/grex)
   [![dependency status](https://deps.rs/crate/grex/1.4.3/status.svg)](https://deps.rs/crate/grex/1.4.3)
