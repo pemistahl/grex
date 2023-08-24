@@ -35,7 +35,7 @@ crate-type = ["cdylib", "rlib"]
 itertools = "0.11.0"
 lazy_static = "1.4.0"
 ndarray = "0.15.6"
-petgraph = {version = "0.6.3", default-features = false, features = ["stable_graph"]}
+petgraph = {version = "0.6.4", default-features = false, features = ["stable_graph"]}
 pyo3 = { version = "0.19.2", optional = true }
 regex = "1.9.3"
 unic-char-range = "0.9.0"
@@ -43,7 +43,7 @@ unic-ucd-category = "0.9.0"
 unicode-segmentation = "1.10.1"
 
 [target.'cfg(not(target_family = "wasm"))'.dependencies]
-clap = { version = "4.3.22", features = ["derive", "wrap_help"], optional = true }
+clap = { version = "4.3.24", features = ["derive", "wrap_help"], optional = true }
 
 [target.'cfg(target_family = "wasm")'.dependencies]
 wasm-bindgen = "0.2.87"
@@ -57,7 +57,7 @@ assert_cmd = "2.0.12"
 criterion = "0.5.1"
 predicates = "3.0.3"
 proptest = "1.2.0"
-tempfile = "3.7.1"
+tempfile = "3.8.0"
 
 [target.'cfg(target_family = "wasm")'.dev-dependencies]
 wasm-bindgen-test = "0.3.37"
