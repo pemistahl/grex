@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-name: release
+name: Rust Release
 
 on:
   push:
@@ -21,7 +21,7 @@ on:
       - v1.*
 
 jobs:
-  create-release:
+  rust-release:
     name: ${{ matrix.name }}
 
     runs-on: ${{ matrix.os }}

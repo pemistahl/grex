@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-name: build
+name: Rust Build
 
 on:
   push:
@@ -133,45 +133,3 @@ jobs:
       - name: Upload code coverage report to Codecov
         if: ${{ matrix.os == 'ubuntu-latest' && github.event_name == 'push' }}
         uses: codecov/codecov-action@v3
-
-  python-build:
-    name: Python ${{ matrix.python-version }} on ${{ matrix.name }}
-
-    runs-on: ${{ matrix.os }}
-
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
-        python-version: ['3.8', '3.9', '3.10', '3.11']
-        include:
-          - os: ubuntu-latest
-            name: Linux 64-Bit
-
-          - os: macos-latest
-            name: MacOS 64-Bit
-
-          - os: windows-latest
-            name: Windows 64-Bit
-
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@v3
-
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: ${{ matrix.python-version }}
-          cache: 'pip'
-
-      - name: Install maturin and pytest
-        run: pip install maturin pytest
-
-      - name: Build Python extension
-        run: maturin build
-
-      - name: Install Python extension
-        run: pip install --find-links=target/wheels grex
-
-      - name: Run Python unit tests
-        run: pytest tests/python/test_grex.py
