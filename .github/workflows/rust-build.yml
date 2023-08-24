@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-name: build
+name: Rust Build
 
 on:
   push:
@@ -36,8 +36,8 @@ on:
       - '**.yml'
 
 jobs:
-  build-and-test:
-    name: ${{ matrix.name }}
+  rust-build:
+    name: Rust on ${{ matrix.name }}
 
     runs-on: ${{ matrix.os }}
 
@@ -47,30 +47,25 @@ jobs:
         os: [ubuntu-latest, macos-latest, windows-latest]
         include:
           - os: ubuntu-latest
-            name: Linux Binary 64-Bit
+            name: Linux 64-Bit
             target: x86_64-unknown-linux-musl
 
           - os: macos-latest
-            name: MacOS Binary 64-Bit
+            name: MacOS 64-Bit
             target: x86_64-apple-darwin
-            target2: aarch64-apple-darwin
             env:
               MACOSX_DEPLOYMENT_TARGET: 10.7
 
           - os: windows-latest
-            name: Windows Binary 64-Bit
+            name: Windows 64-Bit
             target: x86_64-pc-windows-msvc
 
     steps:
       - name: Check out repository
         uses: actions/checkout@v3
 
-      - name: Add rustup default target
+      - name: Add rustup target
         run: rustup target add ${{ matrix.target }}
-
-      - name: Add rustup Apple ARM64 target
-        if: ${{ matrix.os == 'macos-latest' }}
-        run: rustup target add ${{ matrix.target2 }}
 
       - name: Install apt packages
         if: ${{ matrix.os == 'ubuntu-latest' }}
@@ -103,12 +98,8 @@ jobs:
             target/
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
-      - name: Build default target in debug mode
+      - name: Build target in debug mode
         run: cargo build --target ${{ matrix.target }} --locked
-
-      - name: Build Apple ARM64 target in debug mode
-        if: ${{ matrix.os == 'macos-latest' }}
-        run: cargo build --target ${{ matrix.target2 }} --locked
 
       - name: Test default target in debug mode
         run: cargo test --target ${{ matrix.target }}

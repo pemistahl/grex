@@ -277,6 +277,9 @@ mod regexp;
 mod substring;
 mod unicode_tables;
 
+#[cfg(feature = "python")]
+mod python;
+
 #[cfg(target_family = "wasm")]
 mod wasm;
 

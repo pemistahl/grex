@@ -14,7 +14,7 @@
 
 [package]
 name = "grex"
-version = "1.4.2"
+version = "1.4.3"
 authors = ["Peter M. Stahl <pemistahl@gmail.com>"]
 description = """
 grex generates regular expressions from user-provided test cases.
@@ -36,6 +36,7 @@ itertools = "0.11.0"
 lazy_static = "1.4.0"
 ndarray = "0.15.6"
 petgraph = {version = "0.6.4", default-features = false, features = ["stable_graph"]}
+pyo3 = { version = "0.19.2", optional = true }
 regex = "1.9.3"
 unic-char-range = "0.9.0"
 unic-ucd-category = "0.9.0"
@@ -64,6 +65,7 @@ wasm-bindgen-test = "0.3.37"
 [features]
 default = ["cli"]
 cli = ["clap"]
+python = ["pyo3"]
 
 [[bench]]
 name = "benchmark"

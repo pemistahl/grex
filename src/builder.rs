@@ -31,8 +31,9 @@ pub(crate) const MINIMUM_SUBSTRING_LENGTH_MESSAGE: &str =
 
 /// This struct builds regular expressions from user-provided test cases.
 #[derive(Clone)]
+#[cfg_attr(feature = "python", pyo3::prelude::pyclass)]
 pub struct RegExpBuilder {
-    test_cases: Vec<String>,
+    pub(crate) test_cases: Vec<String>,
     pub(crate) config: RegExpConfig,
 }
 

@@ -7,18 +7,20 @@
   [![build status](https://github.com/pemistahl/grex/actions/workflows/build.yml/badge.svg)](https://github.com/pemistahl/grex/actions/workflows/build.yml)
   [![docs.rs](https://docs.rs/grex/badge.svg)](https://docs.rs/grex)
   [![codecov](https://codecov.io/gh/pemistahl/grex/branch/main/graph/badge.svg)](https://codecov.io/gh/pemistahl/grex)
-  [![dependency status](https://deps.rs/crate/grex/1.4.2/status.svg)](https://deps.rs/crate/grex/1.4.2)
+  [![dependency status](https://deps.rs/crate/grex/1.4.3/status.svg)](https://deps.rs/crate/grex/1.4.3)
   [![demo](https://img.shields.io/badge/-Demo%20Website-orange?logo=HTML5&labelColor=white)](https://pemistahl.github.io/grex-js/)
   
   [![downloads](https://img.shields.io/crates/d/grex.svg)](https://crates.io/crates/grex)
   [![crates.io](https://img.shields.io/crates/v/grex.svg)](https://crates.io/crates/grex)
-  [![lib.rs](https://img.shields.io/badge/lib.rs-v1.4.2-blue)](https://lib.rs/crates/grex)
+  [![lib.rs](https://img.shields.io/badge/lib.rs-v1.4.3-blue)](https://lib.rs/crates/grex)
+  ![supported Python versions](https://img.shields.io/badge/Python-%3E%3D%203.8-blue?logo=Python&logoColor=yellow)
+  [![pypi](https://img.shields.io/badge/PYPI-v1.0.0-blue?logo=PyPI&logoColor=yellow)](https://pypi.org/project/grex)
   [![license](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0)
 
-  [![Linux Download](https://img.shields.io/badge/Linux%20Download-v1.4.2-blue?logo=Linux)](https://github.com/pemistahl/grex/releases/download/v1.4.2/grex-v1.4.2-x86_64-unknown-linux-musl.tar.gz)
-  [![MacOS Download](https://img.shields.io/badge/macOS%20x86%20Download-v1.4.2-blue?logo=Apple)](https://github.com/pemistahl/grex/releases/download/v1.4.2/grex-v1.4.2-x86_64-apple-darwin.tar.gz)
-  [![MacOS ARM Download](https://img.shields.io/badge/macOS%20ARM%20Download-v1.4.2-blue?logo=Apple)](https://github.com/pemistahl/grex/releases/download/v1.4.2/grex-v1.4.2-aarch64-apple-darwin.tar.gz)
-  [![Windows Download](https://img.shields.io/badge/Windows%20Download-v1.4.2-blue?logo=Windows)](https://github.com/pemistahl/grex/releases/download/v1.4.2/grex-v1.4.2-x86_64-pc-windows-msvc.zip)
+  [![Linux Download](https://img.shields.io/badge/Linux%20Download-v1.4.3-blue?logo=Linux)](https://github.com/pemistahl/grex/releases/download/v1.4.3/grex-v1.4.3-x86_64-unknown-linux-musl.tar.gz)
+  [![MacOS Download](https://img.shields.io/badge/macOS%20x86%20Download-v1.4.3-blue?logo=Apple)](https://github.com/pemistahl/grex/releases/download/v1.4.3/grex-v1.4.3-x86_64-apple-darwin.tar.gz)
+  [![MacOS ARM Download](https://img.shields.io/badge/macOS%20ARM%20Download-v1.4.3-blue?logo=Apple)](https://github.com/pemistahl/grex/releases/download/v1.4.3/grex-v1.4.3-aarch64-apple-darwin.tar.gz)
+  [![Windows Download](https://img.shields.io/badge/Windows%20Download-v1.4.3-blue?logo=Windows)](https://github.com/pemistahl/grex/releases/download/v1.4.3/grex-v1.4.3-x86_64-pc-windows-msvc.zip)
 </div>
 
 <br>
@@ -112,7 +114,7 @@ In order to use *grex* as a library, simply add it as a dependency to your `Carg
 
 ```toml
 [dependencies]
-grex = { version = "1.4.2", default-features = false }
+grex = { version = "1.4.3", default-features = false }
 ```
 
 The dependency *clap* is only needed for the command-line tool.
@@ -133,7 +135,7 @@ The following table shows all available flags and options:
 ```
 $ grex -h
 
-grex 1.4.2
+grex 1.4.3
 © 2019-today Peter M. Stahl <pemistahl@gmail.com>
 Licensed under the Apache License, Version 2.0
 Downloadable from https://crates.io/crates/grex
@@ -197,8 +199,8 @@ Miscellaneous Options:
 
 #### 5.2.1 Default settings
 
-Test cases are passed either from a collection via [`RegExpBuilder::from()`](https://docs.rs/grex/1.4.2/grex/struct.RegExpBuilder.html#method.from) 
-or from a file via [`RegExpBuilder::from_file()`](https://docs.rs/grex/1.4.2/grex/struct.RegExpBuilder.html#method.from_file).
+Test cases are passed either from a collection via [`RegExpBuilder::from()`](https://docs.rs/grex/1.4.3/grex/struct.RegExpBuilder.html#method.from) 
+or from a file via [`RegExpBuilder::from_file()`](https://docs.rs/grex/1.4.3/grex/struct.RegExpBuilder.html#method.from_file).
 If read from a file, each test case must be on a separate line. Lines may be ended with either a newline `\n` or a carriage
 return with a line feed `\r\n`.
 
@@ -496,7 +498,35 @@ Benchmarks measuring the performance of several settings can be run with:
 cargo bench
 ```
 
-## 7. WebAssembly support
+## 7. Python extension module
+
+With the help of [PyO3](https://github.com/PyO3/pyo3) and
+[Maturin](https://github.com/PyO3/maturin), the library has been compiled to a
+Python extension module so that it can be used within any Python software as well.
+It is available in the [Python Package Index](https://pypi.org/project/grex) and can 
+be installed with:
+
+```shell
+pip install grex
+```
+
+To build the Python extension module yourself, create a virtual environment and install 
+[Maturin](https://github.com/PyO3/maturin).
+
+```shell
+python -m venv /path/to/virtual/environment
+source /path/to/virtual/environment/bin/activate
+pip install maturin
+maturin build
+```
+
+The Python library contains a single class named `RegExpBuilder` that can be imported like so:
+
+```python
+from grex import RegExpBuilder
+```
+
+## 8. WebAssembly support
 
 This library can be compiled to [WebAssembly (WASM)](https://webassembly.org) which allows to use *grex*
 in any JavaScript-based project, be it in the browser or in the back end running on [Node.js](https://nodejs.org).
@@ -537,7 +567,7 @@ There is a [demo website](https://pemistahl.github.io/grex-js/) available where 
 
 ![demo website](https://raw.githubusercontent.com/pemistahl/grex/main/website.jpg)
 
-## 8. How does it work?
+## 9. How does it work?
 
 1. A [deterministic finite automaton](https://en.wikipedia.org/wiki/Deterministic_finite_automaton) (DFA) 
 is created from the input strings.
@@ -549,11 +579,11 @@ is created from the input strings.
 [Brzozowski's algebraic method](http://cs.stackexchange.com/questions/2016/how-to-convert-finite-automata-to-regular-expressions#2392), 
 resulting in the final regular expression.
 
-## 9. What's next for version 1.5.0?
+## 10. What's next for version 1.5.0?
 
 Take a look at the [planned issues](https://github.com/pemistahl/grex/milestone/5).
 
-## 10. Contributions
+## 11. Contributions
 
 In case you want to contribute something to *grex*, I encourage you to do so.
 Do you have ideas for cool features? Or have you found any bugs so far? 
