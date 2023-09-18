@@ -49,7 +49,7 @@ clap = { version = "4.4.3", features = ["derive", "wrap_help"], optional = true 
 wasm-bindgen = "0.2.87"
 
 [dev-dependencies]
-indoc = "2.0.3"
+indoc = "2.0.4"
 rstest = "0.18.2"
 
 [target.'cfg(not(target_family = "wasm"))'.dev-dependencies]
