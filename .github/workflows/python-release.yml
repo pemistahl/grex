@@ -119,33 +119,12 @@ jobs:
           name: wheels
           path: dist
 
-  sdist:
-    name: Source distribution
-
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@v4
-
-      - name: Build source distribution
-        uses: PyO3/maturin-action@v1
-        with:
-          command: sdist
-          args: --out dist
-
-      - name: Upload source distribution
-        uses: actions/upload-artifact@v3
-        with:
-          name: wheels
-          path: dist
-
   release:
     name: Publish wheels to PyPI
 
     runs-on: ubuntu-latest
 
-    needs: [linux, windows, macos, sdist]
+    needs: [linux, windows, macos]
 
     steps:
       - name: Download wheels from previous jobs

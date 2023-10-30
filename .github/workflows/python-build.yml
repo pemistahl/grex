@@ -22,6 +22,8 @@ on:
     paths:
       - 'Cargo.lock'
       - 'Cargo.toml'
+      - 'pyproject.toml'
+      - 'requirements.txt'
       - 'src/**'
       - 'tests/**'
       - '**.yml'
@@ -31,6 +33,8 @@ on:
     paths:
       - 'Cargo.lock'
       - 'Cargo.toml'
+      - 'pyproject.toml'
+      - 'requirements.txt'
       - 'src/**'
       - 'tests/**'
       - '**.yml'
