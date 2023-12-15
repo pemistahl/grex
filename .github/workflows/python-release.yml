@@ -128,7 +128,7 @@ jobs:
 
     steps:
       - name: Download wheels from previous jobs
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: wheels
 
