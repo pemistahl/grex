@@ -55,7 +55,7 @@ rstest = "0.18.2"
 [target.'cfg(not(target_family = "wasm"))'.dev-dependencies]
 assert_cmd = "2.0.13"
 criterion = "0.5.1"
-predicates = "3.0.4"
+predicates = "3.1.0"
 proptest = "1.4.0"
 tempfile = "3.9.0"
 
