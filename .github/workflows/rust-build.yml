@@ -88,7 +88,7 @@ jobs:
         run: sudo safaridriver --enable
 
       - name: Store or retrieve cargo caches
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             ~/.cargo/bin/
