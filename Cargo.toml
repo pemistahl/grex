@@ -32,7 +32,7 @@ keywords = ["pattern", "regex", "regexp"]
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-itertools = "0.12.0"
+itertools = "0.12.1"
 lazy_static = "1.4.0"
 ndarray = "0.15.6"
 petgraph = {version = "0.6.4", default-features = false, features = ["stable_graph"]}
