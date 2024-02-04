@@ -26,15 +26,19 @@ use unic_char_range::CharRange;
 impl Display for Expression<'_> {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         match self {
-            Expression::Alternation(options, is_capturing_group_enabled, is_output_colorized) => {
-                format_alternation(
-                    f,
-                    self,
-                    options,
-                    *is_capturing_group_enabled,
-                    *is_output_colorized,
-                )
-            }
+            Expression::Alternation(
+                options,
+                is_capturing_group_enabled,
+                is_output_colorized,
+                is_verbose_mode_enabled,
+            ) => format_alternation(
+                f,
+                self,
+                options,
+                *is_capturing_group_enabled,
+                *is_output_colorized,
+                *is_verbose_mode_enabled,
+            ),
             Expression::CharacterClass(char_set, is_output_colorized) => {
                 format_character_class(f, char_set, *is_output_colorized)
             }
@@ -43,6 +47,7 @@ impl Display for Expression<'_> {
                 expr2,
                 is_capturing_group_enabled,
                 is_output_colorized,
+                is_verbose_mode_enabled,
             ) => format_concatenation(
                 f,
                 self,
@@ -50,6 +55,7 @@ impl Display for Expression<'_> {
                 expr2,
                 *is_capturing_group_enabled,
                 *is_output_colorized,
+                *is_verbose_mode_enabled,
             ),
             Expression::Literal(
                 cluster,
@@ -66,6 +72,7 @@ impl Display for Expression<'_> {
                 quantifier,
                 is_capturing_group_enabled,
                 is_output_colorized,
+                is_verbose_mode_enabled,
             ) => format_repetition(
                 f,
                 self,
@@ -73,6 +80,7 @@ impl Display for Expression<'_> {
                 quantifier,
                 *is_capturing_group_enabled,
                 *is_output_colorized,
+                *is_verbose_mode_enabled,
             ),
         }
     }
@@ -88,23 +96,38 @@ fn format_alternation(
     options: &[Expression],
     is_capturing_group_enabled: bool,
     is_output_colorized: bool,
+    is_verbose_mode_enabled: bool,
 ) -> Result {
+    let pipe_component = Component::Pipe.to_repr(is_output_colorized);
+    let disjunction_operator = if is_verbose_mode_enabled {
+        format!("\n{}\n", pipe_component)
+    } else {
+        pipe_component
+    };
     let alternation_str = options
         .iter()
         .map(|option| {
             if option.precedence() < expr.precedence() && !option.is_single_codepoint() {
                 if is_capturing_group_enabled {
-                    Component::CapturedParenthesizedExpression(option.to_string())
-                        .to_repr(is_output_colorized)
+                    Component::CapturedParenthesizedExpression(
+                        option.to_string(),
+                        is_verbose_mode_enabled,
+                        true,
+                    )
+                    .to_repr(is_output_colorized)
                 } else {
-                    Component::UncapturedParenthesizedExpression(option.to_string())
-                        .to_repr(is_output_colorized)
+                    Component::UncapturedParenthesizedExpression(
+                        option.to_string(),
+                        is_verbose_mode_enabled,
+                        true,
+                    )
+                    .to_repr(is_output_colorized)
                 }
             } else {
                 format!("{}", option)
             }
         })
-        .join(&Component::Pipe.to_repr(is_output_colorized));
+        .join(&disjunction_operator);
 
     write!(f, "{}", alternation_str)
 }
@@ -188,17 +211,26 @@ fn format_concatenation(
     expr2: &Expression,
     is_capturing_group_enabled: bool,
     is_output_colorized: bool,
+    is_verbose_mode_enabled: bool,
 ) -> Result {
-    let expr_strs = vec![expr1, expr2]
+    let expr_strs = [expr1, expr2]
         .iter()
         .map(|&it| {
             if it.precedence() < expr.precedence() && !it.is_single_codepoint() {
                 if is_capturing_group_enabled {
-                    Component::CapturedParenthesizedExpression(it.to_string())
-                        .to_repr(is_output_colorized)
+                    Component::CapturedParenthesizedExpression(
+                        it.to_string(),
+                        is_verbose_mode_enabled,
+                        true,
+                    )
+                    .to_repr(is_output_colorized)
                 } else {
-                    Component::UncapturedParenthesizedExpression(it.to_string())
-                        .to_repr(is_output_colorized)
+                    Component::UncapturedParenthesizedExpression(
+                        it.to_string(),
+                        is_verbose_mode_enabled,
+                        true,
+                    )
+                    .to_repr(is_output_colorized)
                 }
             } else {
                 format!("{}", it)
@@ -255,23 +287,34 @@ fn format_repetition(
     quantifier: &Quantifier,
     is_capturing_group_enabled: bool,
     is_output_colorized: bool,
+    is_verbose_mode_enabled: bool,
 ) -> Result {
     if expr1.precedence() < expr.precedence() && !expr1.is_single_codepoint() {
         if is_capturing_group_enabled {
             write!(
                 f,
                 "{}{}",
-                Component::CapturedParenthesizedExpression(expr1.to_string())
-                    .to_repr(is_output_colorized),
-                Component::Quantifier(quantifier.clone()).to_repr(is_output_colorized)
+                Component::CapturedParenthesizedExpression(
+                    expr1.to_string(),
+                    is_verbose_mode_enabled,
+                    false
+                )
+                .to_repr(is_output_colorized),
+                Component::Quantifier(quantifier.clone(), is_verbose_mode_enabled)
+                    .to_repr(is_output_colorized)
             )
         } else {
             write!(
                 f,
                 "{}{}",
-                Component::UncapturedParenthesizedExpression(expr1.to_string())
-                    .to_repr(is_output_colorized),
-                Component::Quantifier(quantifier.clone()).to_repr(is_output_colorized)
+                Component::UncapturedParenthesizedExpression(
+                    expr1.to_string(),
+                    is_verbose_mode_enabled,
+                    false
+                )
+                .to_repr(is_output_colorized),
+                Component::Quantifier(quantifier.clone(), is_verbose_mode_enabled)
+                    .to_repr(is_output_colorized)
             )
         }
     } else {
@@ -279,7 +322,8 @@ fn format_repetition(
             f,
             "{}{}",
             expr1,
-            Component::Quantifier(quantifier.clone()).to_repr(is_output_colorized)
+            Component::Quantifier(quantifier.clone(), is_verbose_mode_enabled)
+                .to_repr(is_output_colorized)
         )
     }
 }

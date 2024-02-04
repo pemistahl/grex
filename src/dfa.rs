@@ -121,6 +121,7 @@ impl<'a> Dfa<'a> {
                     max,
                     self.config.is_capturing_group_enabled,
                     self.config.is_output_colorized,
+                    self.config.is_verbose_mode_enabled,
                 );
                 self.graph
                     .update_edge(current_state, next_state, new_grapheme);
@@ -318,14 +319,14 @@ mod tests {
         assert!(first_edge.is_some());
         assert_eq!(
             first_edge.unwrap().weight(),
-            &Grapheme::from("c", false, false)
+            &Grapheme::from("c", false, false, false)
         );
 
         let second_edge = edges.next();
         assert!(second_edge.is_some());
         assert_eq!(
             second_edge.unwrap().weight(),
-            &Grapheme::from("x", false, false)
+            &Grapheme::from("x", false, false, false)
         );
 
         let third_edge = edges.next();
@@ -350,7 +351,7 @@ mod tests {
         let mut edges = dfa.outgoing_edges(*first_state);
         assert_eq!(
             edges.next().unwrap().weight(),
-            &Grapheme::from("a", false, false)
+            &Grapheme::from("a", false, false, false)
         );
         assert!(edges.next().is_none());
 
@@ -358,11 +359,11 @@ mod tests {
         edges = dfa.outgoing_edges(*second_state);
         assert_eq!(
             edges.next().unwrap().weight(),
-            &Grapheme::from("b", false, false)
+            &Grapheme::from("b", false, false, false)
         );
         assert_eq!(
             edges.next().unwrap().weight(),
-            &Grapheme::from("x", false, false)
+            &Grapheme::from("x", false, false, false)
         );
         assert!(edges.next().is_none());
 
@@ -370,7 +371,7 @@ mod tests {
         edges = dfa.outgoing_edges(*third_state);
         assert_eq!(
             edges.next().unwrap().weight(),
-            &Grapheme::from("y", false, false)
+            &Grapheme::from("y", false, false, false)
         );
         assert!(edges.next().is_none());
 
@@ -378,7 +379,7 @@ mod tests {
         edges = dfa.outgoing_edges(*fourth_state);
         assert_eq!(
             edges.next().unwrap().weight(),
-            &Grapheme::from("z", false, false)
+            &Grapheme::from("z", false, false, false)
         );
         assert!(edges.next().is_none());
 
@@ -390,7 +391,7 @@ mod tests {
         edges = dfa.outgoing_edges(*sixth_state);
         assert_eq!(
             edges.next().unwrap().weight(),
-            &Grapheme::from("c", false, false)
+            &Grapheme::from("c", false, false, false)
         );
         assert!(edges.next().is_none());
 
@@ -398,7 +399,7 @@ mod tests {
         edges = dfa.outgoing_edges(*seventh_state);
         assert_eq!(
             edges.next().unwrap().weight(),
-            &Grapheme::from("d", false, false)
+            &Grapheme::from("d", false, false, false)
         );
         assert!(edges.next().is_none());
     }

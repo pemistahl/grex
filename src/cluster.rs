@@ -50,6 +50,7 @@ impl<'a> GraphemeCluster<'a> {
                                     &c.to_string(),
                                     config.is_capturing_group_enabled,
                                     config.is_output_colorized,
+                                    config.is_verbose_mode_enabled,
                                 )
                             })
                             .collect_vec()
@@ -58,6 +59,7 @@ impl<'a> GraphemeCluster<'a> {
                             it,
                             config.is_capturing_group_enabled,
                             config.is_output_colorized,
+                            config.is_verbose_mode_enabled,
                         )]
                     }
                 })
@@ -307,6 +309,7 @@ fn replace_graphemes_with_repetitions(
                 count,
                 config.is_capturing_group_enabled,
                 config.is_output_colorized,
+                config.is_verbose_mode_enabled,
             )]
             .iter()
             .cloned(),
@@ -323,6 +326,7 @@ fn replace_graphemes_with_repetitions(
                         it,
                         config.is_capturing_group_enabled,
                         config.is_output_colorized,
+                        config.is_verbose_mode_enabled,
                     )
                 })
                 .collect_vec(),

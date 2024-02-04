@@ -32,6 +32,7 @@ pub struct Grapheme {
     max: u32,
     is_capturing_group_enabled: bool,
     is_output_colorized: bool,
+    is_verbose_mode_enabled: bool,
 }
 
 impl Grapheme {
@@ -39,6 +40,7 @@ impl Grapheme {
         s: &str,
         is_capturing_group_enabled: bool,
         is_output_colorized: bool,
+        is_verbose_mode_enabled: bool,
     ) -> Self {
         Self {
             chars: vec![s.to_string()],
@@ -47,6 +49,7 @@ impl Grapheme {
             max: 1,
             is_capturing_group_enabled,
             is_output_colorized,
+            is_verbose_mode_enabled,
         }
     }
 
@@ -56,6 +59,7 @@ impl Grapheme {
         max: u32,
         is_capturing_group_enabled: bool,
         is_output_colorized: bool,
+        is_verbose_mode_enabled: bool,
     ) -> Self {
         Self {
             chars,
@@ -64,6 +68,7 @@ impl Grapheme {
             max,
             is_capturing_group_enabled,
             is_output_colorized,
+            is_verbose_mode_enabled,
         }
     }
 
@@ -190,40 +195,59 @@ impl Display for Grapheme {
                 f,
                 "{}{}",
                 value,
-                Component::Repetition(self.min).to_repr(self.is_output_colorized)
+                Component::Repetition(self.min, false).to_repr(self.is_output_colorized)
             )
         } else if !is_range && is_repetition && !is_single_char {
             write!(
                 f,
                 "{}{}",
                 if self.is_capturing_group_enabled {
-                    Component::CapturedParenthesizedExpression(value)
-                        .to_repr(self.is_output_colorized)
+                    Component::CapturedParenthesizedExpression(
+                        value,
+                        self.is_verbose_mode_enabled,
+                        false,
+                    )
+                    .to_repr(self.is_output_colorized)
                 } else {
-                    Component::UncapturedParenthesizedExpression(value)
-                        .to_repr(self.is_output_colorized)
+                    Component::UncapturedParenthesizedExpression(
+                        value,
+                        self.is_verbose_mode_enabled,
+                        false,
+                    )
+                    .to_repr(self.is_output_colorized)
                 },
-                Component::Repetition(self.min).to_repr(self.is_output_colorized)
+                Component::Repetition(self.min, self.is_verbose_mode_enabled)
+                    .to_repr(self.is_output_colorized)
             )
         } else if is_range && is_single_char {
             write!(
                 f,
                 "{}{}",
                 value,
-                Component::RepetitionRange(self.min, self.max).to_repr(self.is_output_colorized)
+                Component::RepetitionRange(self.min, self.max, false)
+                    .to_repr(self.is_output_colorized)
             )
         } else if is_range && !is_single_char {
             write!(
                 f,
                 "{}{}",
                 if self.is_capturing_group_enabled {
-                    Component::CapturedParenthesizedExpression(value)
-                        .to_repr(self.is_output_colorized)
+                    Component::CapturedParenthesizedExpression(
+                        value,
+                        self.is_verbose_mode_enabled,
+                        false,
+                    )
+                    .to_repr(self.is_output_colorized)
                 } else {
-                    Component::UncapturedParenthesizedExpression(value)
-                        .to_repr(self.is_output_colorized)
+                    Component::UncapturedParenthesizedExpression(
+                        value,
+                        self.is_verbose_mode_enabled,
+                        false,
+                    )
+                    .to_repr(self.is_output_colorized)
                 },
-                Component::RepetitionRange(self.min, self.max).to_repr(self.is_output_colorized)
+                Component::RepetitionRange(self.min, self.max, self.is_verbose_mode_enabled)
+                    .to_repr(self.is_output_colorized)
             )
         } else {
             write!(f, "{}", value)

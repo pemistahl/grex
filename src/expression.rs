@@ -29,11 +29,11 @@ use std::collections::BTreeSet;
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum Expression<'a> {
-    Alternation(Vec<Expression<'a>>, bool, bool),
+    Alternation(Vec<Expression<'a>>, bool, bool, bool),
     CharacterClass(BTreeSet<char>, bool),
-    Concatenation(Box<Expression<'a>>, Box<Expression<'a>>, bool, bool),
+    Concatenation(Box<Expression<'a>>, Box<Expression<'a>>, bool, bool, bool),
     Literal(GraphemeCluster<'a>, bool, bool),
-    Repetition(Box<Expression<'a>>, Quantifier, bool, bool),
+    Repetition(Box<Expression<'a>>, Quantifier, bool, bool, bool),
 }
 
 impl<'a> Expression<'a> {
@@ -113,6 +113,7 @@ impl<'a> Expression<'a> {
             options,
             config.is_capturing_group_enabled,
             config.is_output_colorized,
+            config.is_verbose_mode_enabled,
         )
     }
 
@@ -135,6 +136,7 @@ impl<'a> Expression<'a> {
             Box::from(expr2),
             config.is_capturing_group_enabled,
             config.is_output_colorized,
+            config.is_verbose_mode_enabled,
         )
     }
 
@@ -152,6 +154,7 @@ impl<'a> Expression<'a> {
             quantifier,
             config.is_capturing_group_enabled,
             config.is_output_colorized,
+            config.is_verbose_mode_enabled,
         )
     }
 
@@ -175,25 +178,25 @@ impl<'a> Expression<'a> {
 
     fn len(&self) -> usize {
         match self {
-            Expression::Alternation(options, _, _) => options.first().unwrap().len(),
+            Expression::Alternation(options, _, _, _) => options.first().unwrap().len(),
             Expression::CharacterClass(_, _) => 1,
-            Expression::Concatenation(expr1, expr2, _, _) => expr1.len() + expr2.len(),
+            Expression::Concatenation(expr1, expr2, _, _, _) => expr1.len() + expr2.len(),
             Expression::Literal(cluster, _, _) => cluster.size(),
-            Expression::Repetition(expr, _, _, _) => expr.len(),
+            Expression::Repetition(expr, _, _, _, _) => expr.len(),
         }
     }
 
     pub(crate) fn precedence(&self) -> u8 {
         match self {
-            Expression::Alternation(_, _, _) | Expression::CharacterClass(_, _) => 1,
-            Expression::Concatenation(_, _, _, _) | Expression::Literal(_, _, _) => 2,
-            Expression::Repetition(_, _, _, _) => 3,
+            Expression::Alternation(_, _, _, _) | Expression::CharacterClass(_, _) => 1,
+            Expression::Concatenation(_, _, _, _, _) | Expression::Literal(_, _, _) => 2,
+            Expression::Repetition(_, _, _, _, _) => 3,
         }
     }
 
     pub(crate) fn remove_substring(&mut self, substring: &Substring, length: usize) {
         match self {
-            Expression::Concatenation(expr1, expr2, _, _) => match substring {
+            Expression::Concatenation(expr1, expr2, _, _, _) => match substring {
                 Substring::Prefix => {
                     if let Expression::Literal(_, _, _) = **expr1 {
                         expr1.remove_substring(substring, length)
@@ -220,7 +223,7 @@ impl<'a> Expression<'a> {
 
     pub(crate) fn value(&self, substring: Option<&Substring>) -> Option<Vec<Grapheme>> {
         match self {
-            Expression::Concatenation(expr1, expr2, _, _) => match substring {
+            Expression::Concatenation(expr1, expr2, _, _, _) => match substring {
                 Some(value) => match value {
                     Substring::Prefix => expr1.value(None),
                     Substring::Suffix => expr2.value(None),
@@ -270,7 +273,7 @@ impl<'a> Expression<'a> {
 
         if let (
             Expression::Literal(graphemes_a, _, _),
-            Expression::Concatenation(first, second, _, _),
+            Expression::Concatenation(first, second, _, _, _),
         ) = (&expr1, &expr2)
         {
             if let Expression::Literal(graphemes_first, _, _) = &**first {
@@ -288,7 +291,7 @@ impl<'a> Expression<'a> {
 
         if let (
             Expression::Literal(graphemes_b, _, _),
-            Expression::Concatenation(first, second, _, _),
+            Expression::Concatenation(first, second, _, _, _),
         ) = (&expr2, &expr1)
         {
             if let Expression::Literal(graphemes_second, _, _) = &**second {
@@ -340,7 +343,7 @@ impl<'a> Expression<'a> {
                 };
 
                 if result.is_none() {
-                    if let Expression::Repetition(expr, quantifier, _, _) = &expr1 {
+                    if let Expression::Repetition(expr, quantifier, _, _, _) = &expr1 {
                         if quantifier == &Quantifier::QuestionMark {
                             let alternation = Expression::new_alternation(
                                 vec![*expr.clone(), expr2.clone()],
@@ -356,7 +359,7 @@ impl<'a> Expression<'a> {
                 }
 
                 if result.is_none() {
-                    if let Expression::Repetition(expr, quantifier, _, _) = &expr2 {
+                    if let Expression::Repetition(expr, quantifier, _, _, _) = &expr2 {
                         if quantifier == &Quantifier::QuestionMark {
                             let alternation = Expression::new_alternation(
                                 vec![expr1.clone(), *expr.clone()],
@@ -429,7 +432,7 @@ impl<'a> Expression<'a> {
         current_options: Vec<Expression<'a>>,
     ) {
         for option in current_options {
-            if let Expression::Alternation(expr_options, _, _) = option {
+            if let Expression::Alternation(expr_options, _, _, _) = option {
                 Self::flatten_alternations(flattened_options, expr_options);
             } else {
                 flattened_options.push(option);
@@ -577,7 +580,8 @@ mod tests {
                     .map(|&it| Grapheme::from(
                         it,
                         config.is_capturing_group_enabled,
-                        config.is_output_colorized
+                        config.is_output_colorized,
+                        config.is_verbose_mode_enabled
                     ))
                     .collect_vec()
             )
@@ -592,7 +596,8 @@ mod tests {
                     .map(|&it| Grapheme::from(
                         it,
                         config.is_capturing_group_enabled,
-                        config.is_output_colorized
+                        config.is_output_colorized,
+                        config.is_verbose_mode_enabled
                     ))
                     .collect_vec()
             )
@@ -612,7 +617,8 @@ mod tests {
                     .map(|&it| Grapheme::from(
                         it,
                         config.is_capturing_group_enabled,
-                        config.is_output_colorized
+                        config.is_output_colorized,
+                        config.is_verbose_mode_enabled
                     ))
                     .collect_vec()
             )
@@ -627,7 +633,8 @@ mod tests {
                     .map(|&it| Grapheme::from(
                         it,
                         config.is_capturing_group_enabled,
-                        config.is_output_colorized
+                        config.is_output_colorized,
+                        config.is_verbose_mode_enabled
                     ))
                     .collect_vec()
             )

@@ -295,7 +295,7 @@ mod cli {
 
         if !cli.input.is_empty() {
             let is_single_item = cli.input.len() == 1;
-            let is_hyphen = cli.input.get(0).unwrap() == "-";
+            let is_hyphen = cli.input.first().unwrap() == "-";
 
             if is_single_item && is_hyphen && is_stdin_available {
                 Ok(stdin()
