@@ -32,7 +32,7 @@ pub struct RegExp<'a> {
 impl<'a> RegExp<'a> {
     pub(crate) fn from(test_cases: &'a mut Vec<String>, config: &'a RegExpConfig) -> Self {
         if config.is_case_insensitive_matching {
-            Self::convert_to_lowercase(test_cases);
+            Self::convert_for_case_insensitive_matching(test_cases);
         }
         Self::sort(test_cases);
         let grapheme_clusters = Self::grapheme_clusters(test_cases, config);
@@ -68,8 +68,21 @@ impl<'a> RegExp<'a> {
         Self { ast, config }
     }
 
-    fn convert_to_lowercase(test_cases: &mut Vec<String>) {
-        *test_cases = test_cases.iter().map(|it| it.to_lowercase()).collect_vec();
+    fn convert_for_case_insensitive_matching(test_cases: &mut Vec<String>) {
+        // Convert only those test cases to lowercase if
+        // they keep their original number of characters.
+        // Otherwise, "İ" -> "i\u{307}" would not match "İ".
+        *test_cases = test_cases
+            .iter()
+            .map(|it| {
+                let lower_test_case = it.to_lowercase();
+                if lower_test_case.chars().count() == it.chars().count() {
+                    lower_test_case
+                } else {
+                    it.to_string()
+                }
+            })
+            .collect_vec();
     }
 
     fn convert_expr_to_regex(expr: &Expression, config: &RegExpConfig) -> Regex {

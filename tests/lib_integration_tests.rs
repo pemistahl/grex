@@ -111,6 +111,7 @@ mod no_conversion {
         }
 
         #[rstest(test_cases, expected_output,
+            case(vec!["İ"], "(?i)^İ$"),
             case(vec!["ABC", "abc", "AbC", "aBc"], "(?i)^abc$"),
             case(vec!["ABC", "zBC", "abc", "AbC", "aBc"], "(?i)^[az]bc$"),
             case(vec!["Ä@Ö€Ü", "ä@ö€ü", "Ä@ö€Ü", "ä@Ö€ü"], "(?i)^ä@ö€ü$"),
@@ -318,6 +319,13 @@ mod no_conversion {
         }
 
         #[rstest(test_cases, expected_output,
+            case(vec!["İ"], indoc!(
+                r#"
+                (?ix)
+                ^
+                  İ
+                $"#
+            )),
             case(vec!["ABC", "abc", "AbC", "aBc"], indoc!(
                 r#"
                 (?ix)
@@ -437,6 +445,7 @@ mod no_conversion {
         }
 
         #[rstest(test_cases, expected_output,
+            case(vec!["İ", "İİ"], "(?i)^İ{1,2}$"),
             case(vec!["AAAAB", "aaaab", "AaAaB", "aAaAB"], "(?i)^a{4}b$"),
             case(vec!["ÄÖÜäöü@Ö€", "äöüÄöÜ@ö€"], "(?i)^(?:äöü){2}@ö€$"),
         )]
