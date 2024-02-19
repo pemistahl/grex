@@ -85,7 +85,7 @@ impl RegExpBuilder {
         }
     }
 
-    /// Tells `RegExpBuilder` to convert any Unicode decimal digit to character class `\d`.
+    /// Converts any Unicode decimal digit to character class `\d`.
     ///
     /// This method takes precedence over
     /// [`with_conversion_of_words`](Self::with_conversion_of_words) if both are set.
@@ -99,8 +99,7 @@ impl RegExpBuilder {
         self
     }
 
-    /// Tells `RegExpBuilder` to convert any character which is not
-    /// a Unicode decimal digit to character class `\D`.
+    /// Converts any character which is not a Unicode decimal digit to character class `\D`.
     ///
     /// This method takes precedence over
     /// [`with_conversion_of_non_words`](Self::with_conversion_of_non_words) if both are set.
@@ -114,7 +113,7 @@ impl RegExpBuilder {
         self
     }
 
-    /// Tells `RegExpBuilder` to convert any Unicode whitespace character to character class `\s`.
+    /// Converts any Unicode whitespace character to character class `\s`.
     ///
     /// This method takes precedence over
     /// [`with_conversion_of_non_digits`](Self::with_conversion_of_non_digits) if both are set.
@@ -128,14 +127,13 @@ impl RegExpBuilder {
         self
     }
 
-    /// Tells `RegExpBuilder` to convert any character which is not
-    /// a Unicode whitespace character to character class `\S`.
+    /// Converts any character which is not a Unicode whitespace character to character class `\S`.
     pub fn with_conversion_of_non_whitespace(&mut self) -> &mut Self {
         self.config.is_non_space_converted = true;
         self
     }
 
-    /// Tells `RegExpBuilder` to convert any Unicode word character to character class `\w`.
+    /// Converts any Unicode word character to character class `\w`.
     ///
     /// This method takes precedence over
     /// [`with_conversion_of_non_digits`](Self::with_conversion_of_non_digits) if both are set.
@@ -149,8 +147,7 @@ impl RegExpBuilder {
         self
     }
 
-    /// Tells `RegExpBuilder` to convert any character which is not
-    /// a Unicode word character to character class `\W`.
+    /// Converts any character which is not a Unicode word character to character class `\W`.
     ///
     /// This method takes precedence over
     /// [`with_conversion_of_non_whitespace`](Self::with_conversion_of_non_whitespace) if both are set.
@@ -160,21 +157,21 @@ impl RegExpBuilder {
         self
     }
 
-    /// Tells `RegExpBuilder` to detect repeated non-overlapping substrings and
+    /// Detects repeated non-overlapping substrings and
     /// to convert them to `{min,max}` quantifier notation.
     pub fn with_conversion_of_repetitions(&mut self) -> &mut Self {
         self.config.is_repetition_converted = true;
         self
     }
 
-    /// Tells `RegExpBuilder` to enable case-insensitive matching of test cases
+    /// Enables case-insensitive matching of test cases
     /// so that letters match both upper and lower case.
     pub fn with_case_insensitive_matching(&mut self) -> &mut Self {
         self.config.is_case_insensitive_matching = true;
         self
     }
 
-    /// Tells `RegExpBuilder` to replace non-capturing groups by capturing ones.
+    /// Replaces non-capturing groups with capturing ones.
     pub fn with_capturing_groups(&mut self) -> &mut Self {
         self.config.is_capturing_group_enabled = true;
         self
@@ -208,7 +205,7 @@ impl RegExpBuilder {
         self
     }
 
-    /// Tells `RegExpBuilder` to convert non-ASCII characters to unicode escape sequences.
+    /// Converts non-ASCII characters to unicode escape sequences.
     /// The parameter `use_surrogate_pairs` specifies whether to convert astral code planes
     /// (range `U+010000` to `U+10FFFF`) to surrogate pairs.
     pub fn with_escaping_of_non_ascii_chars(&mut self, use_surrogate_pairs: bool) -> &mut Self {
@@ -217,13 +214,13 @@ impl RegExpBuilder {
         self
     }
 
-    /// Tells `RegExpBuilder` to produce a nicer looking regular expression in verbose mode.
+    /// Produces a nicer looking regular expression in verbose mode.
     pub fn with_verbose_mode(&mut self) -> &mut Self {
         self.config.is_verbose_mode_enabled = true;
         self
     }
 
-    /// Tells `RegExpBuilder` to remove the caret anchor '^' from the resulting regular
+    /// Removes the caret anchor '^' from the resulting regular
     /// expression, thereby allowing to match the test cases also when they do not occur
     /// at the start of a string.
     pub fn without_start_anchor(&mut self) -> &mut Self {
@@ -231,7 +228,7 @@ impl RegExpBuilder {
         self
     }
 
-    /// Tells `RegExpBuilder` to remove the dollar sign anchor '$' from the resulting regular
+    /// Removes the dollar sign anchor '$' from the resulting regular
     /// expression, thereby allowing to match the test cases also when they do not occur
     /// at the end of a string.
     pub fn without_end_anchor(&mut self) -> &mut Self {
@@ -239,7 +236,7 @@ impl RegExpBuilder {
         self
     }
 
-    /// Tells `RegExpBuilder` to remove the caret and dollar sign anchors from the resulting
+    /// Removes the caret and dollar sign anchors from the resulting
     /// regular expression, thereby allowing to match the test cases also when they occur
     /// within a larger string that contains other content as well.
     pub fn without_anchors(&mut self) -> &mut Self {
@@ -248,7 +245,7 @@ impl RegExpBuilder {
         self
     }
 
-    /// Tells `RegExpBuilder` to provide syntax highlighting for the resulting regular expression.
+    /// Provides syntax highlighting for the resulting regular expression.
     ///
     /// ⚠ This method may only be used if the resulting regular expression is meant to
     /// be printed to the console. The regex string representation returned from enabling
