@@ -136,9 +136,13 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Generate coverage report
-        run: cargo +nightly tarpaulin --lib --ignore-config --ignore-panics --ignore-tests --exclude-files src/python.rs src/main.rs src/wasm.rs --verbose --timeout 900 --out xml
+        run: cargo +nightly tarpaulin --ignore-config --ignore-panics --ignore-tests --exclude-files src/python.rs src/main.rs src/wasm.rs --verbose --timeout 900 --out xml
+
+      - name: Workaround for codecov/feedback#263
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
 
       - name: Upload coverage report
         uses: codecov/codecov-action@v4
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
+          fail_ci_if_error: true
