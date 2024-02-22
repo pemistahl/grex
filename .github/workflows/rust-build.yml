@@ -67,25 +67,9 @@ jobs:
       - name: Add rustup target
         run: rustup target add ${{ matrix.target }}
 
-      - name: Install apt packages
+      - name: Install MUSL tools for Linux
         if: ${{ matrix.os == 'ubuntu-latest' }}
         run: sudo apt-get install musl-tools libssl-dev
-
-      # needed to fix file corruption of cache
-      # https://github.com/actions/cache/issues/403
-      - name: Install GNU tar
-        if: ${{ matrix.os == 'macos-latest' }}
-        run: |
-          brew install gnu-tar
-          echo "/usr/local/opt/gnu-tar/libexec/gnubin" >> $GITHUB_PATH
-
-      - name: Install wasm-pack
-        if: ${{ matrix.os == 'macos-latest' }}
-        run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
-
-      - name: Enable Safari web driver
-        if: ${{ matrix.os == 'macos-latest' }}
-        run: sudo safaridriver --enable
 
       - name: Store or retrieve cargo caches
         uses: actions/cache@v4
@@ -101,23 +85,35 @@ jobs:
       - name: Build target in debug mode
         run: cargo build --target ${{ matrix.target }} --locked
 
-      - name: Test default target in debug mode
+      - name: Test target in debug mode
         run: cargo test --target ${{ matrix.target }}
 
+  wasm-build:
+    name: WASM Build
+    needs: rust-build
+
+    runs-on: macos-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install wasm-pack
+        run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+
+      - name: Enable Safari web driver
+        run: sudo safaridriver --enable
+
       - name: Run WASM integration tests on NodeJS
-        if: ${{ matrix.os == 'macos-latest' }}
         run: wasm-pack test --node -- --no-default-features
 
       - name: Run WASM integration tests in Chrome
-        if: ${{ matrix.os == 'macos-latest' }}
         run: wasm-pack test --headless --chrome -- --no-default-features
 
       - name: Run WASM integration tests in Firefox
-        if: ${{ matrix.os == 'macos-latest' }}
         run: wasm-pack test --headless --firefox -- --no-default-features
 
       - name: Run WASM integration tests in Safari
-        if: ${{ matrix.os == 'macos-latest' }}
         run: wasm-pack test --headless --safari -- --no-default-features
 
   coverage-report:
