@@ -57,7 +57,7 @@ assert_cmd = "2.0.14"
 criterion = "0.5.1"
 predicates = "3.1.0"
 proptest = "1.4.0"
-tempfile = "3.10.0"
+tempfile = "3.10.1"
 
 [target.'cfg(target_family = "wasm")'.dev-dependencies]
 wasm-bindgen-test = "0.3.37"
