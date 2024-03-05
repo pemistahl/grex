@@ -18,8 +18,8 @@
   [![pypi](https://img.shields.io/badge/PYPI-v1.0.1-blue?logo=PyPI&logoColor=yellow)](https://pypi.org/project/grex)
   [![license](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0)
 
-  [![Linux 64-bit Download](https://img.shields.io/badge/Linux%2064bit%20Download-v1.4.5-blue?logo=Linux)](https://github.com/pemistahl/grex/releases/download/v1.4.5/grex-v1.4.5-x86_64-unknown-linux-musl.tar.gz)
-  [![Linux ARM64 Download](https://img.shields.io/badge/Linux%20ARM64%20Download-v1.4.5-blue?logo=Linux)](https://github.com/pemistahl/grex/releases/download/v1.4.5/grex-v1.4.5-aarch64-unknown-linux-musl.tar.gz)  
+  [![Linux 64-bit Download](https://img.shields.io/badge/Linux%2064bit%20Download-v1.4.5-blue?logo=Linux)](https://github.com/pemistahl/grex/releases/download/v1.4.5/grex-v1.4.5-x86_64-unknown-linux-gnu.tar.gz)
+  [![Linux ARM64 Download](https://img.shields.io/badge/Linux%20ARM64%20Download-v1.4.5-blue?logo=Linux)](https://github.com/pemistahl/grex/releases/download/v1.4.5/grex-v1.4.5-aarch64-unknown-linux-gnu.tar.gz)  
   
   [![MacOS 64-bit Download](https://img.shields.io/badge/macOS%2064bit%20Download-v1.4.5-blue?logo=Apple)](https://github.com/pemistahl/grex/releases/download/v1.4.5/grex-v1.4.5-x86_64-apple-darwin.tar.gz)
   [![MacOS ARM64 Download](https://img.shields.io/badge/macOS%20ARM64%20Download-v1.4.5-blue?logo=Apple)](https://github.com/pemistahl/grex/releases/download/v1.4.5/grex-v1.4.5-aarch64-apple-darwin.tar.gz)

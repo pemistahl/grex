@@ -67,10 +67,6 @@ jobs:
       - name: Add rustup target
         run: rustup target add ${{ matrix.target }}
 
-      - name: Install MUSL tools for Linux
-        if: ${{ matrix.os == 'ubuntu-latest' }}
-        run: sudo apt-get install musl-tools libssl-dev
-
       - name: Store or retrieve cargo caches
         uses: actions/cache@v4
         with:

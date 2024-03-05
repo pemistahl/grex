@@ -33,8 +33,8 @@ jobs:
         include:
           - os: ubuntu-latest
             name: Rust Release Build on Linux
-            x86_64-target: x86_64-unknown-linux-musl
-            aarch64-target: aarch64-unknown-linux-musl
+            x86_64-target: x86_64-unknown-linux-gnu
+            aarch64-target: aarch64-unknown-linux-gnu
 
           - os: macos-latest
             name: Rust Release Build on MacOS
@@ -49,6 +49,10 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
+
+      - name: Install gcc-aarch64-linux-gnu
+        if: ${{ matrix.os == 'ubuntu-latest' }}
+        run: sudo apt-get install gcc-aarch64-linux-gnu
 
       - name: Add rustup x86_64 target
         run: rustup target add ${{ matrix.x86_64-target }}
