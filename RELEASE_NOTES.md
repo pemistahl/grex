@@ -1,3 +1,20 @@
+## grex 1.4.5 (released on 05 Mar 2024)
+
+### Improvements
+
+- Type stubs for the Python bindings are now available, allowing better static code 
+  analysis, better code completion in supported IDEs and easier understanding of the library's API.
+- The code for creating regular expressions in verbose mode has been simplified and is more performant now.
+- ARM64 binaries are now provided for every major platform (Linux, macOs, Windows).
+
+### Bug Fixes
+
+- For a small set of special characters, *grex* produced incorrect regular expressions when
+  the case-insensitivity feature was enabled. This has been fixed.
+
+### Changes
+- All dependencies have been updated to their latest versions.
+
 ## grex 1.4.4 (released on 24 Aug 2023)
 
 ### Bug Fixes

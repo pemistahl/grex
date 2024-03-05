@@ -8,7 +8,7 @@
 [![codecov](https://codecov.io/gh/pemistahl/grex/branch/main/graph/badge.svg)](https://codecov.io/gh/pemistahl/grex)
 [![demo](https://img.shields.io/badge/-Demo%20Website-orange?logo=HTML5&labelColor=white)](https://pemistahl.github.io/grex-js/)
 ![supported Python versions](https://img.shields.io/badge/Python-%3E%3D%203.8-blue?logo=Python&logoColor=yellow)
-[![pypi](https://img.shields.io/badge/PYPI-v1.0.0-blue?logo=PyPI&logoColor=yellow)](https://pypi.org/project/grex)
+[![pypi](https://img.shields.io/badge/PYPI-v1.0.1-blue?logo=PyPI&logoColor=yellow)](https://pypi.org/project/grex)
 [![license](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0)
 </div>
 
@@ -84,7 +84,7 @@ an initial correct regex which should be inspected by hand if further optimizati
 pip install grex
 ```
 
-The current version 1.0.0 corresponds to the latest version 1.4.4 of the Rust
+The current version 1.0.1 corresponds to the latest version 1.4.5 of the Rust
 library and command-line tool.
 
 ## 5. How to use?
