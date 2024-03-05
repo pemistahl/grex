@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-name: Rust Release
+name: Release
 
 on:
   push:
@@ -21,27 +21,28 @@ on:
       - v1.*
 
 jobs:
-  rust-release:
+  rust-release-build:
     name: ${{ matrix.name }}
 
     runs-on: ${{ matrix.os }}
 
     strategy:
+      fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
         include:
           - os: ubuntu-latest
-            name: Linux Binaries
+            name: Rust Release Build on Linux
             x86_64-target: x86_64-unknown-linux-musl
             aarch64-target: aarch64-unknown-linux-musl
 
           - os: macos-latest
-            name: MacOS Binaries
+            name: Rust Release Build on MacOS
             x86_64-target: x86_64-apple-darwin
             aarch64-target: aarch64-apple-darwin
 
           - os: windows-latest
-            name: Windows Binaries
+            name: Rust Release Build on Windows
             x86_64-target: x86_64-pc-windows-msvc
             aarch64-target: aarch64-pc-windows-msvc
 
@@ -101,9 +102,130 @@ jobs:
           file_glob: true
           file: target/*/release/grex-${{ steps.get_version.outputs.version }}-*.{zip,tar.gz}
 
-  release-upload:
+  python-linux-release-build:
+    name: Python Release Build on Linux and target ${{ matrix.target }}
+    needs: rust-release-build
+
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        target: [ x86_64, x86, aarch64 ]
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Build wheels
+        uses: PyO3/maturin-action@v1
+        with:
+          target: ${{ matrix.target }}
+          args: --release --out dist -i 3.8 3.9 3.10 3.11 3.12 pypy3.8 pypy3.9 pypy3.10
+          sccache: 'true'
+          manylinux: auto
+
+      - name: Upload wheels
+        uses: actions/upload-artifact@v4
+        with:
+          name: wheels
+          path: dist
+
+  python-windows-release-build:
+    name: Python Release Build on Windows and target ${{ matrix.target }}
+    needs: rust-release-build
+
+    runs-on: windows-latest
+
+    strategy:
+      matrix:
+        target: [ x64, x86 ]
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          architecture: ${{ matrix.target }}
+          cache: 'pip'
+
+      - name: Build wheels
+        uses: PyO3/maturin-action@v1
+        with:
+          target: ${{ matrix.target }}
+          args: --release --out dist -i 3.8 3.9 3.10 3.11 3.12
+          sccache: 'true'
+
+      - name: Upload wheels
+        uses: actions/upload-artifact@v4
+        with:
+          name: wheels
+          path: dist
+
+  python-macos-release-build:
+    name: Python Release Build on MacOS and target ${{ matrix.target }}
+    needs: rust-release-build
+
+    runs-on: macos-latest
+
+    strategy:
+      matrix:
+        target: [ x86_64, aarch64 ]
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Build wheels
+        uses: PyO3/maturin-action@v1
+        with:
+          target: ${{ matrix.target }}
+          args: --release --out dist -i 3.8 3.9 3.10 3.11 3.12 pypy3.8 pypy3.9 pypy3.10
+          sccache: 'true'
+
+      - name: Upload wheels
+        uses: actions/upload-artifact@v4
+        with:
+          name: wheels
+          path: dist
+
+  python-release-upload:
+    name: Publish wheels to PyPI
+    needs: [ python-linux-release-build, python-windows-release-build, python-macos-release-build ]
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download wheels from previous jobs
+        uses: actions/download-artifact@v4
+        with:
+          name: wheels
+
+      - name: Upload to PyPI
+        uses: PyO3/maturin-action@v1
+        env:
+          MATURIN_PYPI_TOKEN: ${{ secrets.PYPI_API_TOKEN }}
+        with:
+          command: upload
+          args: --skip-existing *
+
+  rust-release-upload:
     name: Upload to crates.io
-    needs: rust-release
+    needs: [ python-linux-release-build, python-windows-release-build, python-macos-release-build ]
 
     runs-on: ubuntu-latest
 

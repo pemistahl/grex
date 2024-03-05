@@ -42,8 +42,8 @@ unic-ucd-category = "0.9.0"
 unicode-segmentation = "1.11.0"
 
 [target.'cfg(not(target_family = "wasm"))'.dependencies]
-clap = { version = "4.5.1", features = ["derive", "wrap_help"], optional = true }
-pyo3 = { version = "0.20.3", optional = true }
+clap = {version = "4.5.1", features = ["derive", "wrap_help"], optional = true}
+pyo3 = {version = "0.20.3", optional = true}
 
 [target.'cfg(target_family = "wasm")'.dependencies]
 wasm-bindgen = "0.2.92"
@@ -61,6 +61,10 @@ tempfile = "3.10.1"
 
 [target.'cfg(target_family = "wasm")'.dev-dependencies]
 wasm-bindgen-test = "0.3.42"
+
+[target.aarch64-unknown-linux-musl]
+linker = "aarch64-linux-gnu-gcc"
+rustflags = ["-C", "target-feature=+crt-static", "-C", "link-arg=-lgcc"]
 
 [features]
 default = ["cli"]
