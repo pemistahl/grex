@@ -27,14 +27,13 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     strategy:
-      fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
         include:
           - os: ubuntu-latest
             name: Rust Release Build on Linux
-            x86_64-target: x86_64-unknown-linux-gnu
-            aarch64-target: aarch64-unknown-linux-gnu
+            x86_64-target: x86_64-unknown-linux-musl
+            aarch64-target: aarch64-unknown-linux-musl
 
           - os: macos-latest
             name: Rust Release Build on MacOS
@@ -50,21 +49,17 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
 
-      - name: Install gcc-aarch64-linux-gnu
-        if: ${{ matrix.os == 'ubuntu-latest' }}
-        run: sudo apt-get install gcc-aarch64-linux-gnu
-
-      - name: Add rustup x86_64 target
-        run: rustup target add ${{ matrix.x86_64-target }}
-
-      - name: Add rustup aarch64 target
-        run: rustup target add ${{ matrix.aarch64-target }}
-
       - name: Build x86_64 target in release mode
-        run: cargo build --release --target ${{ matrix.x86_64-target }} --locked
+        uses: houseabsolute/actions-rust-cross@v0
+        with:
+          target: ${{ matrix.x86_64-target }}
+          args: '--release --locked'
 
       - name: Build aarch64 target in release mode
-        run: cargo build --release --target ${{ matrix.aarch64-target }} --locked
+        uses: houseabsolute/actions-rust-cross@v0
+        with:
+          target: ${{ matrix.aarch64-target }}
+          args: '--release --locked'
 
       - name: Get latest release version number
         id: get_version
@@ -102,7 +97,7 @@ jobs:
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           tag: ${{ github.ref }}
-          release_name: grex ${{ steps.get_version.outputs.version }}
+          release_name: grex ${{ steps.get_version.outputs.version-without-v }}
           file_glob: true
           file: target/*/release/grex-${{ steps.get_version.outputs.version }}-*.{zip,tar.gz}
 
@@ -137,7 +132,7 @@ jobs:
       - name: Upload wheels
         uses: actions/upload-artifact@v4
         with:
-          name: wheels
+          name: linux-${{ matrix.target }}-wheels
           path: dist
 
   python-windows-release-build:
@@ -171,7 +166,7 @@ jobs:
       - name: Upload wheels
         uses: actions/upload-artifact@v4
         with:
-          name: wheels
+          name: windows-${{ matrix.target }}-wheels
           path: dist
 
   python-macos-release-build:
@@ -204,7 +199,7 @@ jobs:
       - name: Upload wheels
         uses: actions/upload-artifact@v4
         with:
-          name: wheels
+          name: macos-${{ matrix.target }}-wheels
           path: dist
 
   python-release-upload:
@@ -216,8 +211,6 @@ jobs:
     steps:
       - name: Download wheels from previous jobs
         uses: actions/download-artifact@v4
-        with:
-          name: wheels
 
       - name: Upload to PyPI
         uses: PyO3/maturin-action@v1

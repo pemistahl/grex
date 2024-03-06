@@ -1,4 +1,4 @@
-## grex 1.4.5 (released on 05 Mar 2024)
+## grex 1.4.5 (released on 06 Mar 2024)
 
 ### Improvements
 
