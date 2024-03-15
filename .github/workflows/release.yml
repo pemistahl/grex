@@ -110,16 +110,11 @@ jobs:
     strategy:
       matrix:
         target: [ x86_64, x86, aarch64 ]
+        linux: [ auto, musllinux_1_2 ]
 
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-          cache: 'pip'
 
       - name: Build wheels
         uses: PyO3/maturin-action@v1
@@ -127,12 +122,12 @@ jobs:
           target: ${{ matrix.target }}
           args: --release --out dist -i 3.8 3.9 3.10 3.11 3.12 pypy3.8 pypy3.9 pypy3.10
           sccache: 'true'
-          manylinux: auto
+          manylinux: ${{ matrix.linux }}
 
       - name: Upload wheels
         uses: actions/upload-artifact@v4
         with:
-          name: linux-${{ matrix.target }}-wheels
+          name: linux-${{ matrix.linux }}-${{ matrix.target }}-wheels
           path: dist
 
   python-windows-release-build:
@@ -148,13 +143,6 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-          architecture: ${{ matrix.target }}
-          cache: 'pip'
 
       - name: Build wheels
         uses: PyO3/maturin-action@v1
@@ -182,12 +170,6 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-          cache: 'pip'
 
       - name: Build wheels
         uses: PyO3/maturin-action@v1
