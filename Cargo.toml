@@ -43,7 +43,7 @@ unic-ucd-category = "0.9.0"
 unicode-segmentation = "1.11.0"
 
 [target.'cfg(not(target_family = "wasm"))'.dependencies]
-clap = {version = "4.5.4", features = ["derive", "wrap_help"], optional = true}
+clap = {version = "4.5.8", features = ["derive", "wrap_help"], optional = true}
 pyo3 = {version = "0.21.2", optional = true}
 
 [target.'cfg(target_family = "wasm")'.dependencies]
