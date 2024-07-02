@@ -225,7 +225,7 @@ fn create_ranges_of_repetitions(
         })
         .sorted_by_key(|&(prefix, _)| prefix.len())
         .rev()
-        .group_by(|&(prefix, _)| prefix.len())
+        .chunk_by(|&(prefix, _)| prefix.len())
     {
         for (prefix, indices) in group.sorted_by_key(|&(_, indices)| indices[0]) {
             indices
