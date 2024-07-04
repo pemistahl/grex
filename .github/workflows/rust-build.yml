@@ -97,6 +97,11 @@ jobs:
       - name: Install wasm-pack
         run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
 
+      - name: Install Firefox and Geckodriver # not available anymore in macos-latest
+        run: |
+          brew install --cask firefox
+          brew install geckodriver
+
       - name: Enable Safari web driver
         run: sudo safaridriver --enable
 
