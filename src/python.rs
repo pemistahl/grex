@@ -26,7 +26,7 @@ use pyo3::types::PyType;
 use regex::{Captures, Regex};
 
 #[pymodule]
-fn grex(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
+fn grex(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<RegExpBuilder>()?;
     Ok(())
 }
@@ -55,7 +55,7 @@ impl RegExpBuilder {
     /// Raises:
     ///     ValueError: if `test_cases` is empty
     #[classmethod]
-    fn from_test_cases(_cls: &PyType, test_cases: Vec<String>) -> PyResult<Self> {
+    fn from_test_cases(_cls: &Bound<PyType>, test_cases: Vec<String>) -> PyResult<Self> {
         Self::new(test_cases)
     }
 
