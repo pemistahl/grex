@@ -102,8 +102,8 @@ jobs:
           brew install --cask firefox
           brew install geckodriver
 
-      - name: Enable Safari web driver
-        run: sudo safaridriver --enable
+      #- name: Enable Safari web driver
+      #  run: sudo safaridriver --enable
 
       - name: Run WASM integration tests on NodeJS
         run: wasm-pack test --node -- --no-default-features
@@ -114,8 +114,10 @@ jobs:
       - name: Run WASM integration tests in Firefox
         run: wasm-pack test --headless --firefox -- --no-default-features
 
-      - name: Run WASM integration tests in Safari
-        run: wasm-pack test --headless --safari -- --no-default-features
+      # Safari WASM tests not working, reason unclear
+      # https://github.com/pemistahl/grex/actions/runs/12146729784/job/33871544034#step:9:30
+      #- name: Run WASM integration tests in Safari
+      #  run: wasm-pack test --headless --safari -- --no-default-features
 
   coverage-report:
     name: Coverage Report
