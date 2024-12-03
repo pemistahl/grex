@@ -40,14 +40,14 @@ petgraph = {version = "0.6.5", default-features = false, features = ["stable_gra
 regex = "1.10.6"
 unic-char-range = "0.9.0"
 unic-ucd-category = "0.9.0"
-unicode-segmentation = "1.11.0"
+unicode-segmentation = "1.12.0"
 
 [target.'cfg(not(target_family = "wasm"))'.dependencies]
-clap = {version = "4.5.20", features = ["derive", "wrap_help"], optional = true}
-pyo3 = {version = "0.22.3", optional = true}
+clap = {version = "4.5.21", features = ["derive", "wrap_help"], optional = true}
+pyo3 = {version = "0.23.2", optional = true}
 
 [target.'cfg(target_family = "wasm")'.dependencies]
-wasm-bindgen = "0.2.92"
+wasm-bindgen = "0.2.97"
 
 [dev-dependencies]
 indoc = "2.0.5"
@@ -58,10 +58,10 @@ assert_cmd = "2.0.16"
 criterion = "0.5.1"
 predicates = "3.1.2"
 proptest = "1.5.0"
-tempfile = "3.13.0"
+tempfile = "3.14.0"
 
 [target.'cfg(target_family = "wasm")'.dev-dependencies]
-wasm-bindgen-test = "0.3.42"
+wasm-bindgen-test = "0.3.47"
 
 [features]
 default = ["cli"]
