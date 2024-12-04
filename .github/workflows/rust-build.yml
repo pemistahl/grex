@@ -96,14 +96,18 @@ jobs:
 
       - name: Install wasm-pack
         run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+      
+      - name: Install `wasm-bindgen-cli`
+        uses: taiki-e/cache-cargo-install-action@v2
+        with:
+          tool: wasm-bindgen-cli
+          git: https://github.com/daxpedda/wasm-bindgen
+          rev: 407b0316c0091acc2b881b20deb81992cf7d8ef6
 
       - name: Install Firefox and Geckodriver # not available anymore in macos-latest
         run: |
           brew install --cask firefox
           brew install geckodriver
-
-      #- name: Enable Safari web driver
-      #  run: sudo safaridriver --enable
 
       - name: Run WASM integration tests on NodeJS
         run: wasm-pack test --node -- --no-default-features
@@ -114,10 +118,12 @@ jobs:
       - name: Run WASM integration tests in Firefox
         run: wasm-pack test --headless --firefox -- --no-default-features
 
-      # Safari WASM tests not working, reason unclear
-      # https://github.com/pemistahl/grex/actions/runs/12146729784/job/33871544034#step:9:30
-      #- name: Run WASM integration tests in Safari
-      #  run: wasm-pack test --headless --safari -- --no-default-features
+      - name: Run WASM integration tests in Safari
+        env:
+          CARGO_TARGET_WASM32_UNKNOWN_UNKNOWN_RUNNER: wasm-bindgen-test-runner
+          WASM_BINDGEN_DRIVER_TIMEOUT: 10
+          SAFARIDRIVER: safaridriver
+        run: cargo test --no-default-features --target wasm32-unknown-unknown
 
   coverage-report:
     name: Coverage Report
