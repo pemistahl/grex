@@ -50,13 +50,13 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Build x86_64 target in release mode
-        uses: houseabsolute/actions-rust-cross@v0
+        uses: houseabsolute/actions-rust-cross@v1
         with:
           target: ${{ matrix.x86_64-target }}
           args: '--release --locked'
 
       - name: Build aarch64 target in release mode
-        uses: houseabsolute/actions-rust-cross@v0
+        uses: houseabsolute/actions-rust-cross@v1
         with:
           target: ${{ matrix.aarch64-target }}
           args: '--release --locked'
