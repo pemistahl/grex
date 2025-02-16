@@ -33,18 +33,18 @@ keywords = ["pattern", "regex", "regexp"]
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-itertools = "0.13.0"
+itertools = "0.14"
 lazy_static = "1.5.0"
 ndarray = "0.16.1"
-petgraph = {version = "0.6.5", default-features = false, features = ["stable_graph"]}
-regex = "1.10.6"
+petgraph = {version = "0.7", default-features = false, features = ["stable_graph"]}
+regex = "1.11"
 unic-char-range = "0.9.0"
 unic-ucd-category = "0.9.0"
 unicode-segmentation = "1.12.0"
 
 [target.'cfg(not(target_family = "wasm"))'.dependencies]
-clap = {version = "4.5.22", features = ["derive", "wrap_help"], optional = true}
-pyo3 = {version = "0.23.3", optional = true}
+clap = {version = "4.5", features = ["derive", "wrap_help"], optional = true}
+pyo3 = {version = "0.23", optional = true}
 
 [target.'cfg(target_family = "wasm")'.dependencies]
 wasm-bindgen = "0.2.97"
