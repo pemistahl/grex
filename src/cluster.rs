@@ -16,7 +16,7 @@
 
 use crate::config::RegExpConfig;
 use crate::grapheme::Grapheme;
-use crate::unicode_tables::{DECIMAL_NUMBER, WHITE_SPACE, WORD};
+use crate::unicode_tables::{DECIMAL_NUMBER, WHITE_SPACE, PERL_WORD};
 use itertools::Itertools;
 use lazy_static::lazy_static;
 use std::cmp::Ordering;
@@ -168,7 +168,7 @@ fn is_digit(c: char) -> bool {
 
 fn is_word(c: char) -> bool {
     lazy_static! {
-        static ref VALID_ALPHANUMERIC_CHARS: Vec<CharRange> = convert_chars_to_range(WORD);
+        static ref VALID_ALPHANUMERIC_CHARS: Vec<CharRange> = convert_chars_to_range(PERL_WORD);
     }
     VALID_ALPHANUMERIC_CHARS
         .iter()

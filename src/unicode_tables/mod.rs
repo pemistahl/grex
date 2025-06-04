@@ -20,4 +20,4 @@ mod word;
 
 pub use decimal::DECIMAL_NUMBER;
 pub use space::WHITE_SPACE;
-pub use word::WORD;
+pub use word::PERL_WORD;
