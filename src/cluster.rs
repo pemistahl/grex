@@ -16,7 +16,7 @@
 
 use crate::config::RegExpConfig;
 use crate::grapheme::Grapheme;
-use crate::unicode_tables::{DECIMAL_NUMBER, WHITE_SPACE, PERL_WORD};
+use crate::unicode_tables::{DECIMAL_NUMBER, PERL_WORD, WHITE_SPACE};
 use itertools::Itertools;
 use lazy_static::lazy_static;
 use std::cmp::Ordering;
