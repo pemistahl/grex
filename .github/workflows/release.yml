@@ -47,7 +47,7 @@ jobs:
 
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Build x86_64 target in release mode
         uses: houseabsolute/actions-rust-cross@v0
@@ -114,7 +114,7 @@ jobs:
 
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Build wheels
         uses: PyO3/maturin-action@v1
@@ -142,7 +142,7 @@ jobs:
 
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Build wheels
         uses: PyO3/maturin-action@v1
@@ -169,7 +169,7 @@ jobs:
 
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Build wheels
         uses: PyO3/maturin-action@v1
@@ -213,7 +213,7 @@ jobs:
 
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Upload release to crates.io
         uses: katyo/publish-crates@v2
