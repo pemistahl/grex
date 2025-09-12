@@ -252,14 +252,14 @@
 //! ### 5. How does it work?
 //!
 //! 1. A [deterministic finite automaton](https://en.wikipedia.org/wiki/Deterministic_finite_automaton) (DFA)
-//! is created from the input strings.
+//!    is created from the input strings.
 //!
 //! 2. The number of states and transitions between states in the DFA is reduced by applying
-//! [Hopcroft's DFA minimization algorithm](https://en.wikipedia.org/wiki/DFA_minimization#Hopcroft.27s_algorithm).
+//!    [Hopcroft's DFA minimization algorithm](https://en.wikipedia.org/wiki/DFA_minimization#Hopcroft.27s_algorithm).
 //!
 //! 3. The minimized DFA is expressed as a system of linear equations which are solved with
-//! [Brzozowski's algebraic method](http://cs.stackexchange.com/questions/2016/how-to-convert-finite-automata-to-regular-expressions#2392),
-//! resulting in the final regular expression.
+//!    [Brzozowski's algebraic method](http://cs.stackexchange.com/questions/2016/how-to-convert-finite-automata-to-regular-expressions#2392),
+//!    resulting in the final regular expression.
 
 #[macro_use]
 mod macros;

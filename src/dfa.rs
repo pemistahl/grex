@@ -66,7 +66,7 @@ impl<'a> Dfa<'a> {
         states
     }
 
-    pub(crate) fn outgoing_edges(&self, state: State) -> Edges<Grapheme, Directed> {
+    pub(crate) fn outgoing_edges(&self, state: State) -> Edges<'_, Grapheme, Directed> {
         self.graph.edges_directed(state, Direction::Outgoing)
     }
 
