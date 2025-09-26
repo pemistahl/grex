@@ -18,10 +18,10 @@ use crate::config::RegExpConfig;
 use crate::grapheme::Grapheme;
 use crate::unicode_tables::{DECIMAL_NUMBER, WHITE_SPACE, WORD};
 use itertools::Itertools;
-use lazy_static::lazy_static;
 use std::cmp::Ordering;
 use std::collections::HashMap;
 use std::ops::Range;
+use std::sync::LazyLock;
 use unic_char_range::CharRange;
 use unic_ucd_category::GeneralCategory;
 use unicode_segmentation::UnicodeSegmentation;
@@ -160,25 +160,22 @@ impl<'a> GraphemeCluster<'a> {
 }
 
 fn is_digit(c: char) -> bool {
-    lazy_static! {
-        static ref VALID_NUMERIC_CHARS: Vec<CharRange> = convert_chars_to_range(DECIMAL_NUMBER);
-    }
+    static VALID_NUMERIC_CHARS: LazyLock<Vec<CharRange>> =
+        LazyLock::new(|| convert_chars_to_range(DECIMAL_NUMBER));
     VALID_NUMERIC_CHARS.iter().any(|range| range.contains(c))
 }
 
 fn is_word(c: char) -> bool {
-    lazy_static! {
-        static ref VALID_ALPHANUMERIC_CHARS: Vec<CharRange> = convert_chars_to_range(WORD);
-    }
+    static VALID_ALPHANUMERIC_CHARS: LazyLock<Vec<CharRange>> =
+        LazyLock::new(|| convert_chars_to_range(WORD));
     VALID_ALPHANUMERIC_CHARS
         .iter()
         .any(|range| range.contains(c))
 }
 
 fn is_space(c: char) -> bool {
-    lazy_static! {
-        static ref VALID_SPACE_CHARS: Vec<CharRange> = convert_chars_to_range(WHITE_SPACE);
-    }
+    static VALID_SPACE_CHARS: LazyLock<Vec<CharRange>> =
+        LazyLock::new(|| convert_chars_to_range(WHITE_SPACE));
     VALID_SPACE_CHARS.iter().any(|range| range.contains(c))
 }
 
