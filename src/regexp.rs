@@ -37,7 +37,7 @@ impl<'a> RegExp<'a> {
         Self::sort(test_cases);
         let grapheme_clusters = Self::grapheme_clusters(test_cases, config);
         let mut dfa = Dfa::from(&grapheme_clusters, true, config);
-        let mut ast = Expression::from(dfa, config);
+        let mut ast = Expression::from(&dfa, config);
 
         if config.is_start_anchor_disabled && config.is_end_anchor_disabled {
             let mut regex = Self::convert_expr_to_regex(&ast, config);
@@ -51,7 +51,7 @@ impl<'a> RegExp<'a> {
                 &regex, &mut ast, test_cases,
             ) {
                 dfa = Dfa::from(&grapheme_clusters, false, config);
-                ast = Expression::from(dfa, config);
+                ast = Expression::from(&dfa, config);
                 regex = Self::convert_expr_to_regex(&ast, config);
 
                 if !Self::regex_matches_all_test_cases(&regex, test_cases) {
@@ -119,13 +119,13 @@ impl<'a> RegExp<'a> {
             .collect_vec();
 
         if config.is_char_class_feature_enabled() {
-            for cluster in clusters.iter_mut() {
+            for cluster in &mut clusters {
                 cluster.convert_to_char_classes();
             }
         }
 
         if config.is_repetition_converted {
-            for cluster in clusters.iter_mut() {
+            for cluster in &mut clusters {
                 cluster.convert_repetitions();
             }
         }
@@ -237,7 +237,7 @@ impl Display for RegExp<'_> {
             f,
             "{}",
             if self.config.is_verbose_mode_enabled {
-                indent_regexp(regexp, self.config)
+                indent_regexp(&regexp, self.config)
             } else {
                 regexp
             }
@@ -245,7 +245,7 @@ impl Display for RegExp<'_> {
     }
 }
 
-fn indent_regexp(regexp: String, config: &RegExpConfig) -> String {
+fn indent_regexp(regexp: &str, config: &RegExpConfig) -> String {
     let mut indented_regexp = vec![];
     let mut nesting_level = 0;
 

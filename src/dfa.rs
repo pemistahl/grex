@@ -148,7 +148,7 @@ impl<'a> Dfa<'a> {
         while !w.is_empty() {
             let a = w.drain(0..1).next().unwrap();
 
-            for edge_label in self.alphabet.iter() {
+            for edge_label in &self.alphabet {
                 let x = self.get_parent_states(&a, edge_label);
                 let mut replacements = vec![];
                 let mut is_replacement_needed = true;
@@ -196,7 +196,7 @@ impl<'a> Dfa<'a> {
             }
         }
 
-        self.recreate_graph(p.iter().filter(|&it| !it.is_empty()).collect_vec());
+        self.recreate_graph(&p.iter().filter(|&it| !it.is_empty()).collect_vec());
     }
 
     fn get_initial_partition(&self) -> Vec<HashSet<State>> {
@@ -228,16 +228,16 @@ impl<'a> Dfa<'a> {
         x
     }
 
-    fn recreate_graph(&mut self, p: Vec<&HashSet<State>>) {
+    fn recreate_graph(&mut self, p: &[&HashSet<State>]) {
         let mut graph = StableGraph::<StateLabel, EdgeLabel>::new();
         let mut final_state_indices = HashSet::new();
         let mut state_mappings = HashMap::new();
         let mut new_initial_state: Option<NodeIndex> = None;
 
-        for equivalence_class in p.iter() {
+        for equivalence_class in p {
             let new_state = graph.add_node("".to_string());
 
-            for old_state in equivalence_class.iter() {
+            for old_state in *equivalence_class {
                 if self.initial_state == *old_state {
                     new_initial_state = Some(new_state);
                 }
@@ -245,7 +245,7 @@ impl<'a> Dfa<'a> {
             }
         }
 
-        for equivalence_class in p.iter() {
+        for equivalence_class in p {
             let old_source_state = *equivalence_class.iter().next().unwrap();
             let new_source_state = state_mappings.get(&old_source_state).unwrap();
 

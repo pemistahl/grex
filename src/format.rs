@@ -180,9 +180,9 @@ fn format_character_class(
 
     let mut char_class_strs = vec![];
 
-    for subset in subsets.iter() {
+    for subset in &subsets {
         if subset.len() <= 2 {
-            for c in subset.iter() {
+            for c in subset {
                 char_class_strs.push((*c).to_string());
             }
         } else {
