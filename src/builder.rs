@@ -48,7 +48,11 @@ impl RegExpBuilder {
             panic!("{}", MISSING_TEST_CASES_MESSAGE);
         }
         Self {
-            test_cases: test_cases.iter().cloned().map(std::convert::Into::into).collect_vec(),
+            test_cases: test_cases
+                .iter()
+                .cloned()
+                .map(std::convert::Into::into)
+                .collect_vec(),
             config: RegExpConfig::new(),
         }
     }
@@ -69,7 +73,10 @@ impl RegExpBuilder {
     pub fn from_file<T: Into<PathBuf>>(file_path: T) -> Self {
         match std::fs::read_to_string(file_path.into()) {
             Ok(file_content) => Self {
-                test_cases: file_content.lines().map(std::string::ToString::to_string).collect_vec(),
+                test_cases: file_content
+                    .lines()
+                    .map(std::string::ToString::to_string)
+                    .collect_vec(),
                 config: RegExpConfig::new(),
             },
             Err(error) => match error.kind() {

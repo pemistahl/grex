@@ -185,7 +185,10 @@ impl Display for Grapheme {
         let mut value = if self.repetitions.is_empty() {
             self.value()
         } else {
-            self.repetitions.iter().map(std::string::ToString::to_string).join("")
+            self.repetitions
+                .iter()
+                .map(std::string::ToString::to_string)
+                .join("")
         };
         value = Component::CharClass(value.clone())
             .to_repr(self.is_output_colorized && CHAR_CLASSES.contains(&&*value));

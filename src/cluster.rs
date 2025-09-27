@@ -197,7 +197,10 @@ fn collect_repeated_substrings(graphemes: &[Grapheme]) -> HashMap<Vec<String>, V
         let suffix = &graphemes[i..];
         for j in 1..=graphemes.len() / 2 {
             if suffix.len() >= j {
-                let prefix = suffix[..j].iter().map(super::grapheme::Grapheme::value).collect_vec();
+                let prefix = suffix[..j]
+                    .iter()
+                    .map(super::grapheme::Grapheme::value)
+                    .collect_vec();
                 let indices = map.entry(prefix).or_insert_with(Vec::new);
                 indices.push(i);
             }
