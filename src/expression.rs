@@ -322,9 +322,9 @@ impl<'a> Expression<'a> {
         if let (Some(mut expr1), Some(mut expr2)) = (a.clone(), b.clone()) {
             if expr1 != expr2 {
                 let common_prefix =
-                    Self::remove_common_substring(&mut expr1, &mut expr2, Substring::Prefix);
+                    Self::remove_common_substring(&mut expr1, &mut expr2, &Substring::Prefix);
                 let common_suffix =
-                    Self::remove_common_substring(&mut expr1, &mut expr2, Substring::Suffix);
+                    Self::remove_common_substring(&mut expr1, &mut expr2, &Substring::Suffix);
 
                 let mut result = if expr1.is_empty() {
                     Some(Expression::new_repetition(
@@ -461,7 +461,7 @@ impl<'a> Expression<'a> {
     fn remove_common_substring(
         a: &mut Expression,
         b: &mut Expression,
-        substring: Substring,
+        substring: &Substring,
     ) -> Option<Vec<Grapheme>> {
         let common_substring = Self::find_common_substring(a, b, &substring);
         if let Some(value) = &common_substring {
