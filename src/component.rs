@@ -40,9 +40,10 @@ pub(crate) enum Component {
 
 impl Component {
     pub(crate) fn to_repr(&self, is_output_colorized: bool) -> String {
-        match is_output_colorized {
-            true => self.to_colored_string(false),
-            false => self.to_string(),
+        if is_output_colorized {
+            self.to_colored_string(false)
+        } else {
+            self.to_string()
         }
     }
 

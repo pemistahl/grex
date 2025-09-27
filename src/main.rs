@@ -316,7 +316,7 @@ mod cli {
                 file_path.to_path_buf()
             };
             match std::fs::read_to_string(path) {
-                Ok(file_content) => Ok(file_content.lines().map(|it| it.to_string()).collect_vec()),
+                Ok(file_content) => Ok(file_content.lines().map(std::string::ToString::to_string).collect_vec()),
                 Err(error) => Err(error),
             }
         } else {

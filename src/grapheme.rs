@@ -136,7 +136,7 @@ impl Grapheme {
         for i in 0..characters.len() {
             let mut character = characters[i].clone();
 
-            for char_to_escape in CHARS_TO_ESCAPE.iter() {
+            for char_to_escape in &CHARS_TO_ESCAPE {
                 character =
                     character.replace(char_to_escape, &format!("{}{}", "\\", char_to_escape));
             }
@@ -185,7 +185,7 @@ impl Display for Grapheme {
         let mut value = if self.repetitions.is_empty() {
             self.value()
         } else {
-            self.repetitions.iter().map(|it| it.to_string()).join("")
+            self.repetitions.iter().map(std::string::ToString::to_string).join("")
         };
         value = Component::CharClass(value.clone())
             .to_repr(self.is_output_colorized && CHAR_CLASSES.contains(&&*value));

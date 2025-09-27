@@ -37,7 +37,7 @@ pub enum Expression<'a> {
 }
 
 impl<'a> Expression<'a> {
-    pub(crate) fn from(dfa: Dfa, config: &'a RegExpConfig) -> Self {
+    pub(crate) fn from(dfa: &Dfa, config: &'a RegExpConfig) -> Self {
         let states = dfa.states_in_depth_first_order();
         let state_count = dfa.state_count();
 
@@ -199,12 +199,12 @@ impl<'a> Expression<'a> {
             Expression::Concatenation(expr1, expr2, _, _, _) => match substring {
                 Substring::Prefix => {
                     if let Expression::Literal(_, _, _) = **expr1 {
-                        expr1.remove_substring(substring, length)
+                        expr1.remove_substring(substring, length);
                     }
                 }
                 Substring::Suffix => {
                     if let Expression::Literal(_, _, _) = **expr2 {
-                        expr2.remove_substring(substring, length)
+                        expr2.remove_substring(substring, length);
                     }
                 }
             },

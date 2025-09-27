@@ -87,7 +87,7 @@ impl<'a> GraphemeCluster<'a> {
         let is_word_converted = self.config.is_word_converted;
         let is_non_word_converted = self.config.is_non_word_converted;
 
-        for grapheme in self.graphemes.iter_mut() {
+        for grapheme in &mut self.graphemes {
             grapheme.chars = grapheme
                 .chars
                 .iter()
@@ -185,9 +185,9 @@ fn convert_repetitions(
     config: &RegExpConfig,
 ) {
     let repeated_substrings = collect_repeated_substrings(graphemes);
-    let ranges_of_repetitions = create_ranges_of_repetitions(repeated_substrings, config);
+    let ranges_of_repetitions = create_ranges_of_repetitions(&repeated_substrings, config);
     let coalesced_repetitions = coalesce_repetitions(ranges_of_repetitions);
-    replace_graphemes_with_repetitions(coalesced_repetitions, graphemes, repetitions, config)
+    replace_graphemes_with_repetitions(coalesced_repetitions, graphemes, repetitions, config);
 }
 
 fn collect_repeated_substrings(graphemes: &[Grapheme]) -> HashMap<Vec<String>, Vec<usize>> {
@@ -197,7 +197,7 @@ fn collect_repeated_substrings(graphemes: &[Grapheme]) -> HashMap<Vec<String>, V
         let suffix = &graphemes[i..];
         for j in 1..=graphemes.len() / 2 {
             if suffix.len() >= j {
-                let prefix = suffix[..j].iter().map(|it| it.value()).collect_vec();
+                let prefix = suffix[..j].iter().map(super::grapheme::Grapheme::value).collect_vec();
                 let indices = map.entry(prefix).or_insert_with(Vec::new);
                 indices.push(i);
             }
@@ -207,7 +207,7 @@ fn collect_repeated_substrings(graphemes: &[Grapheme]) -> HashMap<Vec<String>, V
 }
 
 fn create_ranges_of_repetitions(
-    repeated_substrings: HashMap<Vec<String>, Vec<usize>>,
+    repeated_substrings: &HashMap<Vec<String>, Vec<usize>>,
     config: &RegExpConfig,
 ) -> Vec<(Range<usize>, Vec<String>)> {
     let mut repetitions = Vec::<(Range<usize>, Vec<String>)>::new();
@@ -287,7 +287,7 @@ fn replace_graphemes_with_repetitions(
         repetitions.push(grapheme.clone());
     }
 
-    for (range, substr) in coalesced_repetitions.iter() {
+    for (range, substr) in &coalesced_repetitions {
         if range.end > repetitions.len() {
             break;
         }
