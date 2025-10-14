@@ -36,7 +36,7 @@ crate-type = ["cdylib", "rlib"]
 itertools = "0.14.0"
 ndarray = "0.16.1"
 petgraph = {version = "0.8.3", default-features = false, features = ["stable_graph"]}
-regex = "1.11.3"
+regex = "1.12.2"
 unic-char-range = "0.9.0"
 unic-ucd-category = "0.9.0"
 unicode-segmentation = "1.12.0"
