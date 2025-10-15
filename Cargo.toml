@@ -34,7 +34,7 @@ crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 itertools = "0.14.0"
-ndarray = "0.16.1"
+ndarray = "0.17.0"
 petgraph = {version = "0.8.3", default-features = false, features = ["stable_graph"]}
 regex = "1.12.2"
 unic-char-range = "0.9.0"
