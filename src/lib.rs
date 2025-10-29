@@ -265,6 +265,7 @@
 mod macros;
 
 mod builder;
+mod char_range;
 mod cluster;
 mod component;
 mod config;

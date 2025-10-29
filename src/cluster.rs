@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+use crate::char_range::CharRange;
 use crate::config::RegExpConfig;
 use crate::grapheme::Grapheme;
 use crate::unicode_tables::{DECIMAL_NUMBER, WHITE_SPACE, WORD};
@@ -22,8 +23,7 @@ use std::cmp::Ordering;
 use std::collections::HashMap;
 use std::ops::Range;
 use std::sync::LazyLock;
-use unic_char_range::CharRange;
-use unic_ucd_category::GeneralCategory;
+use unicode_general_category::GeneralCategory as GC;
 use unicode_segmentation::UnicodeSegmentation;
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -39,8 +39,14 @@ impl<'a> GraphemeCluster<'a> {
                 .flat_map(|it| {
                     let contains_backslash = it.chars().count() == 2 && it.contains('\\');
                     let contains_combining_mark_or_unassigned_chars = it.chars().any(|c| {
-                        let category = GeneralCategory::of(c);
-                        category.is_mark() || category.is_other()
+                        let category = unicode_general_category::get_general_category(c);
+                        matches!(
+                            category,
+                            // Mark categories
+                            GC::NonspacingMark | GC::SpacingMark | GC::EnclosingMark |
+                            // Other categories
+                            GC::Control | GC::Format | GC::Surrogate | GC::PrivateUse | GC::Unassigned
+                        )
                     });
 
                     if contains_backslash || contains_combining_mark_or_unassigned_chars {
