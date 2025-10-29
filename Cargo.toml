@@ -34,10 +34,10 @@ crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 itertools = "0.14.0"
-ndarray = "0.17.0"
+ndarray = "0.16.1"
 petgraph = {version = "0.8.3", default-features = false, features = ["stable_graph"]}
 regex = "1.12.2"
-unicode-general-category = "0.6.0"
+unicode-general-category = "1.1.0"
 unicode-segmentation = "1.12.0"
 
 [target.'cfg(not(target_family = "wasm"))'.dependencies]
