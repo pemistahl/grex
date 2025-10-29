@@ -43,10 +43,10 @@ impl Iterator for CharRangeIter {
         }
 
         let result = self.current;
-        
+
         // Get the next valid Unicode scalar value
         let mut next_code_point = self.current as u32 + 1;
-        
+
         // Skip over surrogate code points (U+D800 to U+DFFF) and find next valid char
         loop {
             if next_code_point > 0x10FFFF {
@@ -54,7 +54,7 @@ impl Iterator for CharRangeIter {
                 self.done = true;
                 break;
             }
-            
+
             match char::from_u32(next_code_point) {
                 Some(next_char) => {
                     self.current = next_char;
@@ -99,4 +99,3 @@ mod tests {
         assert_eq!(count, 0x10F800);
     }
 }
-

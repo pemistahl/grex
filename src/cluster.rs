@@ -23,8 +23,8 @@ use std::cmp::Ordering;
 use std::collections::HashMap;
 use std::ops::Range;
 use std::sync::LazyLock;
-use unicode_segmentation::UnicodeSegmentation;
 use unicode_general_category::GeneralCategory as GC;
+use unicode_segmentation::UnicodeSegmentation;
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct GraphemeCluster<'a> {
