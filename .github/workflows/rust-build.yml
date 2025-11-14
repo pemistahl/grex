@@ -84,6 +84,9 @@ jobs:
       - name: Test target in debug mode
         run: cargo test --target ${{ matrix.target }}
 
+      - name: Check Clippy lints
+        run: cargo clippy --target ${{ matrix.target }} -- -Dwarnings
+
   wasm-build:
     name: WASM Build
     needs: rust-build
