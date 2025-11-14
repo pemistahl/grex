@@ -8,24 +8,24 @@
   [![python build status](https://github.com/pemistahl/grex/actions/workflows/python-build.yml/badge.svg)](https://github.com/pemistahl/grex/actions/workflows/python-build.yml)
   [![docs.rs](https://docs.rs/grex/badge.svg)](https://docs.rs/grex)
   [![codecov](https://codecov.io/gh/pemistahl/grex/branch/main/graph/badge.svg)](https://codecov.io/gh/pemistahl/grex)
-  [![dependency status](https://deps.rs/crate/grex/1.4.5/status.svg)](https://deps.rs/crate/grex/1.4.5)
+  [![dependency status](https://deps.rs/crate/grex/1.4.6/status.svg)](https://deps.rs/crate/grex/1.4.6)
   [![demo](https://img.shields.io/badge/-Demo%20Website-orange?logo=HTML5&labelColor=white)](https://pemistahl.github.io/grex-js/)
   
   [![downloads](https://img.shields.io/crates/d/grex.svg)](https://crates.io/crates/grex)
   [![crates.io](https://img.shields.io/crates/v/grex.svg)](https://crates.io/crates/grex)
-  [![lib.rs](https://img.shields.io/badge/lib.rs-v1.4.5-blue)](https://lib.rs/crates/grex)
-  ![supported Python versions](https://img.shields.io/badge/Python-%3E%3D%203.8-blue?logo=Python&logoColor=yellow)
-  [![pypi](https://img.shields.io/badge/PYPI-v1.0.1-blue?logo=PyPI&logoColor=yellow)](https://pypi.org/project/grex)
+  [![lib.rs](https://img.shields.io/badge/lib.rs-v1.4.6-blue)](https://lib.rs/crates/grex)
+  ![supported Python versions](https://img.shields.io/badge/Python-%3E%3D%203.10-blue?logo=Python&logoColor=yellow)
+  [![pypi](https://img.shields.io/badge/PYPI-v1.0.2-blue?logo=PyPI&logoColor=yellow)](https://pypi.org/project/grex)
   [![license](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0)
 
-  [![Linux 64-bit Download](https://img.shields.io/badge/Linux%2064bit%20Download-v1.4.5-blue?logo=Linux)](https://github.com/pemistahl/grex/releases/download/v1.4.5/grex-v1.4.5-x86_64-unknown-linux-musl.tar.gz)
-  [![Linux ARM64 Download](https://img.shields.io/badge/Linux%20ARM64%20Download-v1.4.5-blue?logo=Linux)](https://github.com/pemistahl/grex/releases/download/v1.4.5/grex-v1.4.5-aarch64-unknown-linux-musl.tar.gz)  
+  [![Linux 64-bit Download](https://img.shields.io/badge/Linux%2064bit%20Download-v1.4.6-blue?logo=Linux)](https://github.com/pemistahl/grex/releases/download/v1.4.6/grex-v1.4.6-x86_64-unknown-linux-musl.tar.gz)
+  [![Linux ARM64 Download](https://img.shields.io/badge/Linux%20ARM64%20Download-v1.4.6-blue?logo=Linux)](https://github.com/pemistahl/grex/releases/download/v1.4.6/grex-v1.4.6-aarch64-unknown-linux-musl.tar.gz)  
   
-  [![MacOS 64-bit Download](https://img.shields.io/badge/macOS%2064bit%20Download-v1.4.5-blue?logo=Apple)](https://github.com/pemistahl/grex/releases/download/v1.4.5/grex-v1.4.5-x86_64-apple-darwin.tar.gz)
-  [![MacOS ARM64 Download](https://img.shields.io/badge/macOS%20ARM64%20Download-v1.4.5-blue?logo=Apple)](https://github.com/pemistahl/grex/releases/download/v1.4.5/grex-v1.4.5-aarch64-apple-darwin.tar.gz)
+  [![MacOS 64-bit Download](https://img.shields.io/badge/macOS%2064bit%20Download-v1.4.6-blue?logo=Apple)](https://github.com/pemistahl/grex/releases/download/v1.4.6/grex-v1.4.6-x86_64-apple-darwin.tar.gz)
+  [![MacOS ARM64 Download](https://img.shields.io/badge/macOS%20ARM64%20Download-v1.4.6-blue?logo=Apple)](https://github.com/pemistahl/grex/releases/download/v1.4.6/grex-v1.4.6-aarch64-apple-darwin.tar.gz)
   
-  [![Windows 64-bit Download](https://img.shields.io/badge/Windows%2064bit%20Download-v1.4.5-blue?logo=Windows)](https://github.com/pemistahl/grex/releases/download/v1.4.5/grex-v1.4.5-x86_64-pc-windows-msvc.zip)
-  [![Windows ARM64 Download](https://img.shields.io/badge/Windows%20ARM64%20Download-v1.4.5-blue?logo=Windows)](https://github.com/pemistahl/grex/releases/download/v1.4.5/grex-v1.4.5-aarch64-pc-windows-msvc.zip)
+  [![Windows 64-bit Download](https://img.shields.io/badge/Windows%2064bit%20Download-v1.4.6-blue?logo=Windows)](https://github.com/pemistahl/grex/releases/download/v1.4.6/grex-v1.4.6-x86_64-pc-windows-msvc.zip)
+  [![Windows ARM64 Download](https://img.shields.io/badge/Windows%20ARM64%20Download-v1.4.6-blue?logo=Windows)](https://github.com/pemistahl/grex/releases/download/v1.4.6/grex-v1.4.6-aarch64-pc-windows-msvc.zip)
 </div>
 
 <br>
@@ -87,8 +87,8 @@ an initial correct regex which should be inspected by hand if further optimizati
 - case-sensitive or case-insensitive matching
 - capturing or non-capturing groups
 - optional anchors `^` and `$`
-- fully compliant to [Unicode Standard 15.0](https://unicode.org/versions/Unicode15.0.0)
-- fully compatible with [*regex* crate 1.9.0+](https://crates.io/crates/regex)
+- fully compliant to [Unicode Standard 16.0](https://unicode.org/versions/Unicode15.0.0)
+- fully compatible with [*regex* crate 1.11.0+](https://crates.io/crates/regex)
 - correctly handles graphemes consisting of multiple Unicode symbols
 - reads input strings from the command-line or from a file
 - produces more readable expressions indented on multiple using optional verbose mode 
@@ -119,7 +119,7 @@ In order to use *grex* as a library, simply add it as a dependency to your `Carg
 
 ```toml
 [dependencies]
-grex = { version = "1.4.5", default-features = false }
+grex = { version = "1.4.6", default-features = false }
 ```
 
 The dependency *clap* is only needed for the command-line tool.
@@ -140,7 +140,7 @@ The following table shows all available flags and options:
 ```
 $ grex -h
 
-grex 1.4.5
+grex 1.4.6
 © 2019-today Peter M. Stahl <pemistahl@gmail.com>
 Licensed under the Apache License, Version 2.0
 Downloadable from https://crates.io/crates/grex
@@ -204,8 +204,8 @@ Miscellaneous Options:
 
 #### 5.2.1 Default settings
 
-Test cases are passed either from a collection via [`RegExpBuilder::from()`](https://docs.rs/grex/1.4.5/grex/struct.RegExpBuilder.html#method.from) 
-or from a file via [`RegExpBuilder::from_file()`](https://docs.rs/grex/1.4.5/grex/struct.RegExpBuilder.html#method.from_file).
+Test cases are passed either from a collection via [`RegExpBuilder::from()`](https://docs.rs/grex/1.4.6/grex/struct.RegExpBuilder.html#method.from) 
+or from a file via [`RegExpBuilder::from_file()`](https://docs.rs/grex/1.4.6/grex/struct.RegExpBuilder.html#method.from_file).
 If read from a file, each test case must be on a separate line. Lines may be ended with either a newline `\n` or a carriage
 return with a line feed `\r\n`.
 

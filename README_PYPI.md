@@ -7,8 +7,8 @@
 [![build status](https://github.com/pemistahl/grex/actions/workflows/python-build.yml/badge.svg)](https://github.com/pemistahl/grex/actions/workflows/python-build.yml)
 [![codecov](https://codecov.io/gh/pemistahl/grex/branch/main/graph/badge.svg)](https://codecov.io/gh/pemistahl/grex)
 [![demo](https://img.shields.io/badge/-Demo%20Website-orange?logo=HTML5&labelColor=white)](https://pemistahl.github.io/grex-js/)
-![supported Python versions](https://img.shields.io/badge/Python-%3E%3D%203.8-blue?logo=Python&logoColor=yellow)
-[![pypi](https://img.shields.io/badge/PYPI-v1.0.1-blue?logo=PyPI&logoColor=yellow)](https://pypi.org/project/grex)
+![supported Python versions](https://img.shields.io/badge/Python-%3E%3D%203.10-blue?logo=Python&logoColor=yellow)
+[![pypi](https://img.shields.io/badge/PYPI-v1.0.2-blue?logo=PyPI&logoColor=yellow)](https://pypi.org/project/grex)
 [![license](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0)
 </div>
 
@@ -71,7 +71,7 @@ an initial correct regex which should be inspected by hand if further optimizati
 - case-sensitive or case-insensitive matching
 - capturing or non-capturing groups
 - optional anchors `^` and `$`
-- fully compliant to [Unicode Standard 15.0](https://unicode.org/versions/Unicode15.0.0)
+- fully compliant to [Unicode Standard 16.0](https://unicode.org/versions/Unicode16.0.0)
 - correctly handles graphemes consisting of multiple Unicode symbols
 - produces more readable expressions indented on multiple using optional verbose mode
 - optional syntax highlighting for nicer output in supported terminals
@@ -84,7 +84,7 @@ an initial correct regex which should be inspected by hand if further optimizati
 pip install grex
 ```
 
-The current version 1.0.1 corresponds to the latest version 1.4.5 of the Rust
+The current version 1.0.2 corresponds to the latest version 1.4.6 of the Rust
 library and command-line tool.
 
 ## 5. How to use?
