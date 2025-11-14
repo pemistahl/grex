@@ -30,7 +30,7 @@ test = ["pytest == 9.0.1"]
 
 [tool.maturin]
 no-default-features = true
-features = ["pyo3/extension-module", "python"]
+features = ["pyo3/extension-module", "pyo3/generate-import-lib", "python"]
 
 [build-system]
 requires = ["maturin>=1.1,<2.0"]
