@@ -17,26 +17,26 @@
 /// A lightweight replacement for unic_char_range::CharRange
 /// Represents a closed range of Unicode characters
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct CharRange {
+pub(crate) struct CharRange {
     start: char,
     end: char,
 }
 
 impl CharRange {
     /// Creates a closed character range from start to end (inclusive)
-    pub fn closed(start: char, end: char) -> Self {
+    pub(crate) fn closed(start: char, end: char) -> Self {
         Self { start, end }
     }
 
     /// Checks if the given character is within this range
-    pub fn contains(&self, c: char) -> bool {
+    pub(crate) fn contains(&self, c: char) -> bool {
         c >= self.start && c <= self.end
     }
 
     /// Returns an iterator over all valid Unicode scalar values
     /// This includes U+0000 to U+D7FF and U+E000 to U+10FFFF
     /// (excludes surrogate code points U+D800 to U+DFFF)
-    pub fn all() -> CharRangeIter {
+    pub(crate) fn all() -> CharRangeIter {
         CharRangeIter {
             current: '\0',
             done: false,
@@ -45,7 +45,7 @@ impl CharRange {
 }
 
 /// Iterator over all valid Unicode scalar values
-pub struct CharRangeIter {
+pub(crate) struct CharRangeIter {
     current: char,
     done: bool,
 }
