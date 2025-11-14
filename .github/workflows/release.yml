@@ -120,12 +120,12 @@ jobs:
         uses: PyO3/maturin-action@v1
         with:
           target: ${{ matrix.target }}
-          args: --release --out dist -i 3.8 3.9 3.10 3.11 3.12 3.13 pypy3.8 pypy3.9 pypy3.10
+          args: --release --out dist -i 3.8 3.9 3.10 3.11 3.12 3.13 3.14 pypy3.8 pypy3.9 pypy3.10
           sccache: 'true'
           manylinux: ${{ matrix.linux }}
 
       - name: Upload wheels
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: linux-${{ matrix.linux }}-${{ matrix.target }}-wheels
           path: dist
@@ -148,11 +148,11 @@ jobs:
         uses: PyO3/maturin-action@v1
         with:
           target: ${{ matrix.target }}
-          args: --release --out dist -i 3.8 3.9 3.10 3.11 3.12 3.13
+          args: --release --out dist -i 3.8 3.9 3.10 3.11 3.12 3.13 3.14
           sccache: 'true'
 
       - name: Upload wheels
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: windows-${{ matrix.target }}-wheels
           path: dist
@@ -175,11 +175,11 @@ jobs:
         uses: PyO3/maturin-action@v1
         with:
           target: ${{ matrix.target }}
-          args: --release --out dist -i 3.8 3.9 3.10 3.11 3.12 3.13 pypy3.8 pypy3.9 pypy3.10
+          args: --release --out dist -i 3.8 3.9 3.10 3.11 3.12 3.13 3.14 pypy3.8 pypy3.9 pypy3.10
           sccache: 'true'
 
       - name: Upload wheels
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: macos-${{ matrix.target }}-wheels
           path: dist
@@ -192,7 +192,7 @@ jobs:
 
     steps:
       - name: Download wheels from previous jobs
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v6
         with:
           path: wheels
           merge-multiple: true

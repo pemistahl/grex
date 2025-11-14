@@ -27,7 +27,7 @@ use unicode_general_category::GeneralCategory as GC;
 use unicode_segmentation::UnicodeSegmentation;
 
 #[derive(Clone, Debug, Eq, PartialEq)]
-pub struct GraphemeCluster<'a> {
+pub(crate) struct GraphemeCluster<'a> {
     graphemes: Vec<Grapheme>,
     config: &'a RegExpConfig,
 }

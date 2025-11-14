@@ -28,7 +28,7 @@ use std::cmp::Reverse;
 use std::collections::BTreeSet;
 
 #[derive(Clone, Debug, Eq, PartialEq)]
-pub enum Expression<'a> {
+pub(crate) enum Expression<'a> {
     Alternation(Vec<Expression<'a>>, bool, bool, bool),
     CharacterClass(BTreeSet<char>, bool),
     Concatenation(Box<Expression<'a>>, Box<Expression<'a>>, bool, bool, bool),

@@ -24,7 +24,7 @@ use regex::Regex;
 use std::cmp::Ordering;
 use std::fmt::{Display, Formatter, Result};
 
-pub struct RegExp<'a> {
+pub(crate) struct RegExp<'a> {
     ast: Expression<'a>,
     config: &'a RegExpConfig,
 }
