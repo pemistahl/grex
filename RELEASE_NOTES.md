@@ -1,3 +1,15 @@
+## grex 1.4.6 (released on 14 Nov 2025)
+
+### Improvements
+- All characters from the current Unicode standard 16.0 are now fully supported.
+
+### Changes
+
+- The unmaintained unic-* dependencies have been replaced by @jqnatividad. (#337)
+- All other dependencies have been updated to their latest versions.
+- Support for Python 3.14 has been added.
+- Support for Python < 3.12 has been dropped.
+
 ## grex 1.4.5 (released on 06 Mar 2024)
 
 ### Improvements
