@@ -17,7 +17,7 @@
 use std::fmt::{Display, Formatter, Result};
 
 #[derive(Clone, Debug, Eq, PartialEq)]
-pub enum Quantifier {
+pub(crate) enum Quantifier {
     KleeneStar,
     QuestionMark,
 }

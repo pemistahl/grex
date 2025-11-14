@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-pub enum Substring {
+pub(crate) enum Substring {
     Prefix,
     Suffix,
 }

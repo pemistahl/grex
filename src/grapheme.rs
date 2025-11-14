@@ -25,7 +25,7 @@ const CHARS_TO_ESCAPE: [&str; 14] = [
 const CHAR_CLASSES: [&str; 6] = ["\\d", "\\s", "\\w", "\\D", "\\S", "\\W"];
 
 #[derive(Clone, Debug, Hash, Ord, PartialOrd, Eq, PartialEq)]
-pub struct Grapheme {
+pub(crate) struct Grapheme {
     pub(crate) chars: Vec<String>,
     pub(crate) repetitions: Vec<Grapheme>,
     min: u32,

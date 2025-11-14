@@ -15,7 +15,7 @@
  */
 
 #[derive(Clone, Debug, Hash, Ord, PartialOrd, Eq, PartialEq)]
-pub struct RegExpConfig {
+pub(crate) struct RegExpConfig {
     pub(crate) minimum_repetitions: u32,
     pub(crate) minimum_substring_length: u32,
     pub(crate) is_digit_converted: bool,
