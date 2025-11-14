@@ -1,0 +1,117 @@
+/*
+ * Copyright © 2019-today Peter M. Stahl pemistahl@gmail.com
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either expressed or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/// A lightweight replacement for unic_char_range::CharRange
+/// Represents a closed range of Unicode characters
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) struct CharRange {
+    start: char,
+    end: char,
+}
+
+impl CharRange {
+    /// Creates a closed character range from start to end (inclusive)
+    pub(crate) fn closed(start: char, end: char) -> Self {
+        Self { start, end }
+    }
+
+    /// Checks if the given character is within this range
+    pub(crate) fn contains(&self, c: char) -> bool {
+        c >= self.start && c <= self.end
+    }
+
+    /// Returns an iterator over all valid Unicode scalar values
+    /// This includes U+0000 to U+D7FF and U+E000 to U+10FFFF
+    /// (excludes surrogate code points U+D800 to U+DFFF)
+    pub(crate) fn all() -> CharRangeIter {
+        CharRangeIter {
+            current: '\0',
+            done: false,
+        }
+    }
+}
+
+/// Iterator over all valid Unicode scalar values
+pub(crate) struct CharRangeIter {
+    current: char,
+    done: bool,
+}
+
+impl Iterator for CharRangeIter {
+    type Item = char;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.done {
+            return None;
+        }
+
+        let result = self.current;
+
+        // Get the next valid Unicode scalar value
+        let mut next_code_point = self.current as u32 + 1;
+
+        // Skip over surrogate code points (U+D800 to U+DFFF) and find next valid char
+        loop {
+            if next_code_point > 0x10FFFF {
+                // We've reached the end of valid Unicode code points
+                self.done = true;
+                break;
+            }
+
+            match char::from_u32(next_code_point) {
+                Some(next_char) => {
+                    self.current = next_char;
+                    break;
+                }
+                None => {
+                    // Invalid code point (likely surrogate), skip to next
+                    next_code_point += 1;
+                }
+            }
+        }
+
+        Some(result)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_char_range_contains() {
+        let range = CharRange::closed('a', 'z');
+        assert!(range.contains('a'));
+        assert!(range.contains('m'));
+        assert!(range.contains('z'));
+        assert!(!range.contains('A'));
+        assert!(!range.contains('0'));
+    }
+
+    #[test]
+    fn test_char_range_all() {
+        let all_chars: Vec<char> = CharRange::all().take(10).collect();
+        assert_eq!(all_chars[0], '\0');
+        assert_eq!(all_chars.len(), 10);
+    }
+
+    #[test]
+    fn test_char_range_all_count() {
+        // Valid Unicode scalar values: 0x110000 total code points - 0x800 surrogates = 0x10F800
+        let count = CharRange::all().count();
+        assert_eq!(count, 0x10F800);
+    }
+}

@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+use crate::char_range::CharRange;
 use crate::cluster::GraphemeCluster;
 use crate::component::Component;
 use crate::expression::Expression;
@@ -21,7 +22,6 @@ use crate::quantifier::Quantifier;
 use itertools::Itertools;
 use std::collections::BTreeSet;
 use std::fmt::{Display, Formatter, Result};
-use unic_char_range::CharRange;
 
 impl Display for Expression<'_> {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
@@ -87,7 +87,7 @@ impl Display for Expression<'_> {
 }
 
 fn get_codepoint_position(c: char) -> usize {
-    CharRange::all().iter().position(|it| it == c).unwrap()
+    CharRange::all().position(|it| it == c).unwrap()
 }
 
 fn format_alternation(
