@@ -7,7 +7,7 @@
 [![build status](https://github.com/pemistahl/grex/actions/workflows/python-build.yml/badge.svg)](https://github.com/pemistahl/grex/actions/workflows/python-build.yml)
 [![codecov](https://codecov.io/gh/pemistahl/grex/branch/main/graph/badge.svg)](https://codecov.io/gh/pemistahl/grex)
 [![demo](https://img.shields.io/badge/-Demo%20Website-orange?logo=HTML5&labelColor=white)](https://pemistahl.github.io/grex-js/)
-![supported Python versions](https://img.shields.io/badge/Python-%3E%3D%203.10-blue?logo=Python&logoColor=yellow)
+![supported Python versions](https://img.shields.io/badge/Python-%3E%3D%203.12-blue?logo=Python&logoColor=yellow)
 [![pypi](https://img.shields.io/badge/PYPI-v1.0.2-blue?logo=PyPI&logoColor=yellow)](https://pypi.org/project/grex)
 [![license](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0)
 </div>

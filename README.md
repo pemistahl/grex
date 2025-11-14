@@ -14,7 +14,7 @@
   [![downloads](https://img.shields.io/crates/d/grex.svg)](https://crates.io/crates/grex)
   [![crates.io](https://img.shields.io/crates/v/grex.svg)](https://crates.io/crates/grex)
   [![lib.rs](https://img.shields.io/badge/lib.rs-v1.4.6-blue)](https://lib.rs/crates/grex)
-  ![supported Python versions](https://img.shields.io/badge/Python-%3E%3D%203.10-blue?logo=Python&logoColor=yellow)
+  ![supported Python versions](https://img.shields.io/badge/Python-%3E%3D%203.12-blue?logo=Python&logoColor=yellow)
   [![pypi](https://img.shields.io/badge/PYPI-v1.0.2-blue?logo=PyPI&logoColor=yellow)](https://pypi.org/project/grex)
   [![license](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0)
 
