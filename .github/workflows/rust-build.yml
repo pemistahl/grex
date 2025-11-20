@@ -62,7 +62,7 @@ jobs:
 
     steps:
       - name: Check out repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Add rustup target
         run: rustup target add ${{ matrix.target }}
@@ -95,7 +95,7 @@ jobs:
 
     steps:
       - name: Check out repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Install wasm-pack
         run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
@@ -139,7 +139,7 @@ jobs:
 
     steps:
       - name: Check out repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Generate coverage report
         run: cargo +nightly tarpaulin --ignore-config --ignore-panics --ignore-tests --exclude-files src/python.rs src/main.rs src/wasm.rs --verbose --timeout 900 --out xml
