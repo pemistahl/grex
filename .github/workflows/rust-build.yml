@@ -68,7 +68,7 @@ jobs:
         run: rustup target add ${{ matrix.target }}
 
       - name: Store or retrieve cargo caches
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             ~/.cargo/bin/
