@@ -125,7 +125,7 @@ jobs:
           manylinux: ${{ matrix.linux }}
 
       - name: Upload wheels
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: linux-${{ matrix.linux }}-${{ matrix.target }}-wheels
           path: dist
@@ -152,7 +152,7 @@ jobs:
           sccache: 'true'
 
       - name: Upload wheels
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: windows-${{ matrix.target }}-wheels
           path: dist
@@ -179,7 +179,7 @@ jobs:
           sccache: 'true'
 
       - name: Upload wheels
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: macos-${{ matrix.target }}-wheels
           path: dist
