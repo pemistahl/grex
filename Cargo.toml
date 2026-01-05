@@ -41,7 +41,7 @@ unicode-general-category = "1.1.0"
 unicode-segmentation = "1.12.0"
 
 [target.'cfg(not(target_family = "wasm"))'.dependencies]
-clap = {version = "4.5.53", features = ["derive", "wrap_help"], optional = true}
+clap = {version = "4.5.54", features = ["derive", "wrap_help"], optional = true}
 pyo3 = {version = "0.27.1", optional = true}
 
 [target.'cfg(target_family = "wasm")'.dependencies]
