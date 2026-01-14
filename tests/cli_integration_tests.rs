@@ -16,7 +16,7 @@
 
 #![cfg(not(target_family = "wasm"))]
 
-use assert_cmd::Command;
+use assert_cmd::{cargo_bin, Command};
 use indoc::indoc;
 use predicates::prelude::*;
 use std::io::Write;
@@ -4046,5 +4046,5 @@ mod anchor_conversion {
 }
 
 fn init_command() -> Command {
-    Command::cargo_bin("grex").unwrap()
+    Command::new(cargo_bin!())
 }
