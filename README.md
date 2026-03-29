@@ -113,6 +113,15 @@ So the summary of your installation options is:
 ( brew | cargo | choco | huber | port | scoop ) install grex
 ```
 
+If you are using [mise](https://github.com/jdx/mise), the polyglot tool version manager, you can also use
+such command:
+
+```shell
+mise use -g grex@latest
+```
+
+That will install binaries coming from github because mise use aqua backend by default that use that.
+
 ### 4.2 The library
 
 In order to use *grex* as a library, simply add it as a dependency to your `Cargo.toml` file:
