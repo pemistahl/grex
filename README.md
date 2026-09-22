@@ -225,7 +225,7 @@ let regexp = RegExpBuilder::from(&["a", "aa", "123"])
     .with_conversion_of_digits()
     .with_conversion_of_words()
     .build();
-assert_eq!(regexp, "^(\\d\\d\\d|\\w(?:\\w)?)$");
+assert_eq!(regexp, "^(?:\\d\\d\\d|\\w(?:\\w)?)$");
 ```
 
 #### 5.2.3 Convert repeated substrings
@@ -288,7 +288,7 @@ can be found [here](https://mathiasbynens.be/notes/javascript-unicode).
 use grex::RegExpBuilder;
 
 let regexp = RegExpBuilder::from(&["You smell like 💩."])
-    .with_escaped_non_ascii_chars(true)
+    .with_escaping_of_non_ascii_chars(true)
     .build();
 assert_eq!(regexp, "^You smell like \\u{d83d}\\u{dca9}\\.$");
 ```
