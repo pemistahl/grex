@@ -241,6 +241,7 @@ mod cli {
         is_verbose_mode_enabled: bool,
 
         /// Provides syntax highlighting for the resulting regular expression.
+        /// Has no effect while the NO_COLOR environment variable is set.
         #[arg(name = "colorize", short, long, help_heading = "Display Options")]
         is_output_colorized: bool,
 
@@ -393,7 +394,7 @@ mod cli {
                     builder.without_anchors();
                 }
 
-                if cli.is_output_colorized {
+                if cli.is_output_colorized && crate::is_color_allowed() {
                     builder.with_syntax_highlighting();
                 }
 
@@ -431,6 +432,18 @@ mod cli {
             Err(_) => Err(String::from("Value is not a valid unsigned integer")),
         }
     }
+}
+
+/// Reports whether ANSI color output is allowed.
+///
+/// Follows https://no-color.org: color is disabled when the NO_COLOR
+/// variable is present and not empty, whatever its value. See
+/// <https://github.com/pemistahl/grex/issues/272>.
+#[cfg(not(target_family = "wasm"))]
+fn is_color_allowed() -> bool {
+    std::env::var("NO_COLOR")
+        .map(|value| value.is_empty())
+        .unwrap_or(true)
 }
 
 #[cfg(not(target_family = "wasm"))]
