@@ -450,6 +450,27 @@ mod digit_conversion {
         #[test]
         fn succeeds_with_syntax_highlighting() {
             let mut grex = init_command();
+            grex.env_remove("NO_COLOR");
+            grex.args(&["--colorize", "abc", "def"]);
+            grex.assert()
+                .success()
+                .stdout(predicate::eq("\u{1b}[1;33m^\u{1b}[0m\u{1b}[1;32m(?:\u{1b}[0mabc\u{1b}[1;31m|\u{1b}[0mdef\u{1b}[1;32m)\u{1b}[0m\u{1b}[1;33m$\u{1b}[0m\n"));
+        }
+
+        #[test]
+        fn succeeds_with_syntax_highlighting_disabled_by_no_color() {
+            let mut grex = init_command();
+            grex.env("NO_COLOR", "1");
+            grex.args(&["--colorize", "abc", "def"]);
+            grex.assert()
+                .success()
+                .stdout(predicate::eq("^(?:abc|def)$\n"));
+        }
+
+        #[test]
+        fn succeeds_with_syntax_highlighting_despite_empty_no_color() {
+            let mut grex = init_command();
+            grex.env("NO_COLOR", "");
             grex.args(&["--colorize", "abc", "def"]);
             grex.assert()
                 .success()
