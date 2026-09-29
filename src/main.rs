@@ -298,11 +298,20 @@ mod cli {
             let is_hyphen = cli.input.first().unwrap() == "-";
 
             if is_single_item && is_hyphen && is_stdin_available {
-                Ok(stdin()
+                stdin()
                     .lock()
                     .lines()
-                    .map(|line| line.unwrap())
-                    .collect_vec())
+                    .collect::<Result<Vec<String>, Error>>()
+                    .map_err(|error| {
+                        if error.kind() == ErrorKind::InvalidData {
+                            Error::new(
+                                ErrorKind::InvalidInput,
+                                "the input provided via stdin is not valid UTF-8",
+                            )
+                        } else {
+                            error
+                        }
+                    })
             } else {
                 Ok(cli.input.clone())
             }
@@ -333,6 +342,10 @@ mod cli {
     ) -> Result<(), Box<dyn std::error::Error>> {
         match input {
             Ok(test_cases) => {
+                if test_cases.is_empty() {
+                    return Err("error: no test cases have been provided".into());
+                }
+
                 let mut builder = RegExpBuilder::from(&test_cases);
 
                 if cli.is_digit_converted {
