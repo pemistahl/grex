@@ -196,6 +196,42 @@ mod no_conversion {
                 "the argument '--file <FILE>' cannot be used with '[INPUT]...'",
             ));
         }
+
+        #[test]
+        fn fails_when_stdin_is_empty() {
+            let mut grex = init_command();
+            grex.write_stdin("")
+                .arg("-")
+                .assert()
+                .failure()
+                .stdout(predicate::str::is_empty())
+                .stderr(predicate::eq("error: no test cases have been provided\n"));
+        }
+
+        #[test]
+        fn fails_when_file_is_empty() {
+            let file = NamedTempFile::new().unwrap();
+
+            let mut grex = init_command();
+            grex.args(&["-f", file.path().to_str().unwrap()]);
+            grex.assert()
+                .failure()
+                .stdout(predicate::str::is_empty())
+                .stderr(predicate::eq("error: no test cases have been provided\n"));
+        }
+
+        #[test]
+        fn fails_when_stdin_is_not_valid_utf8() {
+            let mut grex = init_command();
+            grex.write_stdin(b"abc\xFF\xFEdef".as_slice())
+                .arg("-")
+                .assert()
+                .failure()
+                .stdout(predicate::str::is_empty())
+                .stderr(predicate::eq(
+                    "error: the input provided via stdin is not valid UTF-8\n",
+                ));
+        }
     }
 
     mod repetition {
